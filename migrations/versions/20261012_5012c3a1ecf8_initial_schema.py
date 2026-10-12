@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: d900d2ba7924
+Revision ID: 5012c3a1ecf8
 Revises:
-Create Date: 2026-10-12 16:03:14.114530
+Create Date: 2026-10-12 20:46:33.074261
 """
 
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "d900d2ba7924"
+revision: str = "5012c3a1ecf8"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -60,16 +60,21 @@ def upgrade() -> None:
         sa.Column("bpm_eur", sa.Integer(), nullable=True),
         sa.Column("cost_breakdown", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("cost_version", sa.Integer(), nullable=True),
+        sa.Column("duplicate_of_id", sa.Integer(), nullable=True),
         sa.Column("nl_value_eur", sa.Integer(), nullable=True),
         sa.Column("nl_value_n", sa.Integer(), nullable=True),
         sa.Column("nl_value_breakdown", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("spread_eur", sa.Integer(), nullable=True),
         sa.Column("spread_pct", sa.Float(), nullable=True),
+        sa.ForeignKeyConstraint(["duplicate_of_id"], ["listings.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source", "source_listing_id", name="uq_listings_source_id"),
     )
     op.create_index(
         "ix_listings_active_first_seen", "listings", ["is_active", "first_seen"], unique=False
+    )
+    op.create_index(
+        op.f("ix_listings_duplicate_of_id"), "listings", ["duplicate_of_id"], unique=False
     )
     op.create_index(
         op.f("ix_listings_landed_cost_eur"), "listings", ["landed_cost_eur"], unique=False
@@ -265,6 +270,7 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_listings_spread_eur"), table_name="listings")
     op.drop_index("ix_listings_make_model", table_name="listings")
     op.drop_index(op.f("ix_listings_landed_cost_eur"), table_name="listings")
+    op.drop_index(op.f("ix_listings_duplicate_of_id"), table_name="listings")
     op.drop_index("ix_listings_active_first_seen", table_name="listings")
     op.drop_table("listings")
     # ### end Alembic commands ###

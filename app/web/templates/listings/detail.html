@@ -25,6 +25,13 @@
       <div class="mt-3">{% include "listings/_status.html" %}</div>
       <a href="{{ l.url }}" target="_blank" rel="noopener"
          class="mt-4 block rounded bg-slate-900 py-2 text-center font-medium text-white">Open original ad ↗</a>
+      {% if l.duplicates or l.duplicate_of %}
+      <div class="mt-3 text-sm">
+        <span class="text-slate-500">Same car on:</span>
+        {% for d in l.duplicates %}<a class="ml-1 underline" href="/listings/{{ d.id }}">{{ d.source }} ({{ d.price_eur|eur }})</a>{% endfor %}
+        {% if l.duplicate_of %}<a class="ml-1 underline" href="/listings/{{ l.duplicate_of.id }}">{{ l.duplicate_of.source }} ({{ l.duplicate_of.price_eur|eur }}, canonical)</a>{% endif %}
+      </div>
+      {% endif %}
     </div>
     <dl class="grid grid-cols-2 gap-x-3 gap-y-1 rounded-xl bg-white p-4 text-sm shadow">
       {% for k, v in [('First registration', l.first_registration|month), ('Mileage', l.mileage_km|km),

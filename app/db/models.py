@@ -118,6 +118,11 @@ class Listing(Base):
     bpm_eur: Mapped[int | None] = mapped_column(Integer)
     cost_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     cost_version: Mapped[int | None] = mapped_column(Integer)
+    # phase 4: cross-source dedup; set on the non-canonical copies of the same car
+    duplicate_of_id: Mapped[int | None] = mapped_column(
+        ForeignKey("listings.id", ondelete="SET NULL"), index=True
+    )
+
     # phase 3: NL value estimate from comparables and the spread vs landed cost
     nl_value_eur: Mapped[int | None] = mapped_column(Integer)
     nl_value_n: Mapped[int | None] = mapped_column(Integer)
@@ -133,6 +138,12 @@ class Listing(Base):
     )
     saved_searches: Mapped[list[SavedSearch]] = relationship(
         secondary=listing_searches, back_populates="listings"
+    )
+    duplicate_of: Mapped[Listing | None] = relationship(
+        remote_side="Listing.id", back_populates="duplicates", foreign_keys=[duplicate_of_id]
+    )
+    duplicates: Mapped[list[Listing]] = relationship(
+        back_populates="duplicate_of", foreign_keys=[duplicate_of_id]
     )
 
 

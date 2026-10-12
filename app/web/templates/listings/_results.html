@@ -28,7 +28,9 @@
           {{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}{% if l.power_kw %} · {{ l.power_kw }} kW{% endif %}
         </div>
         <div class="text-xs text-slate-500">
-          {{ l.city or '' }} {{ l.country }} · {{ l.seller_type.value }} · seen {{ l.first_seen|timeago }}
+          {{ l.city or '' }} {{ l.country }} · {{ l.seller_type.value }} · {{ l.source }} · seen {{ l.first_seen|timeago }}
+          {% if l.duplicates %}· <span class="rounded bg-indigo-100 px-1 text-indigo-800">also on {{ l.duplicates|map(attribute='source')|join(', ') }}</span>{% endif %}
+          {% if l.duplicate_of_id %}· <span class="rounded bg-slate-200 px-1">duplicate</span>{% endif %}
           {% if not l.is_active %}· <span class="font-semibold text-red-600">gone</span>{% endif %}
         </div>
         {% with listing=l %}{% include "listings/_status.html" %}{% endwith %}

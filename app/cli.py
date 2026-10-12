@@ -9,6 +9,8 @@ searches = typer.Typer(no_args_is_help=True, help="Manage saved searches")
 scrape = typer.Typer(no_args_is_help=True, help="Run scrapers")
 costs = typer.Typer(no_args_is_help=True, help="Landed-cost estimates")
 values = typer.Typer(no_args_is_help=True, help="NL value estimates")
+dedup = typer.Typer(no_args_is_help=True, help="Cross-source duplicate detection")
+app.add_typer(dedup, name="dedup")
 app.add_typer(costs, name="costs")
 app.add_typer(values, name="values")
 app.add_typer(users, name="users")
@@ -182,6 +184,171 @@ COMPARABLE_SEARCHES: list[tuple[str, str, dict[str, object]]] = [
         },
     ),
 ]
+
+
+E90_MOTOR_RE = r"\b(318i|320i)\b"
+# Phase 4 deal searches: (name, source, params, interval_minutes)
+PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
+    (
+        "BE · AutoScout24.be E90/E91 318i/320i",
+        "autoscout24_be",
+        {
+            "path": "/nl/lst/bmw",
+            "cat": "ma13gr100038ge25mt102,ma13gr100038ge25mt103",
+            "fuel": "B",
+            "body": "5,6",
+            "fregfrom": 2008,
+            "fregto": 2014,
+            "cy": "B",
+        },
+        60,
+    ),
+    (
+        "BE · 2dehands 3-serie 318i/320i",
+        "tweedehands_be",
+        {
+            "l2CategoryId": 96,
+            "model": "3-Serie",
+            "fuel": "Benzine",
+            "year_from": 2008,
+            "year_to": 2014,
+            "query": "3-serie",
+            "motor_regex": E90_MOTOR_RE,
+            "bodies": ["Sedan", "Stationwagon"],
+        },
+        60,
+    ),
+    (
+        "IT · AutoScout24.it Serie 3 318i/320i",
+        "autoscout24_it",
+        {
+            "path": "/lst/bmw/serie-3",
+            "fuel": "B",
+            "body": "5,6",
+            "fregfrom": 2008,
+            "fregto": 2014,
+            "cy": "I",
+            "models": ["318", "320"],
+        },
+        60,
+    ),
+    (
+        "IT · Subito 320i",
+        "subito",
+        {
+            "q": "bmw 320i",
+            "ys": 2008,
+            "ye": 2014,
+            "motor_regex": r"\b320i\b",
+            "bodies": ["Berlina", "Station Wagon"],
+        },
+        120,
+    ),
+    (
+        "IT · Subito 318i",
+        "subito",
+        {
+            "q": "bmw 318i",
+            "ys": 2008,
+            "ye": 2014,
+            "motor_regex": r"\b318i\b",
+            "bodies": ["Berlina", "Station Wagon"],
+        },
+        120,
+    ),
+    (
+        "IT · Automobile.it Serie 3 petrol",
+        "automobile_it",
+        {
+            "path": "/bmw-serie_3",
+            "attr_m_year_min": 2008,
+            "attr_m_year_max": 2014,
+            "fuel": "benzina",
+            "motor_regex": E90_MOTOR_RE,
+        },
+        360,
+    ),
+    (
+        "DE · Kleinanzeigen 320i",
+        "kleinanzeigen",
+        {
+            "make": "bmw",
+            "query": "320i",
+            "ez_from": 2008,
+            "ez_to": 2014,
+            "motor_regex": r"\b320i\b",
+        },
+        60,
+    ),
+    (
+        "DE · Kleinanzeigen 318i",
+        "kleinanzeigen",
+        {
+            "make": "bmw",
+            "query": "318i",
+            "ez_from": 2008,
+            "ez_to": 2014,
+            "motor_regex": r"\b318i\b",
+        },
+        60,
+    ),
+    (
+        "SE · Bytbil 3-serien petrol",
+        "bytbil",
+        {
+            "Makes": "BMW",
+            "Models": "3-serien",
+            "ModelYearRange.From": 2008,
+            "ModelYearRange.To": 2014,
+            "Fuels": "Bensin",
+            "motor_regex": E90_MOTOR_RE,
+        },
+        360,
+    ),
+]
+
+
+@searches.command("seed-phase4")
+def searches_seed_phase4(
+    owner: str = typer.Option(..., help="username that owns the searches"),
+) -> None:
+    """Create the phase 4 deal searches (BE, IT, Kleinanzeigen, Bytbil)."""
+    from app.db import SavedSearch, User, db_session
+
+    with db_session() as s:
+        user = s.scalar(select(User).where(User.username == owner))
+        if not user:
+            raise typer.BadParameter(f"no such user {owner!r}")
+        created = 0
+        for name, source, params, interval in PHASE4_SEARCHES:
+            if s.scalar(select(SavedSearch).where(SavedSearch.name == name)):
+                continue
+            s.add(
+                SavedSearch(
+                    name=name,
+                    owner=user,
+                    source=source,
+                    source_params=params,
+                    filters={},
+                    role="deals",
+                    interval_minutes=interval,
+                )
+            )
+            created += 1
+    typer.echo(f"created {created} searches")
+
+
+@dedup.command("run")
+def dedup_run() -> None:
+    """Re-link duplicates across sources for all active listings."""
+    from datetime import UTC, datetime
+
+    from app.db import db_session
+    from app.storage import relink_all
+
+    with db_session() as s:
+        r = relink_all(s, datetime.now(UTC))
+    typer.echo(f"checked {r.checked} listings, linked {r.linked} duplicates")
 
 
 @searches.command("seed-comparables")

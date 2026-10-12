@@ -18,6 +18,7 @@ from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, ge
 from app.storage import (
     deactivate_missing,
     deactivate_missing_comparables,
+    link_duplicates,
     upsert_comparables,
     upsert_listings,
 )
@@ -90,6 +91,9 @@ def run_saved_search(
                 items = [scraper.parse(r) for r in raws]
                 result = upsert_listings(s, items, search, now)
                 stale = deactivate_missing(s, search, run_started_at=started)
+                dedup = link_duplicates(s, result.new, now)
+                if dedup.linked:
+                    log.info("scrape.dedup", linked=dedup.linked, checked=dedup.checked)
                 alerts = queue_alerts(s, search, result, now)
                 summary = RunSummary(
                     run_id,

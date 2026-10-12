@@ -20,6 +20,8 @@ def queue_alerts(
     candidates: list[tuple[Listing, str]] = [(x, "new") for x in result.new]
     candidates += [(x, "price_drop") for x, _old in result.price_dropped]
     for listing, kind in candidates:
+        if listing.duplicate_of_id is not None:
+            continue  # the same car was already alerted from another source
         if not matches(listing, saved_search.filters):
             continue
         exists = session.scalar(

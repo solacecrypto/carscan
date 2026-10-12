@@ -3,6 +3,7 @@ from app.storage.comparables import (
     deactivate_missing_comparables,
     upsert_comparables,
 )
+from app.storage.dedup import DedupResult, is_same_car, link_duplicates, relink_all
 from app.storage.filters import apply_sql, matches
 from app.storage.listings import (
     UpsertResult,
@@ -15,6 +16,7 @@ from app.storage.listings import (
 
 __all__ = [
     "CompUpsertResult",
+    "DedupResult",
     "deactivate_missing_comparables",
     "upsert_comparables",
     "UpsertResult",
@@ -22,7 +24,10 @@ __all__ = [
     "apply_sql",
     "deactivate_missing",
     "get_by_source_id",
+    "is_same_car",
+    "link_duplicates",
     "matches",
     "recompute_costs",
+    "relink_all",
     "upsert_listings",
 ]

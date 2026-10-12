@@ -42,6 +42,7 @@
       </select></label>
     <label class="flex items-center gap-2 self-end"><input type="checkbox" name="price_dropped" value="true" {{ 'checked' if f.price_dropped }}> price dropped</label>
     <label class="flex items-center gap-2 self-end"><input type="checkbox" name="include_inactive" value="true" {{ 'checked' if f.include_inactive }}> include gone</label>
+    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="include_duplicates" value="true" {{ 'checked' if f.include_duplicates }}> include duplicates</label>
     <noscript><button class="rounded bg-slate-900 px-3 py-1.5 text-white">Apply</button></noscript>
   </form>
 </details>

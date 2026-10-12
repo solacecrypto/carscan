@@ -55,6 +55,7 @@ def listings_index(
     new_hours: int | None = Query(None, ge=1),
     price_dropped: bool = False,
     include_inactive: bool = False,
+    include_duplicates: bool = False,
     sort: SortKey = "newest",
     page: int = Query(1, ge=1),
 ) -> HTMLResponse:
@@ -73,6 +74,8 @@ def listings_index(
     stmt = apply_sql(select(Listing), filters)
     if not include_inactive:
         stmt = stmt.where(Listing.is_active.is_(True))
+    if not include_duplicates:
+        stmt = stmt.where(Listing.duplicate_of_id.is_(None))
     if new_hours:
         stmt = stmt.where(Listing.first_seen >= datetime.now(UTC) - timedelta(hours=new_hours))
     if price_dropped:
@@ -82,7 +85,10 @@ def listings_index(
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
     rows = list(
         db.scalars(
-            stmt.options(selectinload(Listing.alerts).selectinload(Alert.claimed_by))
+            stmt.options(
+                selectinload(Listing.alerts).selectinload(Alert.claimed_by),
+                selectinload(Listing.duplicates),
+            )
             .order_by(SORTS[sort], Listing.id.desc())
             .offset((page - 1) * PAGE_SIZE)
             .limit(PAGE_SIZE)
@@ -100,6 +106,7 @@ def listings_index(
             "new_hours": new_hours,
             "price_dropped": price_dropped,
             "include_inactive": include_inactive,
+            "include_duplicates": include_duplicates,
         },
         "query": str(request.url.query),
     }
@@ -114,6 +121,8 @@ def _load(db: DB, listing_id: int) -> Listing:
         .options(
             selectinload(Listing.alerts).selectinload(Alert.claimed_by),
             selectinload(Listing.price_history),
+            selectinload(Listing.duplicates),
+            selectinload(Listing.duplicate_of),
         )
     )
     if listing is None:

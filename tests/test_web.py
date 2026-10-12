@@ -147,11 +147,30 @@ def test_login_requires_csrf(seeded: dict) -> None:
     assert r.status_code == 403
 
 
-def test_listings_filters_and_sort(client: TestClient, seeded: dict) -> None:
+def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session) -> None:
     r = client.get("/listings")
     assert r.status_code == 200 and "320i" in r.text and "318i" not in r.text  # inactive hidden
     assert "was € 7.000" in r.text and "1 listing" in r.text
     assert "318i" in client.get("/listings?include_inactive=true").text
+    dup = Listing(
+        source="kleinanzeigen",
+        source_listing_id="dup",
+        url="https://x/dup",
+        make="BMW",
+        model="320i",
+        price_eur=6050,
+        seller_type=SellerType.private,
+        country="DE",
+        first_seen=NOW,
+        last_seen=NOW,
+        duplicate_of=seeded["a"],
+    )
+    db.add(dup)
+    db.commit()
+    page = client.get("/listings").text
+    assert "also on kleinanzeigen" in page and page.count("<article") == 1
+    assert client.get("/listings?include_duplicates=true").text.count("<article") == 2
+    assert "Same car on:" in client.get(f"/listings/{dup.id}").text
     assert "No listings match" in client.get("/listings?price_max=5000").text
     assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
     assert "No listings match" in client.get("/listings?landed_max=7000").text
