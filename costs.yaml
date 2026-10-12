@@ -2,6 +2,10 @@
 # Every amount is in whole euros unless stated otherwise. Sources and method: docs/landed_cost.md
 version: 1
 
+# Foreign currency per euro, used by the normalizer for non-EUR sources
+fx:
+  SEK: 11.2
+
 transport:
   # cost to get the car from the seller to NL, per seller country (self-drive pickup assumed)
   DE: 350

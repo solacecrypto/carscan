@@ -16,7 +16,6 @@ from app.scrapers.http import PoliteClient
 log = structlog.get_logger()
 
 ORIGIN = "https://www.marktplaats.nl"
-API = ORIGIN + "/lrp/api/search"
 PAGE_SIZE = 30
 USABLE_PRICE_TYPES = {"FIXED", "MIN_BID"}
 GEARBOX = {"Automaat": "automatic", "Handgeschakeld": "manual", "Semi-automaat": "semi-automatic"}
@@ -38,7 +37,7 @@ FUEL = {
 }
 
 
-def build_api_url(params: dict[str, Any], offset: int) -> str:
+def build_api_url(params: dict[str, Any], offset: int, origin: str = ORIGIN) -> str:
     """params: l1CategoryId, l2CategoryId, model, fuel, year_from, year_to, query, mileage_max."""
     q: list[tuple[str, Any]] = [
         ("l1CategoryId", params.get("l1CategoryId", 91)),
@@ -63,7 +62,7 @@ def build_api_url(params: dict[str, Any], offset: int) -> str:
         q.append(("attributeRanges[]", f"mileage:0:{params['mileage_max']}"))
     if params.get("query"):
         q.append(("query", params["query"]))
-    return f"{API}?{urlencode(q)}"
+    return f"{origin}/lrp/api/search?{urlencode(q)}"
 
 
 def _attrs(item: dict[str, Any]) -> dict[str, str]:
@@ -84,6 +83,7 @@ def _scrub(item: dict[str, Any]) -> dict[str, Any]:
 class Marktplaats:
     name = "marktplaats"
     country = "NL"
+    origin = ORIGIN
 
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
@@ -91,7 +91,7 @@ class Marktplaats:
         seen: dict[str, RawListing] = {}
         offset, total, max_page = 0, None, 1
         while total is None or (offset < total and offset // PAGE_SIZE < max_page):
-            resp = client.get(build_api_url(params, offset))
+            resp = client.get(build_api_url(params, offset, origin=self.origin))
             if resp.status_code != 200:
                 raise ParseError(f"HTTP {resp.status_code} from Marktplaats API")
             try:
@@ -116,7 +116,7 @@ class Marktplaats:
                 seen[lid] = RawListing(
                     source=self.name,
                     source_listing_id=lid,
-                    url=ORIGIN + item["vipUrl"],
+                    url=self.origin + item["vipUrl"],
                     data=_scrub(item),
                     fetched_at=fetched_at,
                 )
@@ -168,7 +168,7 @@ class Marktplaats:
             price_eur=to_eur(int(cents) / 100, "EUR"),
             seller_type=SellerType.dealer if is_dealer else SellerType.private,
             seller_name=None,
-            country="NL",
+            country=self.country,
             city=loc.get("cityName"),
             postcode=None,
             photos=photos,
@@ -177,4 +177,13 @@ class Marktplaats:
         )
 
 
+class Tweedehands(Marktplaats):
+    """2dehands.be: the Belgian Marktplaats, same API and categories."""
+
+    name = "tweedehands_be"
+    country = "BE"
+    origin = "https://www.2dehands.be"
+
+
 register(Marktplaats())
+register(Tweedehands())

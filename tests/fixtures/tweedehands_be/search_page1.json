@@ -1,0 +1,4859 @@
+{
+ "listings": [
+  {
+   "itemId": "m2451541924",
+   "title": "Te koop 320i touring automaat",
+   "description": "Te koop 320i geweigerd voor lambdawaarde zie de laatste technische inspectie meer foto's volgen mvg.",
+   "categorySpecificDescription": "Te koop 320i geweigerd voor lambdawaarde zie de laatste technische inspectie meer foto's volgen mvg.",
+   "thinContent": true,
+   "priceInfo": {
+    "priceCents": 339000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Wezembeek-Oppem",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "8 okt 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/6694f83d-503f-4867-9a1f-02c9b93baf9d?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 29807169,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2010",
+     "values": [
+      "2010"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "263000",
+     "unit": "km",
+     "values": [
+      "263000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "upholstery",
+     "value": "Overige bekleding",
+     "values": [
+      "Overige bekleding"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Particulier",
+     "values": [
+      "Particulier"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/6694f83d-503f-4867-9a1f-02c9b93baf9d?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/6694f83d-503f-4867-9a1f-02c9b93baf9d?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/6694f83d-503f-4867-9a1f-02c9b93baf9d?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/6694f83d-503f-4867-9a1f-02c9b93baf9d?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/6694f83d-503f-4867-9a1f-02c9b93baf9d?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 369,
+      "height": 800
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2451541924-te-koop-320i-touring-automaat"
+  },
+  {
+   "itemId": "m2444414163",
+   "title": "Bmw e93 320i AUTOMAAT M-PAKKET",
+   "description": "Bmw e93 320i cabrio m sport – 163 pk te koop: verzorgde bmw e93 320i cabrio met m sport uitvoering. Voorzien van o.a. Rood lederen interieur, 18” sportvelgen, bi-xenon, cruise control, automatische ai",
+   "categorySpecificDescription": "Bmw e93 320i cabrio m sport – 163 pk te koop: verzorgde bmw e93 320i cabrio met m sport uitvoering. Voorzien van o.a. Rood lederen interieur, 18” sportvelgen, bi-xenon, cruise control, automatische airco, verwarmde en elektrische zetels, inklapbare spiegels...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 1350000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Lier",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "22 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/1bc08e2d-26c3-4a17-b6c1-c5b96e4ea1c4?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/a74797a4-6ef4-4f6b-ad01-531f980bc17f?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/9dd75c27-83e4-473c-a225-ab3e42499aff?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 41366197,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2010",
+     "values": [
+      "2010"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "154250",
+     "unit": "km",
+     "values": [
+      "154250"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Cabriolet",
+     "values": [
+      "Cabriolet"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Panoramadak",
+     "values": [
+      "Trekhaak",
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Panoramadak",
+      "Elektrische koffer",
+      "Lederen bekleding",
+      "Electronic Stability Program (ESP)",
+      "Mistlampen",
+      "Radio",
+      "Open dak",
+      "Metaalkleur",
+      "Sportpakket",
+      "Elektrische buitenspiegels",
+      "Regensensor",
+      "ABS",
+      "Verwarmde buitenspiegels",
+      "Bi-Xenon koplampen",
+      "Elektrische ramen",
+      "Traction-control",
+      "Isofix",
+      "LED dagrijverlichting",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "Zetelverwarming",
+      "Elektrische stoelverstelling",
+      "Lichtsensor",
+      "Centrale vergrendeling",
+      "LED verlichting"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Cabriolet",
+     "values": [
+      "Cabriolet"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_PLUS",
+    "EXTRA_IMAGES_SNIPPET"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1bc08e2d-26c3-4a17-b6c1-c5b96e4ea1c4?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1bc08e2d-26c3-4a17-b6c1-c5b96e4ea1c4?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1bc08e2d-26c3-4a17-b6c1-c5b96e4ea1c4?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1bc08e2d-26c3-4a17-b6c1-c5b96e4ea1c4?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1bc08e2d-26c3-4a17-b6c1-c5b96e4ea1c4?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a74797a4-6ef4-4f6b-ad01-531f980bc17f?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a74797a4-6ef4-4f6b-ad01-531f980bc17f?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a74797a4-6ef4-4f6b-ad01-531f980bc17f?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a74797a4-6ef4-4f6b-ad01-531f980bc17f?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a74797a4-6ef4-4f6b-ad01-531f980bc17f?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/9dd75c27-83e4-473c-a225-ab3e42499aff?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/9dd75c27-83e4-473c-a225-ab3e42499aff?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/9dd75c27-83e4-473c-a225-ab3e42499aff?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/9dd75c27-83e4-473c-a225-ab3e42499aff?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/9dd75c27-83e4-473c-a225-ab3e42499aff?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2444414163-bmw-e93-320i-automaat-m-pakket",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "e93 320i AUTOMAAT M-PAKKET"
+  },
+  {
+   "itemId": "m2446322301",
+   "title": "BMW 320i 170PK Xenon Navi PanoDak ZetelVerw.",
+   "description": "Joker cars presenteert deze sportieve en rijk uitgeruste bmw 320i benzine met 170 pk. Een comfortabele bmw met een mooie combinatie van panoramisch dak, bi-xenon, navigatie en zetelverwarming. 💡 Bela",
+   "categorySpecificDescription": "Joker cars presenteert deze sportieve en rijk uitgeruste bmw 320i benzine met 170 pk. Een comfortabele bmw met een mooie combinatie van panoramisch dak, bi-xenon, navigatie en zetelverwarming. 💡 Belangrijkste troeven • 2.0I benzine – 170 pk &bull...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 545000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Grimbergen",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "24 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/58f526b8-d23e-434a-bc1d-e2d5372e40f0?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/92c9f142-b420-4a1b-831e-0d90e6da2685?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/a2241263-e432-4cb3-b086-dd0860d4db24?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 28145503,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "sellerLogoUrl": "//images.2dehands.com/api/v1/hz-twh-pro-profile/images/eb/eb8072f4-dba4-4183-8c0c-d29dd3553ab1?rule=ecg_mp_eps$_82",
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "opvalStickerText": "Xenon Panodak",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "trustIndicators": [
+    {
+     "key": "BookFromDealer"
+    },
+    {
+     "key": "LezSuitable"
+    }
+   ],
+   "highlights": [
+    {
+     "key": "BookFromDealer"
+    },
+    {
+     "key": "LezSuitable"
+    }
+   ],
+   "attributes": [
+    {
+     "key": "carPassUrl",
+     "value": "https://public.car-pass.be/vhr/555e186e-b6fc-4e98-84f1-54863154fb78",
+     "values": [
+      "https://public.car-pass.be/vhr/555e186e-b6fc-4e98-84f1-54863154fb78"
+     ]
+    },
+    {
+     "key": "constructionYear",
+     "value": "2010",
+     "values": [
+      "2010"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "214405",
+     "unit": "km",
+     "values": [
+      "214405"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Break",
+     "values": [
+      "Break"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "upholstery",
+     "value": "Stof",
+     "values": [
+      "Stof"
+     ]
+    },
+    {
+     "key": "engineDisplacement",
+     "value": "1995 cc",
+     "values": [
+      "1995 cc"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "co2emission",
+     "value": "149 g/km",
+     "values": [
+      "149 g/km"
+     ]
+    }
+   ],
+   "traits": [
+    "MICROTIP",
+    "EXTRA_BRANDING",
+    "VIP_MORE_FROM_THIS_SELLER",
+    "WARRANTY_LABEL",
+    "CALL_TRACKING",
+    "FINANCE_AVAILABLE",
+    "EXTERNAL_REVIEWS",
+    "VIDEO",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS",
+    "PACKAGE_FREE",
+    "URL",
+    "NO_COMMERCIAL_CONTENT",
+    "DEALER_ACCESS",
+    "EXTRA_IMAGES_SNIPPET",
+    "HIGHLIGHTS",
+    "CONTACT_SALES_REPRESENTATIVES",
+    "DELIVERY_PACKAGES",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "COMPANY_PHOTO_AND_LOGO"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/58f526b8-d23e-434a-bc1d-e2d5372e40f0?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/58f526b8-d23e-434a-bc1d-e2d5372e40f0?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/58f526b8-d23e-434a-bc1d-e2d5372e40f0?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/58f526b8-d23e-434a-bc1d-e2d5372e40f0?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/58f526b8-d23e-434a-bc1d-e2d5372e40f0?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 803,
+      "height": 602
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/92c9f142-b420-4a1b-831e-0d90e6da2685?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/92c9f142-b420-4a1b-831e-0d90e6da2685?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/92c9f142-b420-4a1b-831e-0d90e6da2685?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/92c9f142-b420-4a1b-831e-0d90e6da2685?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/92c9f142-b420-4a1b-831e-0d90e6da2685?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 803,
+      "height": 602
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a2241263-e432-4cb3-b086-dd0860d4db24?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a2241263-e432-4cb3-b086-dd0860d4db24?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a2241263-e432-4cb3-b086-dd0860d4db24?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a2241263-e432-4cb3-b086-dd0860d4db24?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a2241263-e432-4cb3-b086-dd0860d4db24?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 803,
+      "height": 602
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2446322301-bmw-320i-170pk-xenon-navi-panodak-zetelverw",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i 170PK Xenon Navi PanoDak ZetelVerw."
+  },
+  {
+   "itemId": "m2443386108",
+   "title": "BMW 3 Serie Coupe 320i Corporate Lease*Leder*Xenon*Navigatie",
+   "description": "Exclusive edition, audio-navigatie full map, automatische airconditioning 2-zone met uitgebreide functionaliteit (534), bi-xenon koplampen, bi-xenon lampen voor dim- en grootlicht (522), cruise contro",
+   "categorySpecificDescription": "met uitgebreide functionaliteit (534), bi-xenon koplampen, bi-xenon lampen voor dim- en grootlicht (522), cruise control, ... Bmw 3-serie coupé 320i corporate lease*leder*xenon*navigatie* algemene informatie modelreeks: mrt. 2010 - Mrt. 2013 Modelcode...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 690000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "STEENBERGEN NB",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": true
+   },
+   "date": "16 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/2190f0d1-ce07-461e-9b67-c2204054c3ff?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 27457173,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "183883",
+     "unit": "km",
+     "values": [
+      "183883"
+     ]
+    },
+    {
+     "key": "energyLabel",
+     "value": "C",
+     "values": [
+      "C"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Coupé",
+     "values": [
+      "Coupé"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Xenon verlichting",
+      "Elektrische ramen",
+      "Bluetooth",
+      "Sportstoelen",
+      "Electronic Stability Program (ESP)",
+      "Mistlampen",
+      "Radio",
+      "Verwarmde buitenspiegels",
+      "Bi-Xenon koplampen",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "Airconditioning",
+      "Airbags",
+      "Elektrische buitenspiegels",
+      "Startonderbreker",
+      "ABS",
+      "Alarm",
+      "Centrale vergrendeling"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "engineHorsepowerBE",
+     "value": "165 pk",
+     "values": [
+      "165 pk"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Bedrijf",
+     "values": [
+      "Bedrijf"
+     ]
+    }
+   ],
+   "traits": [
+    "NO_PROFILE_PHOTO",
+    "DEALER_ACCESS",
+    "FEED_BOOSTER_REMOVER",
+    "CALL_TRACKING",
+    "EXTERNAL_REVIEWS",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS",
+    "PACKAGE_BASIC"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/2190f0d1-ce07-461e-9b67-c2204054c3ff?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/2190f0d1-ce07-461e-9b67-c2204054c3ff?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/2190f0d1-ce07-461e-9b67-c2204054c3ff?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/2190f0d1-ce07-461e-9b67-c2204054c3ff?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/2190f0d1-ce07-461e-9b67-c2204054c3ff?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2443386108-bmw-3-serie-coupe-320i-corporate-lease-leder-xenon-navigatie",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "3 Serie Coupe 320i Corporate Lease*Leder*Xenon*Navigatie"
+  },
+  {
+   "itemId": "m2452995411",
+   "title": "BMW 320i / 140.000km / Automaat / Benzine / Euro 5",
+   "description": "Bellen voor meer info: [removed] - bmw 320 ic - benzine - pk: 170 / kw: 125 / c02: - 140.000 Km - bouwjaar 2012 - euro 5 - versnellingsbaak: automaat - klimaatcontrole: manueel - lichten: automaat ",
+   "categorySpecificDescription": "Bellen voor meer info: [removed] - bmw 320 ic - benzine - pk: 170 / kw: 125 / c02: - 140.000 Km - bouwjaar 2012 - euro 5 - versnellingsbaak: automaat - klimaatcontrole: manueel - lichten: automaat - elektrische ruiten: v & a - 4 zit - zetels: lede...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 900000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Vlezembeek",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "Vandaag",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/0aab0315-784e-4480-b1a0-9ca42975f73e?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 27524822,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "carPassUrl",
+     "value": "https://public.car-pass.be/vhr/c7f60e68-beae-4280-8526-208400f4ab27",
+     "values": [
+      "https://public.car-pass.be/vhr/c7f60e68-beae-4280-8526-208400f4ab27"
+     ]
+    },
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "140000",
+     "unit": "km",
+     "values": [
+      "140000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Cabriolet",
+     "values": [
+      "Cabriolet"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Beige",
+     "values": [
+      "Beige"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE",
+    "NO_PROFILE_PHOTO",
+    "DEALER_ACCESS",
+    "FEED_BOOSTER_REMOVER",
+    "CALL_TRACKING",
+    "EXTERNAL_REVIEWS",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/0aab0315-784e-4480-b1a0-9ca42975f73e?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/0aab0315-784e-4480-b1a0-9ca42975f73e?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/0aab0315-784e-4480-b1a0-9ca42975f73e?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/0aab0315-784e-4480-b1a0-9ca42975f73e?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/0aab0315-784e-4480-b1a0-9ca42975f73e?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2452995411-bmw-320i-140-000km-automaat-benzine-euro-5",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i / 140.000km / Automaat / Benzine / Euro 5"
+  },
+  {
+   "itemId": "m2452118720",
+   "title": "BMW 320 3-serie 320i High Executive | Climate | Cruise | Nav",
+   "description": "Let op exportprijs ex. Bpm, prijs voor nl : € 5.400,- Welkom bij autobedrijf vlashuizen b.v. Wij zijn gespecialiseerd in verkoop voor handel of export en kunnen alle documenten en exportkentekens",
+   "categorySpecificDescription": "Let op exportprijs ex. Bpm, prijs voor nl : € 5.400,- Welkom bij autobedrijf vlashuizen b.v. Wij zijn gespecialiseerd in verkoop voor handel of export en kunnen alle documenten en exportkentekens verzorgen, neem contact met ons op voor de tariev...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 495000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Eindhoven",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": true
+   },
+   "date": "Eergisteren",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/5df5b0e3-47bc-408a-9f92-07cf04920fe3?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/223bd6ef-de23-4a54-aac5-d7963bb5b794?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/5b238621-9c54-4072-90bc-a829267932a9?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 48787364,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "opvalStickerText": "",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "293566",
+     "unit": "km",
+     "values": [
+      "293566"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Xenon verlichting",
+      "Bluetooth",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "Lichtmetalen velgen",
+      "Startonderbreker",
+      "Elektrische ramen",
+      "Traction-control",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Xenon verlichting",
+      "Bluetooth",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "Lichtmetalen velgen",
+      "Startonderbreker",
+      "Cruise Control",
+      "Climate control",
+      "Elektrische ramen",
+      "Traction-control",
+      "Parkeersensor",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Zwart",
+     "values": [
+      "Zwart"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    }
+   ],
+   "traits": [
+    "MICROTIP",
+    "EXTRA_BRANDING",
+    "VIP_MORE_FROM_THIS_SELLER",
+    "URL",
+    "WARRANTY_LABEL",
+    "CALL_TRACKING",
+    "FINANCE_AVAILABLE",
+    "EXTERNAL_REVIEWS",
+    "VIDEO",
+    "PACKAGE_PREMIUM",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS",
+    "NO_COMMERCIAL_CONTENT",
+    "DEALER_ACCESS",
+    "EXTRA_IMAGES_SNIPPET",
+    "HIGHLIGHTS",
+    "CONTACT_SALES_REPRESENTATIVES",
+    "DELIVERY_PACKAGES",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "COMPANY_PHOTO_AND_LOGO"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5df5b0e3-47bc-408a-9f92-07cf04920fe3?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5df5b0e3-47bc-408a-9f92-07cf04920fe3?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5df5b0e3-47bc-408a-9f92-07cf04920fe3?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5df5b0e3-47bc-408a-9f92-07cf04920fe3?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5df5b0e3-47bc-408a-9f92-07cf04920fe3?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/223bd6ef-de23-4a54-aac5-d7963bb5b794?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/223bd6ef-de23-4a54-aac5-d7963bb5b794?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/223bd6ef-de23-4a54-aac5-d7963bb5b794?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/223bd6ef-de23-4a54-aac5-d7963bb5b794?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/223bd6ef-de23-4a54-aac5-d7963bb5b794?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5b238621-9c54-4072-90bc-a829267932a9?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5b238621-9c54-4072-90bc-a829267932a9?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5b238621-9c54-4072-90bc-a829267932a9?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5b238621-9c54-4072-90bc-a829267932a9?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5b238621-9c54-4072-90bc-a829267932a9?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2452118720-bmw-320-3-serie-320i-high-executive-climate-cruise-nav",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320 3-serie 320i High Executive | Climate | Cruise | Nav"
+  },
+  {
+   "itemId": "m2451580483",
+   "title": "BMW 320i AUTOMATIQUE 2009 EURO5 198.000KM",
+   "description": "à vendre bmw 320i break automatique euro5 • année : 2009 • kilométrage : 198 000 km • carburant : essence • moteur : 2l 170 cv • boîte de vitesses : automatique cette bmw 320i",
+   "categorySpecificDescription": "à vendre bmw 320i break automatique euro5 • année : 2009 • kilométrage : 198 000 km • carburant : essence • moteur : 2l 170 cv • boîte de vitesses : automatique cette bmw 320i break est en excellent état et roule parfaitement...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 699900,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Tubize",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "8 okt 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/33c79e9c-3ce3-4948-a201-c31517e75889?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 57840485,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2010",
+     "values": [
+      "2010"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "198000",
+     "unit": "km",
+     "values": [
+      "198000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Break",
+     "values": [
+      "Break"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "euronormBE",
+     "value": "Euro 5",
+     "values": [
+      "Euro 5"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Bedrijf",
+     "values": [
+      "Bedrijf"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Break",
+     "values": [
+      "Break"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/33c79e9c-3ce3-4948-a201-c31517e75889?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/33c79e9c-3ce3-4948-a201-c31517e75889?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/33c79e9c-3ce3-4948-a201-c31517e75889?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/33c79e9c-3ce3-4948-a201-c31517e75889?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/33c79e9c-3ce3-4948-a201-c31517e75889?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 132,
+      "height": 95
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2451580483-bmw-320i-automatique-2009-euro5-198-000km",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i AUTOMATIQUE 2009 EURO5 198.000KM"
+  },
+  {
+   "itemId": "m2450755338",
+   "title": "BMW 320 3-serie 320i High Executive | Head-Up Display | Lede",
+   "description": "Let op exportprijs ex. Bpm, prijs voor nl : € 5.250,- Welkom bij autobedrijf vlashuizen b.v. Wij zijn gespecialiseerd in verkoop voor handel of export en kunnen alle documenten en exportkentekens",
+   "categorySpecificDescription": "Let op exportprijs ex. Bpm, prijs voor nl : € 5.250,- Welkom bij autobedrijf vlashuizen b.v. Wij zijn gespecialiseerd in verkoop voor handel of export en kunnen alle documenten en exportkentekens verzorgen, neem contact met ons op voor de tariev...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 495000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Eindhoven",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": true
+   },
+   "date": "6 okt 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/a6cd6fe3-1695-4169-a065-7618ea605a1b?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/d5f0bf91-23cf-44f1-8155-dd2a41f828b5?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/272adf73-6894-4486-a1bc-859d7b463078?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 48787364,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "opvalStickerText": "",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2013",
+     "values": [
+      "2013"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "272630",
+     "unit": "km",
+     "values": [
+      "272630"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Xenon verlichting",
+      "Bluetooth",
+      "Lederen bekleding",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "Lichtmetalen velgen",
+      "Startonderbreker",
+      "Zetelverwarming",
+      "Elektrische ramen",
+      "Traction-control",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Xenon verlichting",
+      "Bluetooth",
+      "Lederen bekleding",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "Lichtmetalen velgen",
+      "Startonderbreker",
+      "Zetelverwarming",
+      "Cruise Control",
+      "Climate control",
+      "Elektrische ramen",
+      "Traction-control",
+      "Parkeersensor",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Zilver of Grijs",
+     "values": [
+      "Zilver of Grijs"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "co2emission",
+     "value": "147 g/km",
+     "values": [
+      "147 g/km"
+     ]
+    }
+   ],
+   "traits": [
+    "MICROTIP",
+    "EXTRA_BRANDING",
+    "VIP_MORE_FROM_THIS_SELLER",
+    "URL",
+    "WARRANTY_LABEL",
+    "CALL_TRACKING",
+    "FINANCE_AVAILABLE",
+    "EXTERNAL_REVIEWS",
+    "VIDEO",
+    "PACKAGE_PREMIUM",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS",
+    "NO_COMMERCIAL_CONTENT",
+    "DEALER_ACCESS",
+    "EXTRA_IMAGES_SNIPPET",
+    "HIGHLIGHTS",
+    "CONTACT_SALES_REPRESENTATIVES",
+    "DELIVERY_PACKAGES",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "COMPANY_PHOTO_AND_LOGO"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a6cd6fe3-1695-4169-a065-7618ea605a1b?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a6cd6fe3-1695-4169-a065-7618ea605a1b?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a6cd6fe3-1695-4169-a065-7618ea605a1b?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a6cd6fe3-1695-4169-a065-7618ea605a1b?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/a6cd6fe3-1695-4169-a065-7618ea605a1b?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d5f0bf91-23cf-44f1-8155-dd2a41f828b5?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d5f0bf91-23cf-44f1-8155-dd2a41f828b5?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d5f0bf91-23cf-44f1-8155-dd2a41f828b5?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d5f0bf91-23cf-44f1-8155-dd2a41f828b5?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d5f0bf91-23cf-44f1-8155-dd2a41f828b5?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/272adf73-6894-4486-a1bc-859d7b463078?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/272adf73-6894-4486-a1bc-859d7b463078?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/272adf73-6894-4486-a1bc-859d7b463078?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/272adf73-6894-4486-a1bc-859d7b463078?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/272adf73-6894-4486-a1bc-859d7b463078?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2450755338-bmw-320-3-serie-320i-high-executive-head-up-display-lede",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320 3-serie 320i High Executive | Head-Up Display | Lede"
+  },
+  {
+   "itemId": "m2439067101",
+   "title": "BMW 320i e93 Cabriolet",
+   "description": "Ik verkoop mijn bmw 320i uit 2008 (automaat). Technisch verkeert de auto in uitstekende staat: hij lekt geen vloeistoffen, start direct en rijdt perfect. Er zijn onlangs uitgebreide werkzaamheden uitg",
+   "categorySpecificDescription": "Ik verkoop mijn bmw 320i uit 2008 (automaat). Technisch verkeert de auto in uitstekende staat: hij lekt geen vloeistoffen, start direct en rijdt perfect. Er zijn onlangs uitgebreide werkzaamheden uitgevoerd, wat de uitstekende technische staat waarborgt...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 560000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Sint-Katelijne-Waver",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "4 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/bf7c730e-84bd-402a-b9e2-e7f17a5b52df?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 41077552,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2008",
+     "values": [
+      "2008"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "272000",
+     "unit": "km",
+     "values": [
+      "272000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Cabriolet",
+     "values": [
+      "Cabriolet"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Panoramadak",
+      "Xenon verlichting",
+      "Verwarmde buitenspiegels",
+      "Bluetooth",
+      "Lederen bekleding",
+      "Sound system",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Open dak",
+      "Sportpakket",
+      "Elektrische buitenspiegels",
+      "Regensensor",
+      "Elektrische ramen",
+      "Traction-control",
+      "Sportstoelen",
+      "Winterpakket",
+      "Elektrische koffer",
+      "Standkachel",
+      "Radio",
+      "Warmtepomp",
+      "Spraakbediening",
+      "Digitale radio-ontvangst",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "Zetelverwarming",
+      "Elektrische stoelverstelling",
+      "Lichtsensor",
+      "ABS",
+      "Alarm",
+      "Centrale vergrendeling"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "numberOfSeatsBE",
+     "value": "4 zetels",
+     "values": [
+      "4 zetels"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "engineDisplacement",
+     "value": "1995 cc",
+     "values": [
+      "1995 cc"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bf7c730e-84bd-402a-b9e2-e7f17a5b52df?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bf7c730e-84bd-402a-b9e2-e7f17a5b52df?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bf7c730e-84bd-402a-b9e2-e7f17a5b52df?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bf7c730e-84bd-402a-b9e2-e7f17a5b52df?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bf7c730e-84bd-402a-b9e2-e7f17a5b52df?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2439067101-bmw-320i-e93-cabriolet",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i e93 Cabriolet"
+  },
+  {
+   "itemId": "m2452893495",
+   "title": "Bmw 320 i coupe heel proper",
+   "description": "Bmw 320i 2.0 Benzine model 2008 km 215000 manueel heel proper laatste keuring paar maanden terug blanco",
+   "categorySpecificDescription": "Bmw 320i 2.0 Benzine model 2008 km 215000 manueel heel proper laatste keuring paar maanden terug blanco",
+   "thinContent": true,
+   "priceInfo": {
+    "priceCents": 595000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Aalst",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "Vandaag",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/bd2ab448-dda9-4eb9-bc43-7aaee009b847?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 45809780,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2008",
+     "values": [
+      "2008"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "215000",
+     "unit": "km",
+     "values": [
+      "215000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Particulier",
+     "values": [
+      "Particulier"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bd2ab448-dda9-4eb9-bc43-7aaee009b847?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bd2ab448-dda9-4eb9-bc43-7aaee009b847?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bd2ab448-dda9-4eb9-bc43-7aaee009b847?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bd2ab448-dda9-4eb9-bc43-7aaee009b847?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bd2ab448-dda9-4eb9-bc43-7aaee009b847?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2452893495-bmw-320-i-coupe-heel-proper",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320 i coupe heel proper"
+  },
+  {
+   "itemId": "m2452104842",
+   "title": "BMW E92 320I",
+   "description": "Hierbij verkoop ik mijn e92 320i km stand: 164000 (licht oplopend) bouwjaar: 2010 euronorm: 5a versnellingsbak: handgeschakeld 6traps de wagen heeft een alcantara interieur en is in zeer goede staat. ",
+   "categorySpecificDescription": "Hierbij verkoop ik mijn e92 320i km stand: 164000 (licht oplopend) bouwjaar: 2010 euronorm: 5a versnellingsbak: handgeschakeld 6traps de wagen heeft een alcantara interieur en is in zeer goede staat. Een 2de set aluminium velgen is inbegrepen (zie fo...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 995000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Izegem",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "Eergisteren",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/3e89e061-24fa-437f-8c48-a7069336f520?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 34034411,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2010",
+     "values": [
+      "2010"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "160000",
+     "unit": "km",
+     "values": [
+      "160000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Coupé",
+     "values": [
+      "Coupé"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Bluetooth",
+     "values": [
+      "Climate control",
+      "Parkeersensor",
+      "Bluetooth",
+      "Sound system",
+      "Electronic Stability Program (ESP)",
+      "Radio",
+      "Sportpakket",
+      "Lichtmetalen velgen",
+      "Elektrische buitenspiegels",
+      "Zetelverwarming",
+      "Elektrische ramen",
+      "Traction-control",
+      "Isofix",
+      "Boordcomputer",
+      "Adaptieve lichten",
+      "Navigatiesysteem",
+      "Airconditioning",
+      "Airbags",
+      "ABS",
+      "Alarm",
+      "Centrale vergrendeling"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "euronormBE",
+     "value": "Euro 5",
+     "values": [
+      "Euro 5"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "upholstery",
+     "value": "Alcantara",
+     "values": [
+      "Alcantara"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Zwart",
+     "values": [
+      "Zwart"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/3e89e061-24fa-437f-8c48-a7069336f520?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/3e89e061-24fa-437f-8c48-a7069336f520?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/3e89e061-24fa-437f-8c48-a7069336f520?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/3e89e061-24fa-437f-8c48-a7069336f520?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/3e89e061-24fa-437f-8c48-a7069336f520?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2452104842-bmw-e92-320i",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "E92 320I"
+  },
+  {
+   "itemId": "m2448504469",
+   "title": "bmw 320i touring wil niet starten",
+   "description": "Bmw 320i touring 218000 km extra set banden met velgen bij wil niet meer starten deed plots niks meer dashbord licht niet meer op en reageert niet op start knop interieur in goede staat bwj 2010 meer ",
+   "categorySpecificDescription": "Bmw 320i touring 218000 km extra set banden met velgen bij wil niet meer starten deed plots niks meer dashbord licht niet meer op en reageert niet op start knop interieur in goede staat bwj 2010 meer info [removed]",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 100000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Oostakker",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "30 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/bbb8e388-0026-49e1-8cef-bca24e1723cf?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 27985938,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2010",
+     "values": [
+      "2010"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "218000",
+     "unit": "km",
+     "values": [
+      "218000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Break",
+     "values": [
+      "Break"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "euronormBE",
+     "value": "Euro 5",
+     "values": [
+      "Euro 5"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Particulier",
+     "values": [
+      "Particulier"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Zilver of Grijs",
+     "values": [
+      "Zilver of Grijs"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bbb8e388-0026-49e1-8cef-bca24e1723cf?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bbb8e388-0026-49e1-8cef-bca24e1723cf?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bbb8e388-0026-49e1-8cef-bca24e1723cf?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bbb8e388-0026-49e1-8cef-bca24e1723cf?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/bbb8e388-0026-49e1-8cef-bca24e1723cf?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 16,
+      "height": 9
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2448504469-bmw-320i-touring-wil-niet-starten",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i touring wil niet starten"
+  },
+  {
+   "itemId": "m2426014088",
+   "title": "BMW 320i Coupé E92",
+   "description": "Enigszins twijfelachtige prijs kan met of zonder technische inspectie worden verkocht. Vragen of interesse: [removed]",
+   "categorySpecificDescription": "Enigszins twijfelachtige prijs kan met of zonder technische inspectie worden verkocht. Vragen of interesse: [removed]",
+   "thinContent": true,
+   "priceInfo": {
+    "priceCents": 800000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Sint-Agatha-Berchem",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "31 jul 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/d8371646-5a13-4fb1-9c15-160fb4fec1e6?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 59395163,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2009",
+     "values": [
+      "2009"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "147177",
+     "unit": "km",
+     "values": [
+      "147177"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Coupé",
+     "values": [
+      "Coupé"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Bi-Xenon koplampen",
+     "values": [
+      "Adaptive Cruise Control",
+      "Trekhaak",
+      "Parkeercamera",
+      "Climate control",
+      "Parkeersensor",
+      "Bi-Xenon koplampen",
+      "Elektrische ramen",
+      "Lederen bekleding",
+      "Sound system",
+      "Apple Carplay",
+      "Radio",
+      "Metaalkleur",
+      "Sportpakket",
+      "Achteruitrijcamera",
+      "Regensensor",
+      "Xenon verlichting",
+      "Bluetooth",
+      "Android Auto",
+      "Mistlampen",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Adaptieve lichten",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "ABS",
+      "Alarm",
+      "Centrale vergrendeling"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "engineDisplacement",
+     "value": "1995 cc",
+     "values": [
+      "1995 cc"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Zwart",
+     "values": [
+      "Zwart"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d8371646-5a13-4fb1-9c15-160fb4fec1e6?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d8371646-5a13-4fb1-9c15-160fb4fec1e6?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d8371646-5a13-4fb1-9c15-160fb4fec1e6?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d8371646-5a13-4fb1-9c15-160fb4fec1e6?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d8371646-5a13-4fb1-9c15-160fb4fec1e6?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2426014088-bmw-320i-coupe-e92",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i Coupé E92"
+  },
+  {
+   "itemId": "m2452578514",
+   "title": "Bmw 320i E90 Cuir Gps Toit Ouvrant Xénon ️✅️Marchand/Export✅",
+   "description": "💥bmw serie 320i e90💥 ✅️ my autos ✅️ ‼️ nouvel arrivage ‼️ 📍 carburant : essence ⛽️ 📍 moteur: 2.0Cc 📍 puissance : 105kw | 142ch 📍 norme : euro 4 📍 kilomètres : 180.000Km 📍 année : 03/2009 optio",
+   "categorySpecificDescription": "💥bmw serie 320i e90💥 ✅️ my autos ✅️ ‼️ nouvel arrivage ‼️ 📍 carburant : essence ⛽️ 📍 moteur: 2.0Cc 📍 puissance : 105kw | 142ch 📍 norme : euro 4 📍 kilomètres : 180.000Km 📍 année : 03/2009 options & infos : 🔹 pack confort (extérieur & intérieur...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 200000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Auvelais",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "Gisteren",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/62861b72-cb5f-4972-9127-83d9044ada8f?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 33860905,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "carPassUrl",
+     "value": "https://public.car-pass.be/vhr/cc7ca319-0034-4b2c-babb-94e0e3468018",
+     "values": [
+      "https://public.car-pass.be/vhr/cc7ca319-0034-4b2c-babb-94e0e3468018"
+     ]
+    },
+    {
+     "key": "constructionYear",
+     "value": "2009",
+     "values": [
+      "2009"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "150000",
+     "unit": "km",
+     "values": [
+      "150000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Parkeercamera",
+      "Parkeersensor",
+      "Xenon verlichting",
+      "Verwarmde buitenspiegels",
+      "Sportstoelen",
+      "Lederen bekleding",
+      "Electronic Stability Program (ESP)",
+      "Radio",
+      "Open dak",
+      "Metaalkleur",
+      "Sportpakket",
+      "Elektrische buitenspiegels",
+      "ABS",
+      "Centrale vergrendeling",
+      "Elektrische ramen",
+      "Isofix",
+      "Mistlampen",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "USB",
+      "Airconditioning",
+      "Airbags"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "serviceHistory",
+     "value": "Dealer onderhouden",
+     "values": [
+      "Dealer onderhouden",
+      "Onderhoudsboekje"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Zwart",
+     "values": [
+      "Zwart"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE",
+    "NO_PROFILE_PHOTO",
+    "DEALER_ACCESS",
+    "FEED_BOOSTER_REMOVER",
+    "CALL_TRACKING",
+    "EXTERNAL_REVIEWS",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/62861b72-cb5f-4972-9127-83d9044ada8f?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/62861b72-cb5f-4972-9127-83d9044ada8f?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/62861b72-cb5f-4972-9127-83d9044ada8f?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/62861b72-cb5f-4972-9127-83d9044ada8f?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/62861b72-cb5f-4972-9127-83d9044ada8f?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 1600,
+      "height": 1193
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2452578514-bmw-320i-e90-cuir-gps-toit-ouvrant-xenon-marchand-export",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i E90 Cuir Gps Toit Ouvrant Xénon ️✅️Marchand/Export✅"
+  },
+  {
+   "itemId": "m2445592236",
+   "title": "BMW 320 3-serie 320i xDrive High Executive | Leder | Pano |",
+   "description": "Welkom bij autobedrijf vlashuizen b.v. Wij zijn gespecialiseerd in verkoop voor handel of export en kunnen alle documenten en exportkentekens verzorgen, neem contact met ons op voor de tarieven naar u",
+   "categorySpecificDescription": "Welkom bij autobedrijf vlashuizen b.v. Wij zijn gespecialiseerd in verkoop voor handel of export en kunnen alle documenten en exportkentekens verzorgen, neem contact met ons op voor de tarieven naar uw land. Kijk voor onze actuele voorraad en meer in...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 495000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Eindhoven",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": true
+   },
+   "date": "22 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/84921dcd-e552-4438-a614-0128c38a496f?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/001a2be7-41fa-4634-9875-c9d0dbf7656e?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/4fa3b71d-d9d0-404d-97a5-7fc7233f570e?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 48787364,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "opvalStickerText": "",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "261631",
+     "unit": "km",
+     "values": [
+      "261631"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Xenon verlichting",
+      "Bluetooth",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "4x4",
+      "Lichtmetalen velgen",
+      "Startonderbreker",
+      "Elektrische ramen",
+      "Traction-control",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "co2emission",
+     "value": "158 g/km",
+     "values": [
+      "158 g/km"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Bruin",
+     "values": [
+      "Bruin"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Xenon verlichting",
+      "Bluetooth",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "4x4",
+      "Lichtmetalen velgen",
+      "Startonderbreker",
+      "Cruise Control",
+      "Climate control",
+      "Elektrische ramen",
+      "Traction-control",
+      "Parkeersensor",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    }
+   ],
+   "traits": [
+    "MICROTIP",
+    "EXTRA_BRANDING",
+    "VIP_MORE_FROM_THIS_SELLER",
+    "URL",
+    "WARRANTY_LABEL",
+    "CALL_TRACKING",
+    "FINANCE_AVAILABLE",
+    "EXTERNAL_REVIEWS",
+    "VIDEO",
+    "PACKAGE_PREMIUM",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS",
+    "NO_COMMERCIAL_CONTENT",
+    "DEALER_ACCESS",
+    "EXTRA_IMAGES_SNIPPET",
+    "HIGHLIGHTS",
+    "CONTACT_SALES_REPRESENTATIVES",
+    "DELIVERY_PACKAGES",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "COMPANY_PHOTO_AND_LOGO"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/84921dcd-e552-4438-a614-0128c38a496f?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/84921dcd-e552-4438-a614-0128c38a496f?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/84921dcd-e552-4438-a614-0128c38a496f?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/84921dcd-e552-4438-a614-0128c38a496f?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/84921dcd-e552-4438-a614-0128c38a496f?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/001a2be7-41fa-4634-9875-c9d0dbf7656e?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/001a2be7-41fa-4634-9875-c9d0dbf7656e?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/001a2be7-41fa-4634-9875-c9d0dbf7656e?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/001a2be7-41fa-4634-9875-c9d0dbf7656e?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/001a2be7-41fa-4634-9875-c9d0dbf7656e?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/4fa3b71d-d9d0-404d-97a5-7fc7233f570e?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/4fa3b71d-d9d0-404d-97a5-7fc7233f570e?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/4fa3b71d-d9d0-404d-97a5-7fc7233f570e?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/4fa3b71d-d9d0-404d-97a5-7fc7233f570e?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/4fa3b71d-d9d0-404d-97a5-7fc7233f570e?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2445592236-bmw-320-3-serie-320i-xdrive-high-executive-leder-pano",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320 3-serie 320i xDrive High Executive | Leder | Pano |"
+  },
+  {
+   "itemId": "m2425115645",
+   "title": "BWM 320I cabrio",
+   "description": "Bmw cabrio 320i. 113000Km !",
+   "categorySpecificDescription": "Bmw cabrio 320i. 113000Km !",
+   "thinContent": true,
+   "priceInfo": {
+    "priceCents": 1100000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Aalst",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "28 jul 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/d0307438-303a-4b94-8e9e-f3da52189ab0?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 34229413,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2008",
+     "values": [
+      "2008"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "113721",
+     "unit": "km",
+     "values": [
+      "113721"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Cabriolet",
+     "values": [
+      "Cabriolet"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Start-stop-systeem",
+     "values": [
+      "Parkeersensor",
+      "Start-stop-systeem",
+      "Radio",
+      "Airconditioning",
+      "Zetelverwarming",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "numberOfSeatsBE",
+     "value": "4 zetels",
+     "values": [
+      "4 zetels"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "engineDisplacement",
+     "value": "1995 cc",
+     "values": [
+      "1995 cc"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d0307438-303a-4b94-8e9e-f3da52189ab0?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d0307438-303a-4b94-8e9e-f3da52189ab0?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d0307438-303a-4b94-8e9e-f3da52189ab0?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d0307438-303a-4b94-8e9e-f3da52189ab0?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/d0307438-303a-4b94-8e9e-f3da52189ab0?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2425115645-bwm-320i-cabrio"
+  },
+  {
+   "itemId": "m2422371363",
+   "title": "BMW 3.20i Hardtop cabrio, tweedehands",
+   "description": "Tot mijn grote spijt, omwille van onverwachte kosten voor mijn dochter en andere redenen. Moet ik mijn project om mijn bmw om te bouwen hoe ik wil staken. Mijn bmw is pas gekeurd en heeft bij bmw liev",
+   "categorySpecificDescription": "Tot mijn grote spijt, omwille van onverwachte kosten voor mijn dochter en andere redenen. Moet ik mijn project om mijn bmw om te bouwen hoe ik wil staken. Mijn bmw is pas gekeurd en heeft bij bmw lievens in balen een controle beurt gehad, batterij is vervangen...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 750000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Leopoldsburg",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "21 jul 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/8d63339e-b0b4-4dd8-a6f2-75d670fc1611?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 55764233,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2008",
+     "values": [
+      "2008"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "206648",
+     "unit": "km",
+     "values": [
+      "206648"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Cabriolet",
+     "values": [
+      "Cabriolet"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Parkeerassistent",
+     "values": [
+      "Parkeerassistent",
+      "Elektrische ramen",
+      "Bluetooth",
+      "Lederen bekleding",
+      "Mistlampen",
+      "Radio",
+      "Open dak",
+      "Metaalkleur",
+      "Lichtmetalen velgen",
+      "Elektrische buitenspiegels",
+      "Elektrische stoelverstelling",
+      "Keyless entry",
+      "ABS",
+      "Centrale vergrendeling",
+      "Sportstoelen",
+      "Elektrische koffer",
+      "Boordcomputer",
+      "Adaptieve lichten",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "Airconditioning"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "euronormBE",
+     "value": "Euro 5",
+     "values": [
+      "Euro 5"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "engineDisplacement",
+     "value": "1995 cc",
+     "values": [
+      "1995 cc"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Beige",
+     "values": [
+      "Beige"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/8d63339e-b0b4-4dd8-a6f2-75d670fc1611?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/8d63339e-b0b4-4dd8-a6f2-75d670fc1611?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/8d63339e-b0b4-4dd8-a6f2-75d670fc1611?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/8d63339e-b0b4-4dd8-a6f2-75d670fc1611?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/8d63339e-b0b4-4dd8-a6f2-75d670fc1611?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2422371363-bmw-3-20i-hardtop-cabrio-tweedehands",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "3.20i Hardtop cabrio, tweedehands"
+  },
+  {
+   "itemId": "m2431791564",
+   "title": "BMW 320i touring xDrive",
+   "description": "Mooie auto in absolute nieuwe staat met zeer weinig km's. De auto is gekeurd tot [removed]. Gezien de 2de handskeuring vanaf [removed] niet meer verplicht is zal ik als verkoper niet gaan. D",
+   "categorySpecificDescription": "Mooie auto in absolute nieuwe staat met zeer weinig km's. De auto is gekeurd tot [removed]. Gezien de 2de handskeuring vanaf [removed] niet meer verplicht is zal ik als verkoper niet gaan. De auto is ingeschreven op [removed] maar pas in g...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 1490000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Leuven",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "20 aug 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/5c67cdba-06c4-4811-90d8-935b4a28eef4?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 38576075,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2014",
+     "values": [
+      "2014"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "101500",
+     "unit": "km",
+     "values": [
+      "101500"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Break",
+     "values": [
+      "Break"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Panoramadak",
+     "values": [
+      "Parkeerassistent",
+      "Cruise Control",
+      "Parkeersensor",
+      "Panoramadak",
+      "Bluetooth",
+      "Elektrische koffer",
+      "Lederen bekleding",
+      "Sound system",
+      "Electronic Stability Program (ESP)",
+      "Start-stop-systeem",
+      "Mistlampen",
+      "Radio",
+      "Metaalkleur",
+      "Dakrails",
+      "Elektrische buitenspiegels",
+      "Regensensor",
+      "Centrale vergrendeling",
+      "Xenon verlichting",
+      "Verwarmde buitenspiegels",
+      "Bi-Xenon koplampen",
+      "Elektrische ramen",
+      "Traction-control",
+      "4x4",
+      "Open dak",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "Lichtsensor",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "serviceHistory",
+     "value": "Dealer onderhouden",
+     "values": [
+      "Dealer onderhouden",
+      "Onderhoudsboekje"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "emptyWeightCars",
+     "value": "1650 kg",
+     "values": [
+      "1650 kg"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5c67cdba-06c4-4811-90d8-935b4a28eef4?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5c67cdba-06c4-4811-90d8-935b4a28eef4?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5c67cdba-06c4-4811-90d8-935b4a28eef4?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5c67cdba-06c4-4811-90d8-935b4a28eef4?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/5c67cdba-06c4-4811-90d8-935b4a28eef4?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2431791564-bmw-320i-touring-xdrive",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i touring xDrive"
+  },
+  {
+   "itemId": "m2446405718",
+   "title": "Bmw 320i f30 1595cm³ 174.000KM SportLine/Navi Pro/Xenon",
+   "description": "Bmw 320i (1598cc) sportline bouwjaar: 06/2013 kilometerstand: 174.000Km 1598cm³ – 125 kw / 170 pk manueel – benzine – euro 6 uitvoering: ~ navigatie pro ~ 18inch alu wheels ~ parkeelhulp achter ~ auto",
+   "categorySpecificDescription": "Bmw 320i (1598cc) sportline bouwjaar: 06/2013 kilometerstand: 174.000Km 1598cm³ – 125 kw / 170 pk manueel – benzine – euro 6 uitvoering: ~ navigatie pro ~ 18inch alu wheels ~ parkeelhulp achter ~ automatische klimaatregeling ~ isofix-bevestigingssystee...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 924500,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Torhout",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "24 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/154e5f9b-fe90-4eea-9101-0fe06a051023?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 41534821,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2013",
+     "values": [
+      "2013"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "174000",
+     "unit": "km",
+     "values": [
+      "174000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Xenon verlichting",
+      "Bi-Xenon koplampen",
+      "Sportstoelen",
+      "Lederen bekleding",
+      "Radio",
+      "Skiluik",
+      "Sportpakket",
+      "Elektrische buitenspiegels",
+      "Regensensor",
+      "Elektrische ramen",
+      "Traction-control",
+      "Isofix",
+      "LED dagrijverlichting",
+      "Bluetooth",
+      "Android Auto",
+      "Apple Carplay",
+      "Electronic Stability Program (ESP)",
+      "Mistlampen",
+      "Bochtverlichting",
+      "Spraakbediening",
+      "Digitale radio-ontvangst",
+      "Metaalkleur",
+      "Multifunctioneel stuurwiel",
+      "Lichtmetalen velgen",
+      "Boordcomputer",
+      "Navigatiesysteem",
+      "Automatische klimaatregeling",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "Lichtsensor",
+      "ABS",
+      "Alarm",
+      "Hill-Hold Control",
+      "Centrale vergrendeling",
+      "LED verlichting"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "upholstery",
+     "value": "Leder",
+     "values": [
+      "Leder"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Bedrijf",
+     "values": [
+      "Bedrijf"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_BASIC"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/154e5f9b-fe90-4eea-9101-0fe06a051023?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/154e5f9b-fe90-4eea-9101-0fe06a051023?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/154e5f9b-fe90-4eea-9101-0fe06a051023?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/154e5f9b-fe90-4eea-9101-0fe06a051023?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/154e5f9b-fe90-4eea-9101-0fe06a051023?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 4,
+      "height": 3
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2446405718-bmw-320i-f30-1595cm3-174-000km-sportline-navi-pro-xenon",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i f30 1595cm³ 174.000KM SportLine/Navi Pro/Xenon"
+  },
+  {
+   "itemId": "m2443891446",
+   "title": "BMW 320 BLANCO GEKEURD MET CARPASS ROZEFORMULIER PERFECTE ST",
+   "description": "Bmw 320i blanco gekeurd met rozeformulier carpass onderhoudsfacturen nieuwe koppeling nieuwe distributie met factuur facelift perfecte staat overnamen huidige wagen",
+   "categorySpecificDescription": "Bmw 320i blanco gekeurd met rozeformulier carpass onderhoudsfacturen nieuwe koppeling nieuwe distributie met factuur facelift perfecte staat overnamen huidige wagen",
+   "thinContent": true,
+   "priceInfo": {
+    "priceCents": 450000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Sint-Niklaas",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "18 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/b8cd4784-2b67-4a1d-9b02-0105209c20c7?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 58968441,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2009",
+     "values": [
+      "2009"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "160000",
+     "unit": "km",
+     "values": [
+      "160000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Adaptive Cruise Control",
+     "values": [
+      "Adaptive Cruise Control",
+      "Parkeercamera",
+      "Bi-Xenon koplampen",
+      "Elektrische ramen",
+      "Autonomous Driving",
+      "Radio",
+      "Adaptieve lichten",
+      "Elektrische buitenspiegels",
+      "Zetelverwarming",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Particulier",
+     "values": [
+      "Particulier"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Adaptive Cruise Control",
+     "values": [
+      "Adaptive Cruise Control",
+      "Bi-Xenon koplampen",
+      "Elektrische ramen",
+      "Autonomous Driving",
+      "Parkeercamera",
+      "Radio",
+      "Adaptieve lichten",
+      "Elektrische buitenspiegels",
+      "Zetelverwarming",
+      "USB",
+      "Airconditioning",
+      "Airbags",
+      "ABS",
+      "Alarm"
+     ]
+    }
+   ],
+   "traits": [],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/b8cd4784-2b67-4a1d-9b02-0105209c20c7?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/b8cd4784-2b67-4a1d-9b02-0105209c20c7?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/b8cd4784-2b67-4a1d-9b02-0105209c20c7?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/b8cd4784-2b67-4a1d-9b02-0105209c20c7?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/b8cd4784-2b67-4a1d-9b02-0105209c20c7?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 369,
+      "height": 800
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2443891446-bmw-320-blanco-gekeurd-met-carpass-rozeformulier-perfecte-st",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320 BLANCO GEKEURD MET CARPASS ROZEFORMULIER PERFECTE ST"
+  },
+  {
+   "itemId": "m2440334594",
+   "title": "BMW 320i F30 2.0 Benzine 184 pk | Modern Line | 157.000 km",
+   "description": "• 2.0 Benzinemotor met 184 pk • m-stuur • verwarmde zetels voor en achter • modern line-uitvoering • sportief en verzorgd interieur • apple carplay • 8,8-inch displa",
+   "categorySpecificDescription": "• nieuwe motorolie en oliefilter • nieuwe remschijven en remblokken • recent groot onderhoud uitgevoerd deze bmw 320i",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 1050000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Kermt",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "8 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/f795fbbb-ea17-473a-8145-f50f103fc75f?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 44846127,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2013",
+     "values": [
+      "2013"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "157000",
+     "unit": "km",
+     "values": [
+      "157000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Trekhaak",
+      "Cruise Control",
+      "Climate control",
+      "Xenon verlichting",
+      "Bi-Xenon koplampen",
+      "Apple Carplay",
+      "Radio",
+      "Airbags",
+      "Verwarming stoelen achter",
+      "Zetelverwarming",
+      "Bluetooth",
+      "Android Auto",
+      "Boordcomputer",
+      "Koplamp volledig LED"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "euronormBE",
+     "value": "Euro 5",
+     "values": [
+      "Euro 5"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Beige",
+     "values": [
+      "Beige"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f795fbbb-ea17-473a-8145-f50f103fc75f?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f795fbbb-ea17-473a-8145-f50f103fc75f?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f795fbbb-ea17-473a-8145-f50f103fc75f?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f795fbbb-ea17-473a-8145-f50f103fc75f?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f795fbbb-ea17-473a-8145-f50f103fc75f?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2440334594-bmw-320i-f30-2-0-benzine-184-pk-modern-line-157-000-km",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i F30 2.0 Benzine 184 pk | Modern Line | 157.000 km"
+  },
+  {
+   "itemId": "m2419946118",
+   "title": "BMW 320i Coupé",
+   "description": "🚘 bmw 320i coupé automaat (e92) | 2012 | 105.506 Km de wagen verkeert in zeer nette staat, zowel vanbinnen als vanbuiten, en heeft recent een onderhoud gehad. Met deze kilometers op de teller is dit ",
+   "categorySpecificDescription": "🚘 bmw 320i coupé automaat (e92) | 2012 | 105.506 Km de wagen verkeert in zeer nette staat, zowel vanbinnen als vanbuiten, en heeft recent een onderhoud gehad. Met deze kilometers op de teller is dit een uitzonderlijk nette wagen voor zijn leeftijd. D...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 1249900,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Willebroek",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "1 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/aeae9053-fb5c-4d04-bc5e-a68e00305d45?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 60107063,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "105506",
+     "unit": "km",
+     "values": [
+      "105506"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Coupé",
+     "values": [
+      "Coupé"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Xenon verlichting",
+     "values": [
+      "Cruise Control",
+      "Parkeersensor",
+      "Panoramadak",
+      "Xenon verlichting",
+      "Elektrische ramen",
+      "Bluetooth",
+      "Lederen bekleding",
+      "Radio",
+      "Lichtmetalen velgen",
+      "Elektrische buitenspiegels",
+      "Zetelverwarming",
+      "Regensensor",
+      "ABS",
+      "Automatische klimaatregeling",
+      "Airconditioning",
+      "Airbags",
+      "Lichtsensor"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Beige",
+     "values": [
+      "Beige"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/aeae9053-fb5c-4d04-bc5e-a68e00305d45?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/aeae9053-fb5c-4d04-bc5e-a68e00305d45?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/aeae9053-fb5c-4d04-bc5e-a68e00305d45?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/aeae9053-fb5c-4d04-bc5e-a68e00305d45?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/aeae9053-fb5c-4d04-bc5e-a68e00305d45?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2419946118-bmw-320i-coupe",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i Coupé"
+  },
+  {
+   "itemId": "m2443119814",
+   "title": "BMW E91",
+   "description": "Bmw e91 320i te koop in prima staat! M pakket",
+   "categorySpecificDescription": "Bmw e91 320i te koop in prima staat! M pakket",
+   "thinContent": true,
+   "priceInfo": {
+    "priceCents": 0,
+    "priceType": "FAST_BID"
+   },
+   "location": {
+    "cityName": "Sint-Niklaas",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "15 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/525b06d5-005a-411c-8f2a-42f869907cd8?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 27469597,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2008",
+     "values": [
+      "2008"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "143400",
+     "unit": "km",
+     "values": [
+      "143400"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Break",
+     "values": [
+      "Break"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Adaptive Cruise Control",
+     "values": [
+      "Adaptive Cruise Control",
+      "Cruise Control",
+      "Parkeersensor",
+      "Bi-Xenon koplampen",
+      "Elektrische ramen",
+      "Start-stop-systeem",
+      "Bochtverlichting",
+      "Radio",
+      "Lichtmetalen velgen",
+      "Elektrische buitenspiegels",
+      "Zetelverwarming",
+      "Regensensor",
+      "ABS",
+      "Centrale vergrendeling",
+      "Dakrails",
+      "Sportpakket",
+      "Adaptieve lichten",
+      "Automatische klimaatregeling",
+      "Airconditioning",
+      "Airbags"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "euronormBE",
+     "value": "Euro 5",
+     "values": [
+      "Euro 5"
+     ]
+    },
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "numberOfCilindersCars",
+     "value": "4 cilinders",
+     "values": [
+      "4 cilinders"
+     ]
+    },
+    {
+     "key": "upholstery",
+     "value": "Alcantara",
+     "values": [
+      "Alcantara"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/525b06d5-005a-411c-8f2a-42f869907cd8?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/525b06d5-005a-411c-8f2a-42f869907cd8?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/525b06d5-005a-411c-8f2a-42f869907cd8?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/525b06d5-005a-411c-8f2a-42f869907cd8?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/525b06d5-005a-411c-8f2a-42f869907cd8?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 3,
+      "height": 4
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2443119814-bmw-e91",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "E91"
+  },
+  {
+   "itemId": "m2415150799",
+   "title": "BMW 320iA SPORTLINE NAVI PROFF/INDIVIDUAL LEDER/FULL SERVICE",
+   "description": "Bmw 320i sportline in topstaat belgische wagen van 1ste eigenaar ongevalvrij volledig historiek-car pass deze wagen wordt verkocht met keuring voor verkoop 185pk automaat 06 2012 optie's 698 i",
+   "categorySpecificDescription": "Bmw 320i sportline in topstaat belgische wagen van 1ste eigenaar ongevalvrij volledig historiek-car pass deze wagen wordt verkocht met keuring voor verkoop 185pk automaat 06 2012 optie's 698 individual volleder 7ld electr lendensteun 2xe ledere...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 910000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Genk",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "21 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/f9fdad6c-57fb-4758-b3d5-3fe335774c5d?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 27454957,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "carPassUrl",
+     "value": "https://public.car-pass.be/vhr/83fe5c38-803a-4d72-b0f8-2c222fba2976",
+     "values": [
+      "https://public.car-pass.be/vhr/83fe5c38-803a-4d72-b0f8-2c222fba2976"
+     ]
+    },
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "194000",
+     "unit": "km",
+     "values": [
+      "194000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Automaat",
+     "values": [
+      "Automaat"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Parkeerassistent",
+     "values": [
+      "Parkeerassistent",
+      "Cruise Control",
+      "Climate control",
+      "Parkeersensor",
+      "Verwarmde buitenspiegels",
+      "Emergency brake assist",
+      "Sportstoelen",
+      "Lederen bekleding",
+      "Sportpakket",
+      "Airconditioning",
+      "Elektrische buitenspiegels",
+      "Zetelverwarming",
+      "Lichtsensor",
+      "Hill-Hold Control",
+      "LED verlichting"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "serviceHistory",
+     "value": "Dealer onderhouden",
+     "values": [
+      "Dealer onderhouden",
+      "Onderhoudsboekje"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Beige",
+     "values": [
+      "Beige"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Zwart",
+     "values": [
+      "Zwart"
+     ]
+    },
+    {
+     "key": "upholstery",
+     "value": "Leder",
+     "values": [
+      "Leder"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f9fdad6c-57fb-4758-b3d5-3fe335774c5d?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f9fdad6c-57fb-4758-b3d5-3fe335774c5d?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f9fdad6c-57fb-4758-b3d5-3fe335774c5d?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f9fdad6c-57fb-4758-b3d5-3fe335774c5d?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/f9fdad6c-57fb-4758-b3d5-3fe335774c5d?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 128,
+      "height": 59
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2415150799-bmw-320ia-sportline-navi-proff-individual-leder-full-service",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320iA SPORTLINE NAVI PROFF/INDIVIDUAL LEDER/FULL SERVICE"
+  },
+  {
+   "itemId": "m2433154456",
+   "title": "BMW 320i F30 Pack M",
+   "description": "Bmw série 3 f30 pack m je mets en vente ma bmw f30 pack m, en excellent état général. Le véhicule est très propre et a toujours été entretenu avec soin. Quelques légères imperfections de carrosserie, ",
+   "categorySpecificDescription": "Bmw série 3 f30 pack m je mets en vente ma bmw f30 pack m, en excellent état général. Le véhicule est très propre et a toujours été entretenu avec soin. Quelques légères imperfections de carrosserie, principalement visibles de près, sont à noter. Le contrôl...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 900000,
+    "priceType": "MIN_BID"
+   },
+   "location": {
+    "cityName": "Aubange",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "23 aug 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/19eba30f-c5a0-4419-9eb0-45cb3ae60d6b?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 34342869,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2012",
+     "values": [
+      "2012"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "227000",
+     "unit": "km",
+     "values": [
+      "227000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Berline",
+     "values": [
+      "Berline"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "driveTrain",
+     "value": "Achterwielaandrijving",
+     "values": [
+      "Achterwielaandrijving"
+     ]
+    },
+    {
+     "key": "interiorcolor",
+     "value": "Beige",
+     "values": [
+      "Beige"
+     ]
+    },
+    {
+     "key": "color",
+     "value": "Blauw",
+     "values": [
+      "Blauw"
+     ]
+    },
+    {
+     "key": "upholstery",
+     "value": "Leder",
+     "values": [
+      "Leder"
+     ]
+    }
+   ],
+   "traits": [
+    "PACKAGE_FREE"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/19eba30f-c5a0-4419-9eb0-45cb3ae60d6b?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/19eba30f-c5a0-4419-9eb0-45cb3ae60d6b?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/19eba30f-c5a0-4419-9eb0-45cb3ae60d6b?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/19eba30f-c5a0-4419-9eb0-45cb3ae60d6b?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/19eba30f-c5a0-4419-9eb0-45cb3ae60d6b?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 9,
+      "height": 16
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": false,
+   "vipUrl": "/v/auto-s/bmw/m2433154456-bmw-320i-f30-pack-m",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i F30 Pack M"
+  },
+  {
+   "itemId": "m2437562397",
+   "title": "BMW 320i coupe 2.0 - 143.000 km - benzine - pano - carpass-",
+   "description": "Bmw 320i coupé | 2008 | benzine | 143.000 Km | sportieve look op zoek naar een sportieve en stijlvolle bmw coupé? Dan is deze bmw 320i coupé zeker het bekijken waard! Specificaties & opties: ▪️ bm",
+   "categorySpecificDescription": "Bmw 320i coupé | 2008 | benzine | 143.000 Km | sportieve look op zoek naar een sportieve en stijlvolle bmw coupé? Dan is deze bmw 320i coupé zeker het bekijken waard! Specificaties & opties: ▪️ bmw 320i coupé ▪️ bouwjaar 2008 ▪️ 2.0 Benzine – 2000c...",
+   "thinContent": false,
+   "priceInfo": {
+    "priceCents": 649000,
+    "priceType": "FIXED"
+   },
+   "location": {
+    "cityName": "Oostende Zandvoorde +Oostende",
+    "countryName": "België",
+    "countryAbbreviation": "BE",
+    "distanceMeters": -1000,
+    "isBuyerLocation": false,
+    "onCountryLevel": false,
+    "abroad": false
+   },
+   "date": "28 sep 26",
+   "imageUrls": [
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/1f63b52b-c26d-4227-816d-77400447db15?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/975649d7-7343-4059-9d6f-1847ad5c293c?rule=ecg_mp_eps$_82.jpg",
+    "//images.2dehands.com/api/v1/hz-twh-pro-listing/images/676f5ec9-7a12-45f2-8134-97c4e5282ed7?rule=ecg_mp_eps$_82.jpg"
+   ],
+   "sellerInformation": {
+    "sellerId": 46502684,
+    "showSoiUrl": true,
+    "showWebsiteUrl": false,
+    "isVerified": false
+   },
+   "categoryId": 96,
+   "priorityProduct": "NONE",
+   "opvalStickerText": "",
+   "videoOnVip": false,
+   "urgencyFeatureActive": false,
+   "napAvailable": false,
+   "attributes": [
+    {
+     "key": "constructionYear",
+     "value": "2008",
+     "values": [
+      "2008"
+     ]
+    },
+    {
+     "key": "mileage",
+     "value": "143000",
+     "unit": "km",
+     "values": [
+      "143000"
+     ]
+    },
+    {
+     "key": "fuel",
+     "value": "Benzine",
+     "values": [
+      "Benzine"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "body",
+     "value": "Coupé",
+     "values": [
+      "Coupé"
+     ]
+    },
+    {
+     "key": "model",
+     "value": "3 Reeks",
+     "values": [
+      "3 Reeks"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Cruise Control",
+     "values": [
+      "Cruise Control"
+     ]
+    },
+    {
+     "key": "priceType",
+     "value": "Te koop",
+     "values": [
+      "Te koop"
+     ]
+    }
+   ],
+   "extendedAttributes": [
+    {
+     "key": "numberOfSeatsBE",
+     "value": "4 zetels",
+     "values": [
+      "4 zetels"
+     ]
+    },
+    {
+     "key": "advertiser",
+     "value": "Bedrijf",
+     "values": [
+      "Bedrijf"
+     ]
+    },
+    {
+     "key": "transmission",
+     "value": "Handgeschakeld",
+     "values": [
+      "Handgeschakeld"
+     ]
+    },
+    {
+     "key": "options",
+     "value": "Cruise Control",
+     "values": [
+      "Cruise Control"
+     ]
+    }
+   ],
+   "traits": [
+    "MICROTIP",
+    "EXTRA_BRANDING",
+    "VIP_MORE_FROM_THIS_SELLER",
+    "WARRANTY_LABEL",
+    "CALL_TRACKING",
+    "FINANCE_AVAILABLE",
+    "EXTERNAL_REVIEWS",
+    "VIDEO",
+    "AUTOMOTIVE_EXTENDED_ASQ",
+    "PROFILE_OPENING_HOURS",
+    "PACKAGE_FREE",
+    "URL",
+    "NO_COMMERCIAL_CONTENT",
+    "DEALER_ACCESS",
+    "EXTRA_IMAGES_SNIPPET",
+    "HIGHLIGHTS",
+    "CONTACT_SALES_REPRESENTATIVES",
+    "DELIVERY_PACKAGES",
+    "NO_RESPONSE_TIME_IN_VIP",
+    "COMPANY_PHOTO_AND_LOGO"
+   ],
+   "verticals": [
+    "cars",
+    "automotive",
+    "bmw"
+   ],
+   "pictures": [
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1f63b52b-c26d-4227-816d-77400447db15?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1f63b52b-c26d-4227-816d-77400447db15?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1f63b52b-c26d-4227-816d-77400447db15?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1f63b52b-c26d-4227-816d-77400447db15?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/1f63b52b-c26d-4227-816d-77400447db15?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 803,
+      "height": 602
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/975649d7-7343-4059-9d6f-1847ad5c293c?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/975649d7-7343-4059-9d6f-1847ad5c293c?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/975649d7-7343-4059-9d6f-1847ad5c293c?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/975649d7-7343-4059-9d6f-1847ad5c293c?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/975649d7-7343-4059-9d6f-1847ad5c293c?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 803,
+      "height": 602
+     }
+    },
+    {
+     "id": 0,
+     "mediaId": "",
+     "url": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/676f5ec9-7a12-45f2-8134-97c4e5282ed7?rule=ecg_mp_eps$_#.jpg",
+     "extraSmallUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/676f5ec9-7a12-45f2-8134-97c4e5282ed7?rule=ecg_mp_eps$_14.jpg",
+     "mediumUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/676f5ec9-7a12-45f2-8134-97c4e5282ed7?rule=ecg_mp_eps$_82.jpg",
+     "largeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/676f5ec9-7a12-45f2-8134-97c4e5282ed7?rule=ecg_mp_eps$_83.jpg",
+     "extraExtraLargeUrl": "https://images.2dehands.com/api/v1/hz-twh-pro-listing/images/676f5ec9-7a12-45f2-8134-97c4e5282ed7?rule=ecg_mp_eps$_85.jpg",
+     "aspectRatio": {
+      "width": 803,
+      "height": 602
+     }
+    }
+   ],
+   "searchType": "TokenMatch",
+   "reserved": true,
+   "vipUrl": "/v/auto-s/bmw/m2437562397-bmw-320i-coupe-2-0-143-000-km-benzine-pano-carpass",
+   "shortTitle": "BMW 3 Reeks",
+   "displayTitle": "320i coupe 2.0 - 143.000 km - benzine - pano - carpass-"
+  }
+ ],
+ "totalResultCount": 26,
+ "maxAllowedPageNumber": 1,
+ "correlationId": "6684a89f-907d-4329-905f-2da9383d43ac",
+ "originalQuery": "320i",
+ "sortOptions": [
+  {
+   "sortBy": "OPTIMIZED",
+   "sortOrder": "DECREASING"
+  },
+  {
+   "sortBy": "SORT_INDEX",
+   "sortOrder": "DECREASING"
+  },
+  {
+   "sortBy": "SORT_INDEX",
+   "sortOrder": "INCREASING"
+  },
+  {
+   "sortBy": "PRICE",
+   "sortOrder": "INCREASING"
+  },
+  {
+   "sortBy": "PRICE",
+   "sortOrder": "DECREASING"
+  },
+  {
+   "sortBy": "ATTRIBUTE",
+   "sortOrder": "DECREASING",
+   "sortAttribute": "constructionYear"
+  },
+  {
+   "sortBy": "ATTRIBUTE",
+   "sortOrder": "INCREASING",
+   "sortAttribute": "constructionYear"
+  },
+  {
+   "sortBy": "ATTRIBUTE",
+   "sortOrder": "INCREASING",
+   "sortAttribute": "mileage"
+  },
+  {
+   "sortBy": "ATTRIBUTE",
+   "sortOrder": "DECREASING",
+   "sortAttribute": "mileage"
+  }
+ ],
+ "isSearchSaved": false,
+ "hasErrors": false,
+ "alternativeLocales": [
+  {
+   "locale": "fr-BE",
+   "selectedAttributes": [
+    {
+     "attributeKey": "priceType",
+     "attributeValueKey": "Vraagprijs",
+     "attributeValueLabel": "Achat"
+    }
+   ],
+   "category": {
+    "name": "Autos",
+    "fullName": "Autos"
+   }
+  }
+ ],
+ "searchRequest": {
+  "originalRequest": {
+   "categories": {
+    "l1Category": {
+     "id": 91,
+     "key": "auto-s",
+     "fullName": "Auto's"
+    }
+   },
+   "searchQuery": "320i",
+   "attributes": {
+    "undefined": [
+     {
+      "attributeValueId": 10882
+     }
+    ],
+    "model": [
+     {
+      "attributeValueKey": "3-Serie"
+     }
+    ]
+   },
+   "attributesById": [
+    10882
+   ],
+   "attributesByKey": [
+    {
+     "attributeKey": "model",
+     "attributeValueKey": "3-Serie"
+    }
+   ],
+   "attributeRanges": [
+    {
+     "attributeKey": "constructionYear",
+     "from": 2008,
+     "to": 2014
+    }
+   ],
+   "attributeLabels": [
+    null,
+    null
+   ],
+   "sortOptions": {
+    "sortBy": "",
+    "sortOrder": "",
+    "sortAttribute": ""
+   },
+   "pagination": {
+    "offset": 0,
+    "limit": 30
+   },
+   "distance": {
+    "postcode": ""
+   },
+   "viewOptions": {
+    "kind": "list-view"
+   },
+   "bypassSpellingSuggestion": false
+  },
+  "categories": {
+   "l1Category": {
+    "id": 91,
+    "key": "auto-s",
+    "fullName": "Auto's"
+   }
+  },
+  "searchQuery": "320i",
+  "attributes": {
+   "undefined": [
+    {
+     "attributeValueId": 10882
+    }
+   ],
+   "model": [
+    {
+     "attributeValueKey": "3-Serie"
+    }
+   ]
+  },
+  "attributesById": [
+   10882
+  ],
+  "attributesByKey": [
+   {
+    "attributeKey": "model",
+    "attributeValueKey": "3-Serie"
+   }
+  ],
+  "attributeRanges": [
+   {
+    "attributeKey": "constructionYear",
+    "from": 2008,
+    "to": 2014
+   }
+  ],
+  "attributeLabels": [
+   null,
+   null
+  ],
+  "sortOptions": {
+   "sortBy": "",
+   "sortOrder": "",
+   "sortAttribute": ""
+  },
+  "pagination": {
+   "offset": 0,
+   "limit": 30
+  },
+  "distance": {
+   "postcode": ""
+  },
+  "viewOptions": {
+   "kind": "list-view"
+  },
+  "bypassSpellingSuggestion": false
+ },
+ "showSuggestionTooltip": false,
+ "showAttributeTooltip": false,
+ "searchCategory": 91
+}

@@ -22,19 +22,47 @@ _NEXT_DATA_RE = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re
 _KW_RE = re.compile(r"(\d+)\s*kW")
 _INT_RE = re.compile(r"\d+")
 
-GEARBOX = {"Schaltgetriebe": "manual", "Automatik": "automatic", "Halbautomatik": "semi-automatic"}
+# German, Dutch, Italian and French labels (the .de/.nl/.be/.it sites localise these)
+GEARBOX = {
+    "Schaltgetriebe": "manual",
+    "Automatik": "automatic",
+    "Halbautomatik": "semi-automatic",
+    "Handgeschakeld": "manual",
+    "Automaat": "automatic",
+    "Semi-automaat": "semi-automatic",
+    "Manuale": "manual",
+    "Automatico": "automatic",
+    "Semiautomatico": "semi-automatic",
+    "Manuelle": "manual",
+    "Automatique": "automatic",
+}
 FUEL = {
     "Benzin": "petrol",
+    "Benzine": "petrol",
+    "Benzina": "petrol",
+    "Essence": "petrol",
     "Diesel": "diesel",
     "Elektro": "electric",
+    "Elektrisch": "electric",
+    "Elettrica": "electric",
+    "Électrique": "electric",
     "Elektro/Benzin": "hybrid-petrol",
     "Elektro/Diesel": "hybrid-diesel",
     "Autogas (LPG)": "lpg",
+    "LPG": "lpg",
+    "GPL": "lpg",
     "Erdgas (CNG)": "cng",
+    "CNG": "cng",
+    "Metano": "cng",
 }
 BODY = {
     "Limousine": "sedan",
+    "Sedan": "sedan",
+    "Berlina": "sedan",
     "Kombi": "estate",
+    "Stationwagen": "estate",
+    "Station Wagon": "estate",
+    "Break": "estate",
     "Touring": "estate",
     "Coupé": "coupe",
     "Cabrio": "convertible",
@@ -45,10 +73,13 @@ BODY = {
 }
 
 
+CLIENT_SIDE_PARAMS = ("path", "models", "motor_regex")
+
+
 def build_search_url(params: dict[str, Any], page: int, origin: str = ORIGIN) -> str:
     """`params` mirrors the AutoScout24 query string (see docs). `path` picks the list page."""
     path = params.get("path", "/lst")
-    query = {k: v for k, v in params.items() if k != "path"}
+    query = {k: v for k, v in params.items() if k not in CLIENT_SIDE_PARAMS}
     query.setdefault("atype", "C")
     query.setdefault("damaged_listing", "exclude")
     query.setdefault("sort", "age")
@@ -109,6 +140,8 @@ class AutoScout24DE:
     # ---- search -----------------------------------------------------------------------
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         seen: dict[str, RawListing] = {}
+        models = {str(m).lower() for m in params.get("models") or []}
+        motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
         page, total_pages = 1, 1
         while page <= min(total_pages, MAX_PAGES):
             url = build_search_url(params, page, origin=self.origin)
@@ -124,6 +157,11 @@ class AutoScout24DE:
             for item in listings:
                 lid = item.get("id")
                 if not lid or lid in seen:
+                    continue
+                veh = item.get("vehicle") or {}
+                if models and str(veh.get("model") or "").lower() not in models:
+                    continue
+                if motor and not motor.search(veh.get("modelVersionInput") or ""):
                     continue
                 seen[lid] = RawListing(
                     source=self.name,
@@ -189,7 +227,7 @@ class AutoScout24DE:
             source_listing_id=raw.source_listing_id,
             url=raw.url,
             make=veh.get("make") or dveh.get("make") or "",
-            model=veh.get("motorTypeName") or dveh.get("motorTypeName") or veh.get("model") or "",
+            model=_model_name(veh, dveh),
             variant=veh.get("modelVersionInput") or dveh.get("modelVersionInput"),
             body_type=BODY.get(body_src, body_src.lower() if body_src else None),
             fuel=FUEL.get(fuel_src, fuel_src.lower() if fuel_src else None),
@@ -216,6 +254,21 @@ class AutoScout24DE:
         )
 
 
+def _model_name(veh: dict[str, Any], dveh: dict[str, Any]) -> str:
+    """'320i' from motorTypeName; on .it that is null, so derive it from the version string."""
+    name = veh.get("motorTypeName") or dveh.get("motorTypeName")
+    if name:
+        return str(name)
+    m = re.search(r"\b(\d{3}[a-z]{1,2})\b", veh.get("modelVersionInput") or "", re.I)
+    if m:
+        return m.group(1).lower()
+    model = str(veh.get("model") or dveh.get("model") or "")
+    fuel = (veh.get("fuel") or "").lower()
+    if model.isdigit() and fuel in ("benzin", "benzina", "benzine", "essence", "petrol"):
+        return model + "i"
+    return model
+
+
 def _kw(s: str | None) -> int | None:
     m = _KW_RE.search(s or "")
     return int(m.group(1)) if m else None
@@ -227,5 +280,19 @@ class AutoScout24NL(AutoScout24DE):
     origin = "https://www.autoscout24.nl"
 
 
+class AutoScout24BE(AutoScout24DE):
+    name = "autoscout24_be"
+    country = "BE"
+    origin = "https://www.autoscout24.be"
+
+
+class AutoScout24IT(AutoScout24DE):
+    name = "autoscout24_it"
+    country = "IT"
+    origin = "https://www.autoscout24.it"
+
+
 register(AutoScout24DE())
 register(AutoScout24NL())
+register(AutoScout24BE())
+register(AutoScout24IT())

@@ -3,8 +3,17 @@
 import re
 from typing import Any
 
-PHONE_RE = re.compile(r"(?<!\d)(\+?\d[\d \-/().]{6,}\d)(?!\d)")
+# A phone number: 8+ digits with optional separators, not a price/mileage/power figure.
+PHONE_RE = re.compile(
+    r"(?<![\d.,])(\+?\d[\d \-/().]{6,}\d)(?![\d.,]*\s*(?:€|eur|km|kr|mil|cv|kw|hk|pk|ps|cc|cm)\b)",
+    re.I,
+)
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+
+
+def _phone_sub(m: re.Match[str]) -> str:
+    return "[removed]" if sum(ch.isdigit() for ch in m.group(1)) >= 8 else m.group(1)
+
 
 # keys removed for every seller type (a dealer's contact person is a person too)
 ALWAYS_DROP = {"phones", "contactName", "whatsappNumber", "phone", "email", "licensePlate"}
@@ -15,7 +24,7 @@ PRIVATE_DROP = {"street", "latitude", "longitude", "name", "companyName"}
 def scrub_text(text: str | None) -> str | None:
     if not text:
         return text
-    text = PHONE_RE.sub("[removed]", text)
+    text = PHONE_RE.sub(_phone_sub, text)
     return EMAIL_RE.sub("[removed]", text)
 
 
