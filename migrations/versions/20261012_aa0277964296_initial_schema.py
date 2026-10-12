@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 5012c3a1ecf8
+Revision ID: aa0277964296
 Revises:
-Create Date: 2026-10-12 20:46:33.074261
+Create Date: 2026-10-12 23:01:39.537637
 """
 
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "5012c3a1ecf8"
+revision: str = "aa0277964296"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -95,6 +95,59 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("username"),
+    )
+    op.create_table(
+        "deals",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("listing_id", sa.Integer(), nullable=False),
+        sa.Column("owner_id", sa.Integer(), nullable=False),
+        sa.Column(
+            "stage",
+            sa.Enum(
+                "spotted",
+                "contacted",
+                "inspected",
+                "bought",
+                "imported",
+                "listed",
+                "sold",
+                "dropped",
+                name="deal_stage",
+                native_enum=False,
+                length=16,
+            ),
+            nullable=False,
+        ),
+        sa.Column("notes", sa.Text(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("stage_changed_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("est_price_eur", sa.Integer(), nullable=False),
+        sa.Column("est_landed_cost_eur", sa.Integer(), nullable=True),
+        sa.Column("est_bpm_eur", sa.Integer(), nullable=True),
+        sa.Column("est_transport_eur", sa.Integer(), nullable=True),
+        sa.Column("est_fees_eur", sa.Integer(), nullable=True),
+        sa.Column("est_nl_value_eur", sa.Integer(), nullable=True),
+        sa.Column("est_nl_asking_median_eur", sa.Integer(), nullable=True),
+        sa.Column("est_spread_eur", sa.Integer(), nullable=True),
+        sa.Column("purchase_price_eur", sa.Integer(), nullable=True),
+        sa.Column("transport_eur", sa.Integer(), nullable=True),
+        sa.Column("bpm_eur", sa.Integer(), nullable=True),
+        sa.Column("fees_eur", sa.Integer(), nullable=True),
+        sa.Column("repairs_eur", sa.Integer(), nullable=True),
+        sa.Column("other_eur", sa.Integer(), nullable=True),
+        sa.Column("listed_price_eur", sa.Integer(), nullable=True),
+        sa.Column("sale_price_eur", sa.Integer(), nullable=True),
+        sa.Column("bought_at", sa.Date(), nullable=True),
+        sa.Column("listed_at", sa.Date(), nullable=True),
+        sa.Column("sold_at", sa.Date(), nullable=True),
+        sa.ForeignKeyConstraint(["listing_id"], ["listings.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["owner_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("listing_id"),
     )
     op.create_table(
         "price_history",
@@ -219,6 +272,40 @@ def upgrade() -> None:
         op.f("ix_comparables_saved_search_id"), "comparables", ["saved_search_id"], unique=False
     )
     op.create_table(
+        "deal_events",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("deal_id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=True),
+        sa.Column("at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("kind", sa.String(length=16), nullable=False),
+        sa.Column(
+            "stage",
+            sa.Enum(
+                "spotted",
+                "contacted",
+                "inspected",
+                "bought",
+                "imported",
+                "listed",
+                "sold",
+                "dropped",
+                name="deal_stage",
+                native_enum=False,
+                length=16,
+            ),
+            nullable=True,
+        ),
+        sa.Column("note", sa.Text(), nullable=True),
+        sa.Column("changes", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.ForeignKeyConstraint(["deal_id"], ["deals.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_deal_events_deal_id"), "deal_events", ["deal_id"], unique=False)
+    op.create_table(
         "listing_searches",
         sa.Column("listing_id", sa.Integer(), nullable=False),
         sa.Column("saved_search_id", sa.Integer(), nullable=False),
@@ -258,6 +345,8 @@ def downgrade() -> None:
     op.drop_index("ix_scrape_runs_source_started", table_name="scrape_runs")
     op.drop_table("scrape_runs")
     op.drop_table("listing_searches")
+    op.drop_index(op.f("ix_deal_events_deal_id"), table_name="deal_events")
+    op.drop_table("deal_events")
     op.drop_index(op.f("ix_comparables_saved_search_id"), table_name="comparables")
     op.drop_index("ix_comparables_model", table_name="comparables")
     op.drop_table("comparables")
@@ -266,6 +355,7 @@ def downgrade() -> None:
     op.drop_table("saved_searches")
     op.drop_index(op.f("ix_price_history_listing_id"), table_name="price_history")
     op.drop_table("price_history")
+    op.drop_table("deals")
     op.drop_table("users")
     op.drop_index(op.f("ix_listings_spread_eur"), table_name="listings")
     op.drop_index("ix_listings_make_model", table_name="listings")

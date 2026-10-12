@@ -23,6 +23,14 @@
         {% if l.vat_deductible %}<span class="text-xs font-normal text-slate-500">VAT deductible</span>{% endif %}</p>
       {% if not l.is_active %}<p class="mt-1 text-sm font-semibold text-red-600">No longer listed (last seen {{ l.last_seen|timeago }})</p>{% endif %}
       <div class="mt-3">{% include "listings/_status.html" %}</div>
+      <div class="mt-3">
+        {% if deal %}
+        <a href="/deals/{{ deal.id }}" class="inline-block rounded bg-indigo-600 px-3 py-1 text-sm font-medium text-white">Deal: {{ deal.stage.value }} · {{ deal.owner.username }} →</a>
+        {% else %}
+        <form method="post" action="/deals" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="listing_id" value="{{ l.id }}">
+          <button class="rounded border border-indigo-600 px-3 py-1 text-sm font-medium text-indigo-700">Track as deal</button></form>
+        {% endif %}
+      </div>
       <a href="{{ l.url }}" target="_blank" rel="noopener"
          class="mt-4 block rounded bg-slate-900 py-2 text-center font-medium text-white">Open original ad ↗</a>
       {% if l.duplicates or l.duplicate_of %}

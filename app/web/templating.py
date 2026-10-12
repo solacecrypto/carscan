@@ -3,18 +3,23 @@ from pathlib import Path
 
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
+from jinja2 import Undefined
 
 from app.web.deps import csrf_token
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-def eur(value: int | None) -> str:
-    return "–" if value is None else f"€ {value:,.0f}".replace(",", ".")
+def eur(value: int | float | None | Undefined) -> str:
+    if value is None or isinstance(value, Undefined):
+        return "–"
+    return f"€ {value:,.0f}".replace(",", ".")
 
 
-def km(value: int | None) -> str:
-    return "–" if value is None else f"{value:,.0f} km".replace(",", ".")
+def km(value: int | float | None | Undefined) -> str:
+    if value is None or isinstance(value, Undefined):
+        return "–"
+    return f"{value:,.0f} km".replace(",", ".")
 
 
 def month(value: datetime | None) -> str:

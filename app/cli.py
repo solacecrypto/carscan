@@ -329,6 +329,26 @@ def searches_seed_phase4(
     typer.echo(f"created {created} searches")
 
 
+@app.command("calibrate")
+def calibrate_cmd(as_json: bool = typer.Option(False, "--json")) -> None:
+    """Compare estimates with logged actuals and print suggested costs.yaml values."""
+    import json
+
+    from app.db import db_session
+    from app.deals import calibrate
+
+    with db_session() as s:
+        report = calibrate(s)
+    if as_json:
+        typer.echo(json.dumps(report.as_dict(), indent=2, default=str))
+        return
+    typer.echo(f"{report.deals_bought} bought, {report.deals_sold} sold")
+    for m in report.metrics:
+        typer.echo(
+            f"- {m.name} (n={m.n}): estimated {m.estimated} / actual {m.actual} -> {m.suggestion}"
+        )
+
+
 @dedup.command("run")
 def dedup_run() -> None:
     """Re-link duplicates across sources for all active listings."""

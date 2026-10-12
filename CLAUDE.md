@@ -127,6 +127,15 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Phase 5 status (2026-10-12)
+
+Deal pipeline done: `deals` + `deal_events` tables, `app/deals/` (service + calibration).
+Stages spotted → contacted → inspected → bought → imported → listed → sold, plus dropped.
+Estimates are frozen on the deal at creation (`est_*`), actuals logged on the deal page,
+alert status contacted/passed advances/drops an existing deal, group Telegram message on
+bought/sold (`notify_group`). `/deals`, `/deals/{id}`, `/calibration`, `carscan calibrate`.
+Calibration only suggests costs.yaml values; nothing is applied automatically.
+
 ## Phase 4 status (2026-10-12)
 
 Added sources (plain HTTP): `autoscout24_be`, `autoscout24_it` (client-side `models` filter),

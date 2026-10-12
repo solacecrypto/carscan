@@ -46,6 +46,7 @@ docker compose exec web carscan costs show 6000 --first-registration 2012-06-01 
 docker compose exec web carscan costs recompute      # after editing costs.yaml
 docker compose exec web carscan values recompute     # NL value + spread
 docker compose exec web carscan dedup run            # re-link the same car across sources
+docker compose exec web carscan calibrate            # estimates vs logged actuals, suggested costs.yaml values
 docker compose logs -f worker
 ```
 

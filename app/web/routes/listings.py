@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.db import Alert, AlertStatus, Comparable, Listing
+from app.deals import get_deal_for_listing, sync_from_alert_status
 from app.storage.filters import apply_sql
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -146,6 +147,7 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "title": listing.make + " " + listing.model,
             "listing": listing,
             "nearest": [comps[i] for i in nearest_ids if i in comps],
+            "deal": get_deal_for_listing(db, listing.id),
         },
     )
 
@@ -176,6 +178,7 @@ def listing_set_status(
         alert.status_changed_at = now
         if alert.telegram_message_id:
             alert.message_synced = False  # the worker edits the Telegram message
+    sync_from_alert_status(db, listing.id, new_status.value, user, now)
     db.flush()
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse(request, "listings/_status.html", {"listing": listing})

@@ -16,6 +16,7 @@ from telegram.error import TelegramError
 
 from app.alerts.queue import pending_alerts
 from app.db import Alert, AlertStatus, Listing, User, db_session
+from app.deals import sync_from_alert_status
 
 log = structlog.get_logger()
 
@@ -248,6 +249,7 @@ def apply_button(data: str, telegram_username: str | None) -> tuple[int | None, 
         alert.claimed_by = user if new_status is not AlertStatus.new else None
         alert.status_changed_at = datetime.now(UTC)
         alert.message_synced = False
+        sync_from_alert_status(s, alert.listing_id, new_status.value, user, alert.status_changed_at)
         return alert_id, f"{new_status.value} ✓" if new_status is not AlertStatus.new else "reset ✓"
 
 

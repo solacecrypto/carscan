@@ -38,6 +38,17 @@ class AlertStatus(enum.StrEnum):
     contacted = "contacted"
 
 
+class DealStage(enum.StrEnum):
+    spotted = "spotted"
+    contacted = "contacted"
+    inspected = "inspected"
+    bought = "bought"
+    imported = "imported"
+    listed = "listed"
+    sold = "sold"
+    dropped = "dropped"
+
+
 class ScrapeStatus(enum.StrEnum):
     running = "running"
     ok = "ok"
@@ -250,6 +261,99 @@ class Comparable(Base):
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class Deal(Base):
+    """A car someone is actually working on: pipeline stage, actual costs, outcome."""
+
+    __tablename__ = "deals"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    listing_id: Mapped[int] = mapped_column(
+        ForeignKey("listings.id", ondelete="CASCADE"), unique=True
+    )
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    stage: Mapped[DealStage] = mapped_column(
+        _enum(DealStage, "deal_stage"), default=DealStage.spotted
+    )
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    stage_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    # estimates frozen at creation time, for calibration later
+    est_price_eur: Mapped[int] = mapped_column(Integer)
+    est_landed_cost_eur: Mapped[int | None] = mapped_column(Integer)
+    est_bpm_eur: Mapped[int | None] = mapped_column(Integer)
+    est_transport_eur: Mapped[int | None] = mapped_column(Integer)
+    est_fees_eur: Mapped[int | None] = mapped_column(Integer)
+    est_nl_value_eur: Mapped[int | None] = mapped_column(Integer)
+    est_nl_asking_median_eur: Mapped[int | None] = mapped_column(Integer)
+    est_spread_eur: Mapped[int | None] = mapped_column(Integer)
+
+    # actuals, all whole euros
+    purchase_price_eur: Mapped[int | None] = mapped_column(Integer)
+    transport_eur: Mapped[int | None] = mapped_column(Integer)
+    bpm_eur: Mapped[int | None] = mapped_column(Integer)
+    fees_eur: Mapped[int | None] = mapped_column(Integer)
+    repairs_eur: Mapped[int | None] = mapped_column(Integer)
+    other_eur: Mapped[int | None] = mapped_column(Integer)
+    listed_price_eur: Mapped[int | None] = mapped_column(Integer)
+    sale_price_eur: Mapped[int | None] = mapped_column(Integer)
+    bought_at: Mapped[date | None] = mapped_column(Date)
+    listed_at: Mapped[date | None] = mapped_column(Date)
+    sold_at: Mapped[date | None] = mapped_column(Date)
+
+    listing: Mapped[Listing] = relationship()
+    owner: Mapped[User] = relationship()
+    events: Mapped[list[DealEvent]] = relationship(
+        back_populates="deal", cascade="all, delete-orphan", order_by="DealEvent.at"
+    )
+
+    @property
+    def actual_landed_cost_eur(self) -> int | None:
+        if self.purchase_price_eur is None:
+            return None
+        return self.purchase_price_eur + sum(
+            x or 0 for x in (self.transport_eur, self.bpm_eur, self.fees_eur)
+        )
+
+    @property
+    def total_cost_eur(self) -> int | None:
+        landed = self.actual_landed_cost_eur
+        if landed is None:
+            return None
+        return landed + (self.repairs_eur or 0) + (self.other_eur or 0)
+
+    @property
+    def profit_eur(self) -> int | None:
+        total = self.total_cost_eur
+        if total is None or self.sale_price_eur is None:
+            return None
+        return self.sale_price_eur - total
+
+    @property
+    def days_to_sell(self) -> int | None:
+        start = self.listed_at or self.bought_at
+        if start is None or self.sold_at is None:
+            return None
+        return (self.sold_at - start).days
+
+
+class DealEvent(Base):
+    __tablename__ = "deal_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    deal_id: Mapped[int] = mapped_column(ForeignKey("deals.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    kind: Mapped[str] = mapped_column(String(16))  # created | stage | actuals | note
+    stage: Mapped[DealStage | None] = mapped_column(_enum(DealStage, "deal_stage"))
+    note: Mapped[str | None] = mapped_column(Text)
+    changes: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+
+    deal: Mapped[Deal] = relationship(back_populates="events")
+    user: Mapped[User | None] = relationship()
 
 
 class ScrapeRun(Base):

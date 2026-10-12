@@ -6,7 +6,7 @@ from app.config import get_settings
 from app.db import User, get_sessionmaker
 from app.logging import configure_logging
 from app.web.deps import LoginRequired, login_required_handler
-from app.web.routes import auth, listings, searches, status
+from app.web.routes import auth, deals, listings, searches, status
 from app.web.templating import TEMPLATES_DIR
 
 
@@ -46,6 +46,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth.router)
     app.include_router(listings.router)
+    app.include_router(deals.router)
     app.include_router(searches.router)
     app.include_router(status.router)
     assert TEMPLATES_DIR.exists()
