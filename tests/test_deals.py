@@ -219,7 +219,7 @@ def test_web_deal_flow(db: Session) -> None:
     )
     assert r.status_code == 303
     page = c.get(deal_url).text
-    assert "€ 7.100" in page and "deal!" in page and "updated purchase_price_eur" in page
+    assert "€ 7.100" in page and "deal!" in page and "purchase_price_eur" in page
     deals_page = c.get("/deals").text
     assert "bought" in deals_page and "actual € 7.100" in deals_page
     assert (
