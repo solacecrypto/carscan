@@ -127,6 +127,16 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Phase 4 status (2026-10-12)
+
+Added sources (plain HTTP): `autoscout24_be`, `autoscout24_it` (client-side `models` filter),
+`tweedehands_be`, `kleinanzeigen` (HTML), `automobile_it`, `bytbil` (SEK via `fx:` in
+costs.yaml). `subito` is implemented and fixture-tested but **DataDome blocks non-browser TLS**;
+`mobile.de`, `gocar.be`, `blocket.se`, `kvd.se` are not implemented (see
+`docs/sources/phase4_investigation.md`). Every scraper declares `headers` (Accept-Language).
+Cross-source dedup in `app/storage/dedup.py` (`docs/dedup.md`): `listings.duplicate_of_id`,
+duplicates hidden by default and never alerted. `carscan searches seed-phase4`, `carscan dedup run`.
+
 ## Phase 3 status (2026-10-12)
 
 NL comparables and spread done: scrapers `autoscout24_nl`, `marktplaats` (internal JSON API),

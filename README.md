@@ -27,6 +27,7 @@ Create a login and the first saved search (in a second terminal):
 docker compose exec web carscan users create quinten
 docker compose exec web carscan searches seed --owner quinten
 docker compose exec web carscan searches seed-comparables --owner quinten   # NL asking prices for valuation
+docker compose exec web carscan searches seed-phase4 --owner quinten        # BE, IT, Kleinanzeigen, Bytbil deal searches
 ```
 
 Run the scraper by hand instead of waiting for the schedule:
@@ -44,6 +45,7 @@ docker compose exec web carscan searches list
 docker compose exec web carscan costs show 6000 --first-registration 2012-06-01 --co2 158
 docker compose exec web carscan costs recompute      # after editing costs.yaml
 docker compose exec web carscan values recompute     # NL value + spread
+docker compose exec web carscan dedup run            # re-link the same car across sources
 docker compose logs -f worker
 ```
 
@@ -170,6 +172,7 @@ server$ docker compose -f docker-compose.yml exec web carscan users create quint
 server$ docker compose -f docker-compose.yml exec web carscan users create friend1 --telegram-username theirhandle
 server$ docker compose -f docker-compose.yml exec web carscan searches seed --owner quinten
 server$ docker compose -f docker-compose.yml exec web carscan searches seed-comparables --owner quinten
+server$ docker compose -f docker-compose.yml exec web carscan searches seed-phase4 --owner quinten
 ```
 
 `--telegram-username` is the person's Telegram @handle (without the @). It is what links a
