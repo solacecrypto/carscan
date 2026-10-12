@@ -21,8 +21,11 @@ SORTS = {
     "mileage": Listing.mileage_km.asc().nulls_last(),
     "year_desc": Listing.first_registration.desc().nulls_last(),
     "price_change": Listing.price_changed_at.desc().nulls_last(),
+    "landed_asc": Listing.landed_cost_eur.asc().nulls_last(),
 }
-SortKey = Literal["newest", "price_asc", "price_desc", "mileage", "year_desc", "price_change"]
+SortKey = Literal[
+    "newest", "price_asc", "price_desc", "mileage", "year_desc", "price_change", "landed_asc"
+]
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -33,6 +36,7 @@ def listings_index(
     user: CurrentUser,
     price_min: int | None = Query(None, ge=0),
     price_max: int | None = Query(None, ge=0),
+    landed_max: int | None = Query(None, ge=0),
     mileage_max: int | None = Query(None, ge=0),
     year_min: int | None = Query(None, ge=1990),
     year_max: int | None = Query(None, ge=1990),
@@ -48,6 +52,7 @@ def listings_index(
     filters = {
         "price_min": price_min,
         "price_max": price_max,
+        "landed_max": landed_max,
         "mileage_max": mileage_max,
         "year_min": year_min,
         "year_max": year_max,

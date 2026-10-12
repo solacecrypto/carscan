@@ -29,7 +29,7 @@
     <p class="text-xs text-slate-500">Only listings passing these get a Telegram alert. All listings are still stored.</p>
     <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
       {% set fv = search.filters if search else {} %}
-      {% for key in ['price_min', 'price_max', 'mileage_max', 'year_min', 'year_max'] %}
+      {% for key in ['price_min', 'price_max', 'landed_max', 'mileage_max', 'year_min', 'year_max'] %}
       <label class="block text-sm">{{ key.replace('_', ' ') }}
         <input type="number" name="f_{{ key }}" value="{{ fv.get(key, '') }}" class="mt-1 w-full rounded border border-slate-300 p-1.5"></label>
       {% endfor %}

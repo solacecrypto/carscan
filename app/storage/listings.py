@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.costs import get_cost_config, landed_cost
 from app.db.models import Listing, PriceHistory, SavedSearch
 from app.normalize.schema import NormalizedListing
 
@@ -49,6 +50,38 @@ _UPDATABLE = (
 )
 
 
+def apply_costs(row: Listing, today: datetime) -> None:
+    """(Re)compute the landed-cost estimate for one listing from its current fields."""
+    lc = landed_cost(
+        price_eur=row.price_eur,
+        country=row.country,
+        first_registration=row.first_registration,
+        co2_g_km=row.co2_g_km,
+        fuel=row.fuel,
+        make=row.make,
+        model=row.model,
+        today=today.date(),
+    )
+    row.landed_cost_eur = lc.total_eur
+    row.bpm_eur = lc.bpm_eur
+    row.cost_breakdown = lc.as_dict()
+    row.cost_version = lc.config_version
+
+
+def recompute_costs(session: Session, now: datetime, only_stale: bool = False) -> int:
+    """Recompute every listing (or only those computed with an older costs.yaml version)."""
+    stmt = select(Listing)
+    if only_stale:
+        version = get_cost_config().version
+        stmt = stmt.where((Listing.cost_version.is_(None)) | (Listing.cost_version != version))
+    n = 0
+    for row in session.scalars(stmt):
+        apply_costs(row, now)
+        n += 1
+    session.flush()
+    return n
+
+
 def upsert_listings(
     session: Session, items: list[NormalizedListing], saved_search: SavedSearch, now: datetime
 ) -> UpsertResult:
@@ -69,6 +102,7 @@ def upsert_listings(
             row = Listing(**item.model_dump(), first_seen=now, last_seen=now, is_active=True)
             row.price_history.append(PriceHistory(price_eur=item.price_eur, seen_at=now))
             row.saved_searches.append(saved_search)
+            apply_costs(row, now)
             session.add(row)
             result.new.append(row)
             continue
@@ -103,6 +137,7 @@ def upsert_listings(
                 result.price_raised.append(row)
         else:
             result.unchanged += 1
+        apply_costs(row, now)
     session.flush()
     return result
 

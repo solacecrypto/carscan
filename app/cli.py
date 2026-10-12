@@ -7,6 +7,8 @@ app = typer.Typer(no_args_is_help=True, help="Car Scanner admin commands")
 users = typer.Typer(no_args_is_help=True, help="Manage login accounts")
 searches = typer.Typer(no_args_is_help=True, help="Manage saved searches")
 scrape = typer.Typer(no_args_is_help=True, help="Run scrapers")
+costs = typer.Typer(no_args_is_help=True, help="Landed-cost estimates")
+app.add_typer(costs, name="costs")
 app.add_typer(users, name="users")
 app.add_typer(searches, name="searches")
 app.add_typer(scrape, name="scrape")
@@ -157,6 +159,50 @@ def scrape_run(
             f"drops={r.price_dropped} deactivated={r.deactivated} alerts={r.alerts_queued}"
             + (f" error={r.error}" if r.error else "")
         )
+
+
+@costs.command("recompute")
+def costs_recompute(
+    only_stale: bool = typer.Option(
+        False, "--only-stale", help="only listings computed with an older costs.yaml"
+    ),
+) -> None:
+    """Recompute landed costs for stored listings (run after editing costs.yaml)."""
+    from datetime import UTC, datetime
+
+    from app.db import db_session
+    from app.storage import recompute_costs
+
+    with db_session() as s:
+        n = recompute_costs(s, datetime.now(UTC), only_stale=only_stale)
+    typer.echo(f"recomputed {n} listings")
+
+
+@costs.command("show")
+def costs_show(
+    price: int,
+    first_registration: str = typer.Option(..., help="YYYY-MM-DD"),
+    co2: int | None = typer.Option(None, help="NEDC g/km; omitted = model fallback"),
+    make: str = "BMW",
+    model: str = "320i",
+    country: str = "DE",
+) -> None:
+    """Print the landed-cost breakdown for a hypothetical car."""
+    import json
+    from datetime import date
+
+    from app.costs import landed_cost
+
+    lc = landed_cost(
+        price_eur=price,
+        country=country,
+        first_registration=date.fromisoformat(first_registration),
+        co2_g_km=co2,
+        fuel="petrol",
+        make=make,
+        model=model,
+    )
+    typer.echo(json.dumps(lc.as_dict(), indent=2))
 
 
 if __name__ == "__main__":

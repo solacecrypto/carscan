@@ -40,8 +40,13 @@ Other useful commands:
 docker compose exec web carscan users list
 docker compose exec web carscan users set-password quinten
 docker compose exec web carscan searches list
+docker compose exec web carscan costs show 6000 --first-registration 2012-06-01 --co2 158
+docker compose exec web carscan costs recompute      # after editing costs.yaml
 docker compose logs -f worker
 ```
+
+Landed-cost parameters (transport per country, BPM tables, RDW fees) live in `costs.yaml`;
+the method is explained in `docs/landed_cost.md`.
 
 ### Without Docker (tests, quick hacking)
 
@@ -206,6 +211,7 @@ A press updates the status on the website too, and vice versa.
 | Logs | `dc logs -f --tail=100 worker` (or `web`, `caddy`, `postgres`) |
 | Update to a new version | `cd ~/carscan && git pull && dc up -d --build` (migrations run automatically) |
 | Scrape now | `dc exec worker carscan scrape run` |
+| Recompute landed costs after editing `costs.yaml` | `dc exec web carscan costs recompute` (then `dc up -d --build` so the new file is in the image) |
 | Add a user | `dc exec web carscan users create <name> --telegram-username <handle>` |
 | Reset a password | `dc exec web carscan users set-password <name>` |
 | Database backup | `dc exec postgres pg_dump -U carscan carscan \| gzip > backup-$(date +%F).sql.gz` |

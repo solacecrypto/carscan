@@ -96,3 +96,24 @@ def test_detail_fields_survive_search_only_pass(db: Session) -> None:
     assert a is not None
     assert a.description == "nice car" and a.co2_g_km == 150 and a.photos == ["1", "2", "3"]
     assert a.raw == {"search": {"y": 2}, "detail": {"x": 1}}
+
+
+def test_costs_computed_on_upsert_and_recompute(db: Session) -> None:
+    from datetime import date
+
+    from app.storage import recompute_costs
+
+    s = _search(db)
+    item = _item("c", 6000, first_registration=date(2014, 10, 1), co2_g_km=158, fuel="petrol")
+    upsert_listings(db, [item], s, datetime(2026, 10, 12, tzinfo=UTC))
+    db.commit()
+    c = db.scalar(select(Listing).where(Listing.source_listing_id == "c"))
+    assert c is not None and c.bpm_eur == 1046 and c.landed_cost_eur == 6000 + 350 + 302 + 1046
+    assert c.cost_breakdown["bpm"]["tariff_year"] == 2015 and c.cost_version == 1
+
+    c.cost_version = 0
+    db.commit()
+    assert recompute_costs(db, datetime(2026, 10, 12, tzinfo=UTC), only_stale=True) == 1
+    db.commit()
+    db.refresh(c)
+    assert c.cost_version == 1 and c.landed_cost_eur == 7698

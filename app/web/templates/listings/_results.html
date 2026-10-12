@@ -19,6 +19,7 @@
             {% if l.previous_price_eur and l.previous_price_eur > l.price_eur %}
             <div class="text-xs text-green-700">was {{ l.previous_price_eur|eur }}</div>
             {% endif %}
+            {% if l.landed_cost_eur %}<div class="text-xs text-slate-500" title="estimated landed cost incl. transport, BPM and fees">landed ≈ {{ l.landed_cost_eur|eur }}</div>{% endif %}
           </div>
         </div>
         <div class="text-sm text-slate-700">

@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 38cd6e8cd49d
+Revision ID: 06a564fcfd7a
 Revises:
-Create Date: 2026-10-12 11:34:46.935370
+Create Date: 2026-10-12 13:54:24.838364
 """
 
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "38cd6e8cd49d"
+revision: str = "06a564fcfd7a"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -56,11 +56,18 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("previous_price_eur", sa.Integer(), nullable=True),
         sa.Column("price_changed_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("landed_cost_eur", sa.Integer(), nullable=True),
+        sa.Column("bpm_eur", sa.Integer(), nullable=True),
+        sa.Column("cost_breakdown", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("cost_version", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source", "source_listing_id", name="uq_listings_source_id"),
     )
     op.create_index(
         "ix_listings_active_first_seen", "listings", ["is_active", "first_seen"], unique=False
+    )
+    op.create_index(
+        op.f("ix_listings_landed_cost_eur"), "listings", ["landed_cost_eur"], unique=False
     )
     op.create_index("ix_listings_make_model", "listings", ["make", "model"], unique=False)
     op.create_table(
@@ -206,6 +213,7 @@ def downgrade() -> None:
     op.drop_table("price_history")
     op.drop_table("users")
     op.drop_index("ix_listings_make_model", table_name="listings")
+    op.drop_index(op.f("ix_listings_landed_cost_eur"), table_name="listings")
     op.drop_index("ix_listings_active_first_seen", table_name="listings")
     op.drop_table("listings")
     # ### end Alembic commands ###

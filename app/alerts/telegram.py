@@ -71,6 +71,18 @@ def format_alert(alert: Alert, site_url: str, old_price: int | None = None) -> s
         f"{year} · {km} · {listing.gearbox or '–'}"
         + (f" · {listing.power_kw} kW" if listing.power_kw else ""),
         f"📍 {e(place)} ({listing.country}) · {seller}",
+        *(
+            [
+                f"🇳🇱 landed ≈ <b>€ {listing.landed_cost_eur:,}</b>".replace(",", ".")
+                + (
+                    f" (BPM € {listing.bpm_eur:,})".replace(",", ".")
+                    if listing.bpm_eur is not None
+                    else ""
+                )
+            ]
+            if listing.landed_cost_eur is not None
+            else []
+        ),
         f'<a href="{e(listing.url)}">Original ad</a> · '
         f'<a href="{site_url}/listings/{listing.id}">On our site</a>',
     ]

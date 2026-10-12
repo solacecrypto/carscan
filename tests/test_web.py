@@ -42,6 +42,25 @@ def seeded(db: Session) -> dict:
         country="DE",
         city="Berlin",
         photos=["https://img/1.webp"],
+        landed_cost_eur=7700,
+        bpm_eur=1046,
+        cost_breakdown={
+            "purchase_eur": 6000,
+            "transport_eur": 350,
+            "bpm_eur": 1046,
+            "fees_eur": 302,
+            "total_eur": 7700,
+            "config_version": 1,
+            "fees": {},
+            "bpm": {
+                "bruto_eur": 7975,
+                "tariff_year": 2015,
+                "depreciation_pct": 86.89,
+                "co2_g_km": 158,
+                "co2_estimated": False,
+                "notes": [],
+            },
+        },
         first_seen=NOW - timedelta(hours=2),
         last_seen=NOW,
         price_history=[
@@ -118,6 +137,8 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict) -> None:
     assert "was € 7.000" in r.text and "1 listing" in r.text
     assert "318i" in client.get("/listings?include_inactive=true").text
     assert "No listings match" in client.get("/listings?price_max=5000").text
+    assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
+    assert "No listings match" in client.get("/listings?landed_max=7000").text
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text
     assert "No listings match" in client.get("/listings?new_hours=1").text

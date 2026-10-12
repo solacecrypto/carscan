@@ -127,6 +127,15 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Phase 2 status (2026-10-12)
+
+Landed-cost calculator done: `app/costs/` (pure functions), parameters in `costs.yaml`, method
+and sources in `docs/landed_cost.md`. Computed on upsert, stored on `listings`
+(`landed_cost_eur`, `bpm_eur`, `cost_breakdown`), shown on cards/detail/Telegram, filterable
+(`landed_max`) and sortable. Two tariff tables are marked VERIFY in `costs.yaml`; the user
+should check them against the Belastingdienst tarievenlijst. `carscan costs recompute` after
+editing the config.
+
 ## Phase 1 status (2026-10-12)
 
 Implemented and tested: AutoScout24.de scraper (JSON from `__NEXT_DATA__`, no Playwright),

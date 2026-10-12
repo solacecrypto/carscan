@@ -112,6 +112,12 @@ class Listing(Base):
     previous_price_eur: Mapped[int | None] = mapped_column(Integer)
     price_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    # phase 2: landed-cost estimate (see app/costs); None when it cannot be estimated
+    landed_cost_eur: Mapped[int | None] = mapped_column(Integer, index=True)
+    bpm_eur: Mapped[int | None] = mapped_column(Integer)
+    cost_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    cost_version: Mapped[int | None] = mapped_column(Integer)
+
     price_history: Mapped[list[PriceHistory]] = relationship(
         back_populates="listing", cascade="all, delete-orphan", order_by="PriceHistory.seen_at"
     )

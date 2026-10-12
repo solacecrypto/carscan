@@ -37,6 +37,24 @@
       {% endfor %}
     </dl>
     <div class="rounded-xl bg-white p-4 shadow">
+      <h2 class="font-semibold">Landed cost estimate</h2>
+      {% set c = l.cost_breakdown %}
+      {% if c and c.total_eur %}
+      <p class="text-2xl font-bold">{{ c.total_eur|eur }}</p>
+      <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
+        <dt class="text-slate-500">Purchase</dt><dd>{{ c.purchase_eur|eur }}</dd>
+        <dt class="text-slate-500">Transport ({{ l.country }})</dt><dd>{{ c.transport_eur|eur }}</dd>
+        <dt class="text-slate-500">BPM</dt><dd>{{ c.bpm_eur|eur }}
+          {% if c.bpm %}<span class="text-xs text-slate-500">(bruto {{ c.bpm.bruto_eur|eur }} at {{ c.bpm.tariff_year or '–' }} tariff, {{ c.bpm.depreciation_pct }}% off, {{ c.bpm.co2_g_km }} g/km{{ ' assumed' if c.bpm.co2_estimated }})</span>{% endif %}</dd>
+        <dt class="text-slate-500">RDW &amp; fees</dt><dd>{{ c.fees_eur|eur }}</dd>
+      </dl>
+      {% if c.bpm and c.bpm.notes %}<p class="mt-2 text-xs text-amber-700">{{ c.bpm.notes|join(' · ') }}</p>{% endif %}
+      <p class="mt-2 text-xs text-slate-400">Estimate, config v{{ c.config_version }}. Method: docs/landed_cost.md</p>
+      {% else %}
+      <p class="text-sm text-slate-500">Not available (missing first registration date or unsupported fuel).</p>
+      {% endif %}
+    </div>
+    <div class="rounded-xl bg-white p-4 shadow">
       <h2 class="font-semibold">Price history</h2>
       <ul class="mt-2 text-sm">
         {% for h in l.price_history|reverse %}

@@ -7,7 +7,7 @@ COPY pyproject.toml ./
 COPY app ./app
 RUN pip install --upgrade pip && pip install .
 
-COPY alembic.ini ./
+COPY alembic.ini costs.yaml ./
 COPY migrations ./migrations
 
 EXPOSE 8000
