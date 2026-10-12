@@ -14,22 +14,23 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import Settings, get_settings
 from app.logging import configure_logging
-from app.worker.jobs import run_all_active_searches
+from app.worker.jobs import run_due_searches
 
 log = structlog.get_logger()
 
 
 def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
+    """Every few minutes, run the searches whose own interval has elapsed."""
     scheduler = BackgroundScheduler(timezone="UTC")
     scheduler.add_job(
-        run_all_active_searches,
-        IntervalTrigger(minutes=interval_minutes, jitter=120),
-        id="scrape_all",
+        run_due_searches,
+        IntervalTrigger(minutes=min(5, interval_minutes), jitter=30),
+        id="scrape_due",
         max_instances=1,
         coalesce=True,
         misfire_grace_time=600,
     )
-    scheduler.add_job(run_all_active_searches, id="scrape_all_initial", max_instances=1)
+    scheduler.add_job(run_due_searches, id="scrape_due_initial", max_instances=1)
     return scheduler
 
 

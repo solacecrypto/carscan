@@ -8,7 +8,9 @@ users = typer.Typer(no_args_is_help=True, help="Manage login accounts")
 searches = typer.Typer(no_args_is_help=True, help="Manage saved searches")
 scrape = typer.Typer(no_args_is_help=True, help="Run scrapers")
 costs = typer.Typer(no_args_is_help=True, help="Landed-cost estimates")
+values = typer.Typer(no_args_is_help=True, help="NL value estimates")
 app.add_typer(costs, name="costs")
+app.add_typer(values, name="values")
 app.add_typer(users, name="users")
 app.add_typer(searches, name="searches")
 app.add_typer(scrape, name="scrape")
@@ -126,6 +128,107 @@ def searches_seed(owner: str = typer.Option(..., help="username that owns the se
     typer.echo("created saved search")
 
 
+COMPARABLE_SEARCHES: list[tuple[str, str, dict[str, object]]] = [
+    (
+        "NL comps · AutoScout24.nl E90/E91 318i/320i",
+        "autoscout24_nl",
+        {
+            "path": "/lst/bmw",
+            "cat": "ma13gr100038ge25mt102,ma13gr100038ge25mt103",
+            "fuel": "B",
+            "body": "5,6",
+            "fregfrom": 2008,
+            "fregto": 2014,
+            "cy": "NL",
+        },
+    ),
+    (
+        "NL comps · Marktplaats 3-serie 320i",
+        "marktplaats",
+        {
+            "l2CategoryId": 96,
+            "model": "3-Serie",
+            "fuel": "Benzine",
+            "year_from": 2008,
+            "year_to": 2014,
+            "query": "320i",
+            "motor_regex": r"\b320i\b",
+            "bodies": ["Sedan", "Stationwagon"],
+        },
+    ),
+    (
+        "NL comps · Marktplaats 3-serie 318i",
+        "marktplaats",
+        {
+            "l2CategoryId": 96,
+            "model": "3-Serie",
+            "fuel": "Benzine",
+            "year_from": 2008,
+            "year_to": 2014,
+            "query": "318i",
+            "motor_regex": r"\b318i\b",
+            "bodies": ["Sedan", "Stationwagon"],
+        },
+    ),
+    (
+        "NL comps · Gaspedaal 3-serie benzine",
+        "gaspedaal",
+        {
+            "path": "/bmw/3-serie/benzine",
+            "bmin": 2008,
+            "bmax": 2014,
+            "motor_regex": r"\b(318i|320i)\b",
+            "bodies": ["Sedan", "Stationwagon"],
+        },
+    ),
+]
+
+
+@searches.command("seed-comparables")
+def searches_seed_comparables(
+    owner: str = typer.Option(..., help="username that owns the searches"),
+    interval: int = typer.Option(360, help="minutes between runs"),
+) -> None:
+    """Create the default NL comparables searches (AutoScout24.nl, Marktplaats, Gaspedaal)."""
+    from app.db import SavedSearch, User, db_session
+
+    with db_session() as s:
+        user = s.scalar(select(User).where(User.username == owner))
+        if not user:
+            raise typer.BadParameter(f"no such user {owner!r}")
+        created = 0
+        for name, source, params in COMPARABLE_SEARCHES:
+            if s.scalar(select(SavedSearch).where(SavedSearch.name == name)):
+                continue
+            s.add(
+                SavedSearch(
+                    name=name,
+                    owner=user,
+                    source=source,
+                    source_params=params,
+                    filters={},
+                    role="comparables",
+                    alerts_enabled=False,
+                    interval_minutes=interval,
+                )
+            )
+            created += 1
+    typer.echo(f"created {created} comparables searches")
+
+
+@values.command("recompute")
+def values_recompute() -> None:
+    """Recompute NL value estimates and spreads for active listings."""
+    from datetime import UTC, datetime
+
+    from app.db import db_session
+    from app.valuation import recompute_values
+
+    with db_session() as s:
+        n = recompute_values(s, datetime.now(UTC))
+    typer.echo(f"recomputed {n} listings")
+
+
 @searches.command("list")
 def searches_list() -> None:
     """List saved searches."""
@@ -134,13 +237,19 @@ def searches_list() -> None:
     with db_session() as s:
         for x in s.scalars(select(SavedSearch).order_by(SavedSearch.id)):
             flags = ("active" if x.active else "paused") + (", alerts" if x.alerts_enabled else "")
-            typer.echo(f"{x.id:>3}  {x.name:<32} {x.source:<16} {flags}")
+            typer.echo(
+                f"{x.id:>3}  {x.name:<44} {x.source:<16} {x.role:<12} "
+                f"every {x.interval_minutes} min, {flags}"
+            )
 
 
 @scrape.command("run")
 def scrape_run(
     search_id: int | None = typer.Option(None, help="only this saved search"),
     detail_budget: int = typer.Option(40, help="max detail pages to fetch this run"),
+    due_only: bool = typer.Option(
+        False, "--due-only", help="skip searches whose interval has not elapsed"
+    ),
 ) -> None:
     """Run the scrapers now (all active searches, or one)."""
     from app.config import get_settings
@@ -151,7 +260,7 @@ def scrape_run(
     summaries = (
         [run_saved_search(search_id, detail_budget=detail_budget)]
         if search_id
-        else run_all_active_searches(detail_budget=detail_budget)
+        else run_all_active_searches(detail_budget=detail_budget, due_only=due_only)
     )
     for r in summaries:
         typer.echo(

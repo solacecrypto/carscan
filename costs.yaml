@@ -59,3 +59,14 @@ bpm:
     "bmw 318i": 146
     "bmw 320i": 158
     default: 170
+
+valuation:
+  # NL value = median asking price of comparable cars (mileage-adjusted) minus a haircut
+  haircut_pct: 7            # asking price -> realistic sale price
+  km_rate_eur: 0.02         # value change per km of mileage difference
+  min_comps: 5              # widen the windows until at least this many comparables match
+  year_window: 1            # +/- registration years, first attempt
+  year_window_max: 3
+  mileage_window_km: 40000  # +/- km, first attempt
+  mileage_window_max_km: 120000
+  nearest_to_show: 8

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import traceback
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from sqlalchemy import select
@@ -15,7 +15,13 @@ from app.db import ScrapeRun, ScrapeStatus, db_session
 from app.db.models import Listing, SavedSearch
 from app.normalize import RawListing
 from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, get_scraper
-from app.storage import deactivate_missing, upsert_listings
+from app.storage import (
+    deactivate_missing,
+    deactivate_missing_comparables,
+    upsert_comparables,
+    upsert_listings,
+)
+from app.valuation import recompute_values
 
 log = structlog.get_logger()
 
@@ -54,7 +60,12 @@ def run_saved_search(
         s.add(run)
         s.flush()
         run_id = run.id
-        source, params, name = search.source, dict(search.source_params), search.name
+        source, params, name, role = (
+            search.source,
+            dict(search.source_params),
+            search.name,
+            search.role,
+        )
 
     log.info("scrape.start", run_id=run_id, source=source, search=name)
     scraper = get_scraper(source)
@@ -65,30 +76,41 @@ def run_saved_search(
         with db_session() as s:
             search = s.get(SavedSearch, saved_search_id)
             assert search is not None
-            _enrich_new(s, scraper, client, raws, detail_budget)
-            items = [scraper.parse(r) for r in raws]
             now = datetime.now(UTC)
-            result = upsert_listings(s, items, search, now)
-            stale = deactivate_missing(s, search, run_started_at=started)
-            alerts = queue_alerts(s, search, result, now)
+            if role == "comparables":
+                items = [scraper.parse(r) for r in raws]
+                cres = upsert_comparables(s, items, search, now)
+                gone = deactivate_missing_comparables(s, search, run_started_at=started)
+                summary = RunSummary(
+                    run_id, ScrapeStatus.ok, seen=cres.seen, new=cres.new, deactivated=gone
+                )
+                price_changed = 0
+            else:
+                _enrich_new(s, scraper, client, raws, detail_budget)
+                items = [scraper.parse(r) for r in raws]
+                result = upsert_listings(s, items, search, now)
+                stale = deactivate_missing(s, search, run_started_at=started)
+                alerts = queue_alerts(s, search, result, now)
+                summary = RunSummary(
+                    run_id,
+                    ScrapeStatus.ok,
+                    seen=result.seen,
+                    new=len(result.new),
+                    price_dropped=len(result.price_dropped),
+                    deactivated=len(stale),
+                    alerts_queued=len(alerts),
+                )
+                price_changed = len(result.price_dropped) + len(result.price_raised)
+            recompute_values(s, now)
             run = s.get(ScrapeRun, run_id)
             assert run is not None
             run.finished_at = now
             run.status = ScrapeStatus.ok
             run.pages_fetched = client.requests_made
-            run.listings_seen = result.seen
-            run.listings_new = len(result.new)
-            run.listings_price_changed = len(result.price_dropped) + len(result.price_raised)
-            run.listings_deactivated = len(stale)
-            summary = RunSummary(
-                run_id,
-                ScrapeStatus.ok,
-                seen=result.seen,
-                new=len(result.new),
-                price_dropped=len(result.price_dropped),
-                deactivated=len(stale),
-                alerts_queued=len(alerts),
-            )
+            run.listings_seen = summary.seen
+            run.listings_new = summary.new
+            run.listings_price_changed = price_changed
+            run.listings_deactivated = summary.deactivated
         log.info("scrape.done", **summary.__dict__)
         return summary
     except (ScrapeError, Exception) as e:  # noqa: BLE001 - every failure must be recorded
@@ -145,7 +167,30 @@ def _enrich_new(
         fetched += 1
 
 
-def run_all_active_searches(detail_budget: int = DETAIL_FETCH_BUDGET) -> list[RunSummary]:
+def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]:
+    """Active searches, optionally only those whose interval has elapsed since their last run."""
+    ids: list[int] = []
+    for search in session.scalars(select(SavedSearch).where(SavedSearch.active.is_(True))):
+        if due_only:
+            last = session.scalar(
+                select(ScrapeRun.started_at)
+                .where(ScrapeRun.saved_search_id == search.id)
+                .order_by(ScrapeRun.started_at.desc())
+                .limit(1)
+            )
+            if last is not None and last > now - timedelta(minutes=search.interval_minutes):
+                continue
+        ids.append(search.id)
+    return ids
+
+
+def run_all_active_searches(
+    detail_budget: int = DETAIL_FETCH_BUDGET, due_only: bool = False
+) -> list[RunSummary]:
     with db_session() as s:
-        ids = list(s.scalars(select(SavedSearch.id).where(SavedSearch.active.is_(True))))
+        ids = due_search_ids(s, datetime.now(UTC), due_only)
     return [run_saved_search(i, detail_budget=detail_budget) for i in ids]
+
+
+def run_due_searches() -> list[RunSummary]:
+    return run_all_active_searches(due_only=True)

@@ -10,6 +10,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -117,6 +118,12 @@ class Listing(Base):
     bpm_eur: Mapped[int | None] = mapped_column(Integer)
     cost_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     cost_version: Mapped[int | None] = mapped_column(Integer)
+    # phase 3: NL value estimate from comparables and the spread vs landed cost
+    nl_value_eur: Mapped[int | None] = mapped_column(Integer)
+    nl_value_n: Mapped[int | None] = mapped_column(Integer)
+    nl_value_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    spread_eur: Mapped[int | None] = mapped_column(Integer, index=True)
+    spread_pct: Mapped[float | None] = mapped_column(Float)
 
     price_history: Mapped[list[PriceHistory]] = relationship(
         back_populates="listing", cascade="all, delete-orphan", order_by="PriceHistory.seen_at"
@@ -153,6 +160,10 @@ class SavedSearch(Base):
     filters: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     alerts_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    # "deals": foreign cars we may buy (-> listings, alerts). "comparables": NL asking prices
+    # used for valuation (-> comparables, no alerts).
+    role: Mapped[str] = mapped_column(String(16), default="deals", server_default="deals")
+    interval_minutes: Mapped[int] = mapped_column(Integer, default=30, server_default="30")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     owner: Mapped[User] = relationship()
@@ -192,6 +203,42 @@ class Alert(Base):
     listing: Mapped[Listing] = relationship(back_populates="alerts")
     saved_search: Mapped[SavedSearch] = relationship(back_populates="alerts")
     claimed_by: Mapped[User | None] = relationship()
+
+
+class Comparable(Base):
+    """An NL asking price used for valuation. Same shape as Listing minus deal bookkeeping."""
+
+    __tablename__ = "comparables"
+    __table_args__ = (
+        UniqueConstraint("source", "source_listing_id", name="uq_comparables_source_id"),
+        Index("ix_comparables_model", "make", "model", "is_active"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source: Mapped[str] = mapped_column(String(32))
+    source_listing_id: Mapped[str] = mapped_column(String(64))
+    saved_search_id: Mapped[int | None] = mapped_column(
+        ForeignKey("saved_searches.id", ondelete="SET NULL"), index=True
+    )
+    url: Mapped[str] = mapped_column(Text)
+    make: Mapped[str] = mapped_column(String(64))
+    model: Mapped[str] = mapped_column(String(64))
+    variant: Mapped[str | None] = mapped_column(String(255))
+    body_type: Mapped[str | None] = mapped_column(String(32))
+    fuel: Mapped[str | None] = mapped_column(String(32))
+    gearbox: Mapped[str | None] = mapped_column(String(32))
+    power_kw: Mapped[int | None] = mapped_column(Integer)
+    first_registration: Mapped[date | None] = mapped_column(Date)
+    mileage_km: Mapped[int | None] = mapped_column(Integer)
+    price_eur: Mapped[int] = mapped_column(Integer)
+    seller_type: Mapped[SellerType] = mapped_column(_enum(SellerType, "seller_type"))
+    seller_name: Mapped[str | None] = mapped_column(String(255))
+    city: Mapped[str | None] = mapped_column(String(128))
+    photos: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    raw: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class ScrapeRun(Base):

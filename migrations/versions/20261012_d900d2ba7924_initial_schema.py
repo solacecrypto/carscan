@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 06a564fcfd7a
+Revision ID: d900d2ba7924
 Revises:
-Create Date: 2026-10-12 13:54:24.838364
+Create Date: 2026-10-12 16:03:14.114530
 """
 
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "06a564fcfd7a"
+revision: str = "d900d2ba7924"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -60,6 +60,11 @@ def upgrade() -> None:
         sa.Column("bpm_eur", sa.Integer(), nullable=True),
         sa.Column("cost_breakdown", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("cost_version", sa.Integer(), nullable=True),
+        sa.Column("nl_value_eur", sa.Integer(), nullable=True),
+        sa.Column("nl_value_n", sa.Integer(), nullable=True),
+        sa.Column("nl_value_breakdown", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("spread_eur", sa.Integer(), nullable=True),
+        sa.Column("spread_pct", sa.Float(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source", "source_listing_id", name="uq_listings_source_id"),
     )
@@ -70,6 +75,7 @@ def upgrade() -> None:
         op.f("ix_listings_landed_cost_eur"), "listings", ["landed_cost_eur"], unique=False
     )
     op.create_index("ix_listings_make_model", "listings", ["make", "model"], unique=False)
+    op.create_index(op.f("ix_listings_spread_eur"), "listings", ["spread_eur"], unique=False)
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -107,6 +113,8 @@ def upgrade() -> None:
         sa.Column("filters", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("active", sa.Boolean(), nullable=False),
         sa.Column("alerts_enabled", sa.Boolean(), nullable=False),
+        sa.Column("role", sa.String(length=16), server_default="deals", nullable=False),
+        sa.Column("interval_minutes", sa.Integer(), server_default="30", nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -167,6 +175,45 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_alerts_listing_id"), "alerts", ["listing_id"], unique=False)
     op.create_table(
+        "comparables",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("source", sa.String(length=32), nullable=False),
+        sa.Column("source_listing_id", sa.String(length=64), nullable=False),
+        sa.Column("saved_search_id", sa.Integer(), nullable=True),
+        sa.Column("url", sa.Text(), nullable=False),
+        sa.Column("make", sa.String(length=64), nullable=False),
+        sa.Column("model", sa.String(length=64), nullable=False),
+        sa.Column("variant", sa.String(length=255), nullable=True),
+        sa.Column("body_type", sa.String(length=32), nullable=True),
+        sa.Column("fuel", sa.String(length=32), nullable=True),
+        sa.Column("gearbox", sa.String(length=32), nullable=True),
+        sa.Column("power_kw", sa.Integer(), nullable=True),
+        sa.Column("first_registration", sa.Date(), nullable=True),
+        sa.Column("mileage_km", sa.Integer(), nullable=True),
+        sa.Column("price_eur", sa.Integer(), nullable=False),
+        sa.Column(
+            "seller_type",
+            sa.Enum("dealer", "private", name="seller_type", native_enum=False, length=16),
+            nullable=False,
+        ),
+        sa.Column("seller_name", sa.String(length=255), nullable=True),
+        sa.Column("city", sa.String(length=128), nullable=True),
+        sa.Column("photos", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("raw", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("first_seen", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("last_seen", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False),
+        sa.ForeignKeyConstraint(["saved_search_id"], ["saved_searches.id"], ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("source", "source_listing_id", name="uq_comparables_source_id"),
+    )
+    op.create_index(
+        "ix_comparables_model", "comparables", ["make", "model", "is_active"], unique=False
+    )
+    op.create_index(
+        op.f("ix_comparables_saved_search_id"), "comparables", ["saved_search_id"], unique=False
+    )
+    op.create_table(
         "listing_searches",
         sa.Column("listing_id", sa.Integer(), nullable=False),
         sa.Column("saved_search_id", sa.Integer(), nullable=False),
@@ -206,12 +253,16 @@ def downgrade() -> None:
     op.drop_index("ix_scrape_runs_source_started", table_name="scrape_runs")
     op.drop_table("scrape_runs")
     op.drop_table("listing_searches")
+    op.drop_index(op.f("ix_comparables_saved_search_id"), table_name="comparables")
+    op.drop_index("ix_comparables_model", table_name="comparables")
+    op.drop_table("comparables")
     op.drop_index(op.f("ix_alerts_listing_id"), table_name="alerts")
     op.drop_table("alerts")
     op.drop_table("saved_searches")
     op.drop_index(op.f("ix_price_history_listing_id"), table_name="price_history")
     op.drop_table("price_history")
     op.drop_table("users")
+    op.drop_index(op.f("ix_listings_spread_eur"), table_name="listings")
     op.drop_index("ix_listings_make_model", table_name="listings")
     op.drop_index(op.f("ix_listings_landed_cost_eur"), table_name="listings")
     op.drop_index("ix_listings_active_first_seen", table_name="listings")

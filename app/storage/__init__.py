@@ -1,3 +1,8 @@
+from app.storage.comparables import (
+    CompUpsertResult,
+    deactivate_missing_comparables,
+    upsert_comparables,
+)
 from app.storage.filters import apply_sql, matches
 from app.storage.listings import (
     UpsertResult,
@@ -9,6 +14,9 @@ from app.storage.listings import (
 )
 
 __all__ = [
+    "CompUpsertResult",
+    "deactivate_missing_comparables",
+    "upsert_comparables",
     "UpsertResult",
     "apply_costs",
     "apply_sql",
