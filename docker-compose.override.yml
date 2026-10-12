@@ -1,0 +1,18 @@
+# Loaded automatically by `docker compose up` for local development.
+# On the VPS run: docker compose -f docker-compose.yml up -d   (so this file is NOT used)
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+  web:
+    volumes:
+      - ./app:/srv/app
+      - ./migrations:/srv/migrations
+    ports:
+      - "8000:8000"
+    command: sh -c "alembic upgrade head && uvicorn app.web.main:app --host 0.0.0.0 --port 8000 --reload"
+  worker:
+    volumes:
+      - ./app:/srv/app
+  caddy:
+    profiles: ["prod"]

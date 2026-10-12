@@ -1,0 +1,2 @@
+HTTP 301 Location: https://www.autoscout24.de/lst/bmw/3er
+(observed 2026-10-12 for a non-existent listing id; the redirect target is the model list page)

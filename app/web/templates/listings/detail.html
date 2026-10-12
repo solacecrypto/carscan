@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+{% set l = listing %}
+<a href="/listings" class="text-sm text-slate-500">← Listings</a>
+<div class="mt-2 grid gap-4 lg:grid-cols-5">
+  <div class="lg:col-span-3">
+    {% if l.photos %}
+    <img src="{{ l.photos[0] }}" alt="" class="w-full rounded-xl object-cover shadow">
+    <div class="mt-2 flex gap-2 overflow-x-auto">
+      {% for p in l.photos[1:] %}<a href="{{ p }}" target="_blank" rel="noopener" class="flex-none"><img src="{{ p }}" alt="" loading="lazy" class="h-20 w-28 flex-none rounded object-cover"></a>{% endfor %}
+    </div>
+    {% endif %}
+    {% if l.description %}
+    <details class="mt-4 rounded-xl bg-white p-4 shadow"><summary class="cursor-pointer font-semibold">Description</summary>
+      <pre class="mt-2 whitespace-pre-wrap font-sans text-sm text-slate-700">{{ l.description }}</pre></details>
+    {% endif %}
+  </div>
+  <div class="space-y-4 lg:col-span-2">
+    <div class="rounded-xl bg-white p-4 shadow">
+      <h1 class="text-xl font-bold">{{ l.make }} {{ l.model }}</h1>
+      <p class="text-sm text-slate-500">{{ l.variant or '' }}</p>
+      <p class="mt-2 text-3xl font-bold">{{ l.price_eur|eur }}
+        {% if l.vat_deductible %}<span class="text-xs font-normal text-slate-500">VAT deductible</span>{% endif %}</p>
+      {% if not l.is_active %}<p class="mt-1 text-sm font-semibold text-red-600">No longer listed (last seen {{ l.last_seen|timeago }})</p>{% endif %}
+      <div class="mt-3">{% include "listings/_status.html" %}</div>
+      <a href="{{ l.url }}" target="_blank" rel="noopener"
+         class="mt-4 block rounded bg-slate-900 py-2 text-center font-medium text-white">Open original ad ↗</a>
+    </div>
+    <dl class="grid grid-cols-2 gap-x-3 gap-y-1 rounded-xl bg-white p-4 text-sm shadow">
+      {% for k, v in [('First registration', l.first_registration|month), ('Mileage', l.mileage_km|km),
+                      ('Gearbox', l.gearbox), ('Fuel', l.fuel), ('Power', (l.power_kw ~ ' kW') if l.power_kw else None),
+                      ('Body', l.body_type), ('CO₂', (l.co2_g_km ~ ' g/km') if l.co2_g_km else None),
+                      ('Seller', l.seller_type.value ~ (' · ' ~ l.seller_name if l.seller_name else '')),
+                      ('Location', (l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' (' ~ l.country ~ ')'),
+                      ('Source', l.source), ('First seen', l.first_seen|timeago), ('Last seen', l.last_seen|timeago)] %}
+      <dt class="text-slate-500">{{ k }}</dt><dd>{{ v or '–' }}</dd>
+      {% endfor %}
+    </dl>
+    <div class="rounded-xl bg-white p-4 shadow">
+      <h2 class="font-semibold">Price history</h2>
+      <ul class="mt-2 text-sm">
+        {% for h in l.price_history|reverse %}
+        <li class="flex justify-between border-b border-slate-100 py-1"><span>{{ h.seen_at.strftime('%Y-%m-%d %H:%M') }}</span><span class="font-medium">{{ h.price_eur|eur }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

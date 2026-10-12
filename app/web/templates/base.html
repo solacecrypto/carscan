@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}{{ title }}{% endblock %} · Car Scanner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
+</head>
+<body class="min-h-full bg-slate-100 text-slate-900" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
+  {% if user %}
+  <nav class="bg-slate-900 text-slate-100">
+    <div class="mx-auto flex max-w-6xl items-center gap-1 px-3 py-2 text-sm">
+      <a href="/listings" class="rounded px-3 py-2 font-semibold hover:bg-slate-700">Listings</a>
+      <a href="/searches" class="rounded px-3 py-2 hover:bg-slate-700">Searches</a>
+      <a href="/status" class="rounded px-3 py-2 hover:bg-slate-700">Status</a>
+      <form method="post" action="/logout" class="ml-auto">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="whitespace-nowrap rounded px-2 py-2 text-xs text-slate-300 hover:bg-slate-700" title="{{ user.username }}">log out</button>
+      </form>
+    </div>
+  </nav>
+  {% endif %}
+  <main class="mx-auto max-w-6xl px-3 py-4 sm:px-4">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

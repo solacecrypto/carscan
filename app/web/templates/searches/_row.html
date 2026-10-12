@@ -1,0 +1,12 @@
+<tr id="search-{{ s.id }}" class="border-b border-slate-100">
+  <td class="py-2 pr-2"><a href="/searches/{{ s.id }}/edit" class="font-medium underline">{{ s.name }}</a>
+    <div class="text-xs text-slate-500">{{ s.source }} · {{ s.listings|length }} listings</div></td>
+  <td class="py-2 pr-2">
+    <button hx-post="/searches/{{ s.id }}/toggle/active" hx-target="#search-{{ s.id }}" hx-swap="outerHTML"
+      class="rounded px-2 py-1 text-xs font-semibold {{ 'bg-green-100 text-green-800' if s.active else 'bg-slate-200 text-slate-600' }}">
+      {{ 'active' if s.active else 'paused' }}</button></td>
+  <td class="py-2">
+    <button hx-post="/searches/{{ s.id }}/toggle/alerts_enabled" hx-target="#search-{{ s.id }}" hx-swap="outerHTML"
+      class="rounded px-2 py-1 text-xs font-semibold {{ 'bg-blue-100 text-blue-800' if s.alerts_enabled else 'bg-slate-200 text-slate-600' }}">
+      alerts {{ 'on' if s.alerts_enabled else 'off' }}</button></td>
+</tr>

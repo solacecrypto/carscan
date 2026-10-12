@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-xl font-bold">Status</h1>
+<div class="mt-4 grid gap-3 sm:grid-cols-2">
+  {% for s in sources %}
+  <div class="rounded-xl bg-white p-4 shadow">
+    <h2 class="font-semibold">{{ s.name }}</h2>
+    <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
+      <dt class="text-slate-500">Active listings</dt><dd>{{ s.active }}</dd>
+      <dt class="text-slate-500">Last run</dt>
+      <dd>{% if s.last %}{{ s.last.started_at|timeago }} ·
+        <span class="{{ 'text-green-700' if s.last.status.value == 'ok' else 'text-red-700' }} font-semibold">{{ s.last.status.value }}</span>{% else %}never{% endif %}</dd>
+      <dt class="text-slate-500">Last successful</dt><dd>{{ s.last_ok.finished_at|timeago if s.last_ok else 'never' }}</dd>
+      {% if s.last and s.last.error %}<dt class="text-slate-500">Error</dt><dd class="break-words text-red-700">{{ s.last.error }}</dd>{% endif %}
+    </dl>
+  </div>
+  {% endfor %}
+</div>
+<h2 class="mt-6 font-semibold">Recent runs</h2>
+<div class="mt-2 overflow-x-auto rounded-xl bg-white shadow">
+<table class="w-full text-sm">
+  <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr>
+    <th class="p-2">Started</th><th class="p-2">Search</th><th class="p-2">Status</th><th class="p-2">Seen</th><th class="p-2">New</th><th class="p-2">Price Δ</th><th class="p-2">Gone</th><th class="p-2">Requests</th></tr></thead>
+  <tbody>
+  {% for r in runs %}
+  <tr class="border-t border-slate-100 {{ 'bg-red-50' if r.status.value == 'failed' }}">
+    <td class="p-2 whitespace-nowrap">{{ r.started_at.strftime('%m-%d %H:%M') }}</td>
+    <td class="p-2">{{ searches.get(r.saved_search_id, '–') }}</td>
+    <td class="p-2">{{ r.status.value }}{% if r.error %} <span class="text-xs text-red-700">{{ r.error[:80] }}</span>{% endif %}</td>
+    <td class="p-2">{{ r.listings_seen }}</td><td class="p-2">{{ r.listings_new }}</td>
+    <td class="p-2">{{ r.listings_price_changed }}</td><td class="p-2">{{ r.listings_deactivated }}</td><td class="p-2">{{ r.pages_fetched }}</td>
+  </tr>
+  {% else %}<tr><td class="p-4 text-slate-500" colspan="8">No runs yet.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

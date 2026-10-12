@@ -1,0 +1,46 @@
+<div id="results">
+  <p class="mb-3 text-sm text-slate-600">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    {% for l in listings %}
+    <article class="overflow-hidden rounded-xl bg-white shadow {{ 'opacity-60' if not l.is_active }}">
+      <a href="/listings/{{ l.id }}" class="block">
+        {% if l.photos %}
+        <img src="{{ l.photos[0] }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover">
+        {% else %}
+        <div class="aspect-[4/3] w-full bg-slate-200"></div>
+        {% endif %}
+      </a>
+      <div class="space-y-1 p-3">
+        <div class="flex items-start justify-between gap-2">
+          <a href="/listings/{{ l.id }}" class="font-semibold leading-tight">{{ l.make }} {{ l.model }}
+            <span class="block text-xs font-normal text-slate-500">{{ l.variant or '' }}</span></a>
+          <div class="text-right">
+            <div class="text-lg font-bold">{{ l.price_eur|eur }}</div>
+            {% if l.previous_price_eur and l.previous_price_eur > l.price_eur %}
+            <div class="text-xs text-green-700">was {{ l.previous_price_eur|eur }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="text-sm text-slate-700">
+          {{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}{% if l.power_kw %} · {{ l.power_kw }} kW{% endif %}
+        </div>
+        <div class="text-xs text-slate-500">
+          {{ l.city or '' }} {{ l.country }} · {{ l.seller_type.value }} · seen {{ l.first_seen|timeago }}
+          {% if not l.is_active %}· <span class="font-semibold text-red-600">gone</span>{% endif %}
+        </div>
+        {% with listing=l %}{% include "listings/_status.html" %}{% endwith %}
+      </div>
+    </article>
+    {% else %}
+    <p class="text-slate-500">No listings match.</p>
+    {% endfor %}
+  </div>
+  {% if pages > 1 %}
+  <nav class="mt-4 flex items-center justify-center gap-3 text-sm">
+    {% set q = query.replace('page=' ~ page, '') %}
+    {% if page > 1 %}<a class="rounded bg-white px-3 py-1 shadow" href="/listings?{{ q }}&page={{ page - 1 }}">← Prev</a>{% endif %}
+    <span>Page {{ page }} / {{ pages }}</span>
+    {% if page < pages %}<a class="rounded bg-white px-3 py-1 shadow" href="/listings?{{ q }}&page={{ page + 1 }}">Next →</a>{% endif %}
+  </nav>
+  {% endif %}
+</div>

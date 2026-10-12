@@ -1,0 +1,23 @@
+{% set alert = listing.alerts[0] if listing.alerts else None %}
+{% set st = alert.status.value if alert else 'new' %}
+<div id="status-{{ listing.id }}" class="flex flex-wrap items-center gap-2">
+  {% set colors = {'new': 'bg-slate-200 text-slate-700', 'claimed': 'bg-amber-200 text-amber-900',
+                   'contacted': 'bg-blue-200 text-blue-900', 'passed': 'bg-slate-300 text-slate-500 line-through'} %}
+  <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ colors[st] }}">
+    {{ st }}{% if alert and alert.claimed_by %} · {{ alert.claimed_by.username }}{% endif %}
+  </span>
+  {% for action, label, cls in [('claimed', 'Claim', 'bg-amber-500 text-white'),
+                                ('contacted', 'Contacted', 'bg-blue-600 text-white'),
+                                ('passed', 'Pass', 'bg-slate-500 text-white')] %}
+  {% if st != action %}
+  <button hx-post="/listings/{{ listing.id }}/status" hx-vals='{"status": "{{ action }}"}'
+          hx-target="#status-{{ listing.id }}" hx-swap="outerHTML"
+          class="rounded px-2 py-1 text-xs font-medium {{ cls }}">{{ label }}</button>
+  {% endif %}
+  {% endfor %}
+  {% if st != 'new' %}
+  <button hx-post="/listings/{{ listing.id }}/status" hx-vals='{"status": "new"}'
+          hx-target="#status-{{ listing.id }}" hx-swap="outerHTML"
+          class="rounded px-2 py-1 text-xs text-slate-500 underline">reset</button>
+  {% endif %}
+</div>
