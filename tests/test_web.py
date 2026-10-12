@@ -44,6 +44,22 @@ def seeded(db: Session) -> dict:
         photos=["https://img/1.webp"],
         landed_cost_eur=7700,
         bpm_eur=1046,
+        nl_value_eur=9300,
+        nl_value_n=7,
+        spread_eur=1600,
+        spread_pct=20.8,
+        nl_value_breakdown={
+            "value_eur": 9300,
+            "asking_median_eur": 10000,
+            "asking_q1_eur": 9500,
+            "asking_q3_eur": 10500,
+            "n": 7,
+            "year_window": 1,
+            "mileage_window_km": 40000,
+            "haircut_pct": 7.0,
+            "km_rate_eur": 0.02,
+            "nearest": [],
+        },
         cost_breakdown={
             "purchase_eur": 6000,
             "transport_eur": 350,
@@ -139,6 +155,8 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict) -> None:
     assert "No listings match" in client.get("/listings?price_max=5000").text
     assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
     assert "No listings match" in client.get("/listings?landed_max=7000").text
+    assert "+€ 1.600 (20.8%)" in client.get("/listings?spread_min=1000&sort=spread_desc").text
+    assert "No listings match" in client.get("/listings?spread_min=2000").text
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text
     assert "No listings match" in client.get("/listings?new_hours=1").text
@@ -216,6 +234,8 @@ def test_saved_searches_crud(client: TestClient, seeded: dict, db: Session) -> N
             "name": "E91 manual",
             "source": "autoscout24_de",
             "p_path": "/lst/bmw/3er",
+            "role": "deals",
+            "interval_minutes": "45",
             "p_cat": "ma13gr100038ge25mt103",
             "p_fregfrom": "2010",
             "p_gear": "",
@@ -233,6 +253,39 @@ def test_saved_searches_crud(client: TestClient, seeded: dict, db: Session) -> N
         "fregfrom": 2010,
     }
     assert s.filters == {"price_max": 8000, "gearbox": "manual"}
+    assert s.role == "deals" and s.interval_minutes == 45 and s.alerts_enabled
+    r = client.post(
+        "/searches",
+        data={
+            "csrf_token": token,
+            "name": "GP comps",
+            "source": "gaspedaal",
+            "role": "comparables",
+            "interval_minutes": "360",
+            "params_json": '{"path": "/bmw/3-serie/benzine", "bmin": 2008}',
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    gp = db.scalar(select(SavedSearch).where(SavedSearch.name == "GP comps"))
+    assert (
+        gp is not None
+        and gp.role == "comparables"
+        and not gp.alerts_enabled
+        and gp.source_params["bmin"] == 2008
+    )
+    assert (
+        client.post(
+            "/searches",
+            data={
+                "csrf_token": token,
+                "name": "bad",
+                "source": "gaspedaal",
+                "params_json": "{nope",
+            },
+        ).status_code
+        == 400
+    )
 
     r = client.post(
         f"/searches/{s.id}/toggle/alerts_enabled",

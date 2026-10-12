@@ -71,6 +71,9 @@ def alerts(db: Session) -> dict:
         photos=["https://img/1.webp"],
         landed_cost_eur=7700,
         bpm_eur=1046,
+        nl_value_eur=9300,
+        spread_eur=1600,
+        spread_pct=20.8,
         first_seen=NOW,
         last_seen=NOW,
         saved_searches=[s],
@@ -105,6 +108,7 @@ def test_format_alert_escapes_and_shows_drop(db: Session, alerts: dict) -> None:
     assert "05/2010 · 150.000 km · manual · 125 kW" in text
     assert "📍 10115 Berlin (DE) · dealer" in text
     assert "🇳🇱 landed ≈ <b>€ 7.700</b> (BPM € 1.046)" in text
+    assert "📈 NL value ≈ € 9.300 · spread <b>+€ 1.600</b> (20.8%)" in text
     assert (
         'href="https://as24/a"' in text
         and f'href="https://cars.example.com/listings/{alert.listing_id}"' in text

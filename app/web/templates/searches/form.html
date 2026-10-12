@@ -10,11 +10,20 @@
       <select name="source" class="mt-1 w-full rounded border border-slate-300 p-2">
         {% for src in sources %}<option value="{{ src }}" {{ 'selected' if search and search.source == src }}>{{ src }}</option>{% endfor %}
       </select></label>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <label class="block text-sm">Role
+        <select name="role" class="mt-1 w-full rounded border border-slate-300 p-2">
+          <option value="deals" {{ 'selected' if not search or search.role == 'deals' }}>deals (foreign cars to buy, alerts)</option>
+          <option value="comparables" {{ 'selected' if search and search.role == 'comparables' }}>comparables (NL asking prices)</option>
+        </select></label>
+      <label class="block text-sm">Run every (minutes)
+        <input type="number" name="interval_minutes" min="5" value="{{ search.interval_minutes if search else 30 }}" class="mt-1 w-full rounded border border-slate-300 p-2"></label>
+    </div>
   </div>
   {% for src, fields in param_fields.items() %}
   <fieldset class="rounded-xl bg-white p-4 shadow">
     <legend class="px-1 text-sm font-semibold">Source parameters · {{ src }}</legend>
-    <p class="text-xs text-slate-500">Codes are documented in docs/sources/{{ src }}.md. Defaults are the BMW E90/E91 318i/320i search.</p>
+    <p class="text-xs text-slate-500">Codes are documented in docs/sources/{{ src }}.md. Leave a block empty when it is not the selected source. For sources without fields here, paste JSON below.</p>
     <div class="mt-2 grid gap-2 sm:grid-cols-2">
       {% for key, label, default in fields %}
       <label class="block text-sm">{{ label }}
@@ -25,11 +34,15 @@
   </fieldset>
   {% endfor %}
   <fieldset class="rounded-xl bg-white p-4 shadow">
+    <legend class="px-1 text-sm font-semibold">Source parameters as JSON (other sources)</legend>
+    <textarea name="params_json" rows="3" class="mt-1 w-full rounded border border-slate-300 p-2 font-mono text-xs">{{ (search.source_params|tojson) if search and search.source not in param_fields else '' }}</textarea>
+  </fieldset>
+  <fieldset class="rounded-xl bg-white p-4 shadow">
     <legend class="px-1 text-sm font-semibold">Alert filters (optional)</legend>
     <p class="text-xs text-slate-500">Only listings passing these get a Telegram alert. All listings are still stored.</p>
     <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
       {% set fv = search.filters if search else {} %}
-      {% for key in ['price_min', 'price_max', 'landed_max', 'mileage_max', 'year_min', 'year_max'] %}
+      {% for key in ['price_min', 'price_max', 'landed_max', 'spread_min', 'mileage_max', 'year_min', 'year_max'] %}
       <label class="block text-sm">{{ key.replace('_', ' ') }}
         <input type="number" name="f_{{ key }}" value="{{ fv.get(key, '') }}" class="mt-1 w-full rounded border border-slate-300 p-1.5"></label>
       {% endfor %}

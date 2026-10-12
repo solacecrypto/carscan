@@ -6,7 +6,7 @@
   <div class="rounded-xl bg-white p-4 shadow">
     <h2 class="font-semibold">{{ s.name }}</h2>
     <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
-      <dt class="text-slate-500">Active listings</dt><dd>{{ s.active }}</dd>
+      <dt class="text-slate-500">Active listings</dt><dd>{{ s.active }}{% if s.comps %} · {{ s.comps }} comparables{% endif %}</dd>
       <dt class="text-slate-500">Last run</dt>
       <dd>{% if s.last %}{{ s.last.started_at|timeago }} ·
         <span class="{{ 'text-green-700' if s.last.status.value == 'ok' else 'text-red-700' }} font-semibold">{{ s.last.status.value }}</span>{% else %}never{% endif %}</dd>

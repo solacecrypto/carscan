@@ -20,6 +20,8 @@
             <div class="text-xs text-green-700">was {{ l.previous_price_eur|eur }}</div>
             {% endif %}
             {% if l.landed_cost_eur %}<div class="text-xs text-slate-500" title="estimated landed cost incl. transport, BPM and fees">landed ≈ {{ l.landed_cost_eur|eur }}</div>{% endif %}
+            {% if l.nl_value_eur %}<div class="text-xs text-slate-500" title="NL value from {{ l.nl_value_n }} comparables">NL ≈ {{ l.nl_value_eur|eur }}</div>{% endif %}
+            {% if l.spread_eur is not none %}<div class="text-sm font-semibold {{ 'text-green-700' if l.spread_eur > 0 else 'text-red-600' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} ({{ l.spread_pct }}%)</div>{% endif %}
           </div>
         </div>
         <div class="text-sm text-slate-700">

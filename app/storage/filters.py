@@ -11,6 +11,7 @@ FILTER_KEYS = (
     "price_min",
     "price_max",
     "landed_max",
+    "spread_min",
     "mileage_max",
     "year_min",
     "year_max",
@@ -28,6 +29,10 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         return False
     if f.get("landed_max") and (
         listing.landed_cost_eur is None or listing.landed_cost_eur > int(f["landed_max"])
+    ):
+        return False
+    if f.get("spread_min") and (
+        listing.spread_eur is None or listing.spread_eur < int(f["spread_min"])
     ):
         return False
     if f.get("mileage_max") and (listing.mileage_km or 0) > int(f["mileage_max"]):
@@ -52,6 +57,8 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
         stmt = stmt.where(Listing.price_eur <= int(f["price_max"]))
     if f.get("landed_max"):
         stmt = stmt.where(Listing.landed_cost_eur <= int(f["landed_max"]))
+    if f.get("spread_min"):
+        stmt = stmt.where(Listing.spread_eur >= int(f["spread_min"]))
     if f.get("mileage_max"):
         stmt = stmt.where(Listing.mileage_km <= int(f["mileage_max"]))
     if f.get("year_min"):

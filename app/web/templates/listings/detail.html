@@ -55,6 +55,27 @@
       {% endif %}
     </div>
     <div class="rounded-xl bg-white p-4 shadow">
+      <h2 class="font-semibold">NL value &amp; spread</h2>
+      {% set v = l.nl_value_breakdown %}
+      {% if v %}
+      <p class="text-2xl font-bold">{{ l.nl_value_eur|eur }}
+        {% if l.spread_eur is not none %}<span class="ml-2 text-lg {{ 'text-green-700' if l.spread_eur > 0 else 'text-red-600' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} · {{ l.spread_pct }}%</span>{% endif %}</p>
+      <p class="mt-1 text-xs text-slate-500">Median asking {{ v.asking_median_eur|eur }} (IQR {{ v.asking_q1_eur|eur }} – {{ v.asking_q3_eur|eur }}) from {{ v.n }} comparables within ±{{ v.year_window }} y / ±{{ v.mileage_window_km|km }}, mileage-adjusted at € {{ v.km_rate_eur }}/km, minus {{ v.haircut_pct }}% haircut.</p>
+      {% if nearest %}
+      <ul class="mt-2 divide-y divide-slate-100 text-sm">
+        {% for c in nearest %}
+        <li class="flex items-center justify-between gap-2 py-1">
+          <a href="{{ c.url }}" target="_blank" rel="noopener" class="truncate underline">{{ c.variant or (c.make ~ ' ' ~ c.model) }}</a>
+          <span class="whitespace-nowrap text-slate-600">{{ c.first_registration.year if c.first_registration }} · {{ c.mileage_km|km }} · <b>{{ c.price_eur|eur }}</b> <span class="text-xs text-slate-400">{{ c.source }}</span></span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% else %}
+      <p class="text-sm text-slate-500">Not enough comparables yet (run the NL comparables searches).</p>
+      {% endif %}
+    </div>
+    <div class="rounded-xl bg-white p-4 shadow">
       <h2 class="font-semibold">Price history</h2>
       <ul class="mt-2 text-sm">
         {% for h in l.price_history|reverse %}

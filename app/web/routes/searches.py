@@ -15,6 +15,15 @@ router = APIRouter(prefix="/searches", dependencies=[Depends(csrf_protect)])
 
 # Per-source form fields for the source parameters. Adding a source = adding an entry here.
 SOURCE_PARAM_FIELDS: dict[str, list[tuple[str, str, str]]] = {
+    "autoscout24_nl": [
+        ("path", "List path", "/lst/bmw"),
+        ("cat", "Taxonomy filter (cat)", "ma13gr100038ge25mt102,ma13gr100038ge25mt103"),
+        ("fuel", "Fuel code", "B"),
+        ("body", "Body codes", "5,6"),
+        ("fregfrom", "First registration from", "2008"),
+        ("fregto", "First registration to", "2014"),
+        ("cy", "Country code", "NL"),
+    ],
     "autoscout24_de": [
         ("path", "List path", "/lst/bmw/3er"),
         ("cat", "Taxonomy filter (cat)", "ma13gr100038ge25mt102,ma13gr100038ge25mt103"),
@@ -25,7 +34,7 @@ SOURCE_PARAM_FIELDS: dict[str, list[tuple[str, str, str]]] = {
         ("cy", "Country code", "D"),
         ("gear", "Gearbox code (A/M, optional)", ""),
         ("custtype", "Seller type code (D/P, optional)", ""),
-    ]
+    ],
 }
 
 
@@ -77,7 +86,18 @@ async def _read_form(request: Request) -> tuple[str, str, dict[str, Any], dict[s
         if val:
             params[key] = int(val) if val.isdigit() else val
     if not params and form.get("params_json"):
-        params = json.loads(str(form["params_json"]))
+        try:
+            params = json.loads(str(form["params_json"]))
+        except ValueError:
+            raise HTTPException(400, "params_json is not valid JSON") from None
+    role = str(form.get("role", "deals"))
+    if role not in ("deals", "comparables"):
+        raise HTTPException(400, "unknown role")
+    try:
+        interval = max(5, int(str(form.get("interval_minutes", "30")) or 30))
+    except ValueError:
+        raise HTTPException(400, "interval must be a number") from None
+    request.state.role, request.state.interval = role, interval
     filters: dict[str, Any] = {}
     for key in FILTER_KEYS:
         val = str(form.get(f"f_{key}", "")).strip()
@@ -89,7 +109,18 @@ async def _read_form(request: Request) -> tuple[str, str, dict[str, Any], dict[s
 @router.post("", response_class=HTMLResponse)
 async def create(request: Request, db: DB, user: CurrentUser) -> RedirectResponse:
     name, source, params, filters = await _read_form(request)
-    db.add(SavedSearch(name=name, owner=user, source=source, source_params=params, filters=filters))
+    db.add(
+        SavedSearch(
+            name=name,
+            owner=user,
+            source=source,
+            source_params=params,
+            filters=filters,
+            role=request.state.role,
+            interval_minutes=request.state.interval,
+            alerts_enabled=request.state.role == "deals",
+        )
+    )
     return RedirectResponse("/searches", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -99,6 +130,7 @@ async def update(request: Request, db: DB, user: CurrentUser, search_id: int) ->
     if not search:
         raise HTTPException(404)
     search.name, search.source, search.source_params, search.filters = await _read_form(request)
+    search.role, search.interval_minutes = request.state.role, request.state.interval
     return RedirectResponse("/searches", status_code=status.HTTP_303_SEE_OTHER)
 
 

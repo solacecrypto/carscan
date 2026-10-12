@@ -127,6 +127,14 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Phase 3 status (2026-10-12)
+
+NL comparables and spread done: scrapers `autoscout24_nl`, `marktplaats` (internal JSON API),
+`gaspedaal` (JSON-LD), all plain HTTP. `SavedSearch.role` = deals | comparables, each with its
+own `interval_minutes`; the scheduler runs due searches every 5 min. Comparables live in the
+`comparables` table; `app/valuation/` computes `nl_value_eur` / `spread_eur` per listing after
+every run (`docs/valuation.md`). Valuation parameters under `valuation:` in `costs.yaml`.
+
 ## Phase 2 status (2026-10-12)
 
 Landed-cost calculator done: `app/costs/` (pure functions), parameters in `costs.yaml`, method

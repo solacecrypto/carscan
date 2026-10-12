@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
-from app.db import Alert, AlertStatus, Listing
+from app.db import Alert, AlertStatus, Comparable, Listing
 from app.storage.filters import apply_sql
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -22,9 +22,17 @@ SORTS = {
     "year_desc": Listing.first_registration.desc().nulls_last(),
     "price_change": Listing.price_changed_at.desc().nulls_last(),
     "landed_asc": Listing.landed_cost_eur.asc().nulls_last(),
+    "spread_desc": Listing.spread_eur.desc().nulls_last(),
 }
 SortKey = Literal[
-    "newest", "price_asc", "price_desc", "mileage", "year_desc", "price_change", "landed_asc"
+    "newest",
+    "price_asc",
+    "price_desc",
+    "mileage",
+    "year_desc",
+    "price_change",
+    "landed_asc",
+    "spread_desc",
 ]
 
 
@@ -37,6 +45,7 @@ def listings_index(
     price_min: int | None = Query(None, ge=0),
     price_max: int | None = Query(None, ge=0),
     landed_max: int | None = Query(None, ge=0),
+    spread_min: int | None = Query(None),
     mileage_max: int | None = Query(None, ge=0),
     year_min: int | None = Query(None, ge=1990),
     year_max: int | None = Query(None, ge=1990),
@@ -53,6 +62,7 @@ def listings_index(
         "price_min": price_min,
         "price_max": price_max,
         "landed_max": landed_max,
+        "spread_min": spread_min,
         "mileage_max": mileage_max,
         "year_min": year_min,
         "year_max": year_max,
@@ -114,10 +124,20 @@ def _load(db: DB, listing_id: int) -> Listing:
 @router.get("/listings/{listing_id}", response_class=HTMLResponse)
 def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int) -> HTMLResponse:
     listing = _load(db, listing_id)
+    nearest_ids = [n["id"] for n in (listing.nl_value_breakdown or {}).get("nearest", [])]
+    comps = (
+        {c.id: c for c in db.scalars(select(Comparable).where(Comparable.id.in_(nearest_ids)))}
+        if nearest_ids
+        else {}
+    )
     return templates.TemplateResponse(
         request,
         "listings/detail.html",
-        {"title": listing.make + " " + listing.model, "listing": listing},
+        {
+            "title": listing.make + " " + listing.model,
+            "listing": listing,
+            "nearest": [comps[i] for i in nearest_ids if i in comps],
+        },
     )
 
 

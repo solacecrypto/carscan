@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<details class="mb-4 rounded-xl bg-white p-3 shadow" {{ 'open' if f.price_min or f.price_max or f.landed_max or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.new_hours or f.price_dropped or f.include_inactive }}>
+<details class="mb-4 rounded-xl bg-white p-3 shadow" {{ 'open' if f.price_min or f.price_max or f.landed_max or f.spread_min or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.new_hours or f.price_dropped or f.include_inactive }}>
   <summary class="cursor-pointer font-semibold">Filters &amp; sort</summary>
   <form hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true"
         class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
@@ -11,6 +11,7 @@
     {{ num('price_min', 'Price from €', f.price_min, 100) }}
     {{ num('price_max', 'Price to €', f.price_max, 100) }}
     {{ num('landed_max', 'Landed cost to €', f.landed_max, 100) }}
+    <label class="block">Spread from €<input type="number" name="spread_min" value="{{ f.spread_min if f.spread_min is not none }}" step="100" class="mt-1 w-full rounded border border-slate-300 p-1.5"></label>
     {{ num('mileage_max', 'Max km', f.mileage_max, 1000) }}
     {{ num('year_min', 'Year from', f.year_min) }}
     {{ num('year_max', 'Year to', f.year_max) }}
@@ -36,7 +37,7 @@
       </select></label>
     <label class="block">Sort
       <select name="sort" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        {% for v, t in [('newest', 'newest first'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change'), ('landed_asc', 'landed cost ↑')] %}
+        {% for v, t in [('newest', 'newest first'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change'), ('landed_asc', 'landed cost ↑'), ('spread_desc', 'spread ↓')] %}
         <option value="{{ v }}" {{ 'selected' if sort == v }}>{{ t }}</option>{% endfor %}
       </select></label>
     <label class="flex items-center gap-2 self-end"><input type="checkbox" name="price_dropped" value="true" {{ 'checked' if f.price_dropped }}> price dropped</label>

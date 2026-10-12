@@ -83,6 +83,17 @@ def format_alert(alert: Alert, site_url: str, old_price: int | None = None) -> s
             if listing.landed_cost_eur is not None
             else []
         ),
+        *(
+            [
+                (
+                    f"📈 NL value ≈ € {listing.nl_value_eur:,} · spread "
+                    f"<b>{'+' if listing.spread_eur > 0 else ''}€ {listing.spread_eur:,}</b> "
+                    f"({listing.spread_pct}%)"
+                ).replace(",", ".")
+            ]
+            if listing.nl_value_eur is not None and listing.spread_eur is not None
+            else []
+        ),
         f'<a href="{e(listing.url)}">Original ad</a> · '
         f'<a href="{site_url}/listings/{listing.id}">On our site</a>',
     ]
