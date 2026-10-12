@@ -98,13 +98,14 @@ def _parse_price(text: str | None) -> tuple[int | None, bool]:
 class Kleinanzeigen:
     name = "kleinanzeigen"
     country = "DE"
+    headers = {"Accept-Language": "de-DE,de;q=0.9,en;q=0.8"}
 
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
         seen: dict[str, RawListing] = {}
         page = 1
         while page <= min(int(params.get("max_pages") or MAX_PAGES), MAX_PAGES):
-            resp = client.get(build_search_url(params, page))
+            resp = client.get(build_search_url(params, page), headers=self.headers)
             if resp.status_code != 200:
                 raise ParseError(f"HTTP {resp.status_code} on Kleinanzeigen page {page}")
             items = parse_articles(resp.text)

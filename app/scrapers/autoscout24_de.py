@@ -136,6 +136,7 @@ class AutoScout24DE:
     name = "autoscout24_de"
     country = "DE"
     origin = ORIGIN
+    headers = {"Accept-Language": "de-DE,de;q=0.9,en;q=0.8"}
 
     # ---- search -----------------------------------------------------------------------
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
@@ -145,7 +146,7 @@ class AutoScout24DE:
         page, total_pages = 1, 1
         while page <= min(total_pages, MAX_PAGES):
             url = build_search_url(params, page, origin=self.origin)
-            resp = client.get(url)
+            resp = client.get(url, headers=self.headers)
             if resp.status_code != 200:
                 raise ParseError(f"HTTP {resp.status_code} on search page {page}")
             pp = extract_next_data(resp.text)
@@ -180,7 +181,7 @@ class AutoScout24DE:
 
     # ---- detail -----------------------------------------------------------------------
     def fetch_detail(self, raw: RawListing, client: PoliteClient) -> dict[str, Any] | None:
-        resp = client.get(raw.url)
+        resp = client.get(raw.url, headers=self.headers)
         if resp.status_code in (301, 302, 404, 410):
             return None  # listing gone: AS24 redirects to the list page
         if resp.status_code != 200:
@@ -278,18 +279,21 @@ class AutoScout24NL(AutoScout24DE):
     name = "autoscout24_nl"
     country = "NL"
     origin = "https://www.autoscout24.nl"
+    headers = {"Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8"}
 
 
 class AutoScout24BE(AutoScout24DE):
     name = "autoscout24_be"
     country = "BE"
     origin = "https://www.autoscout24.be"
+    headers = {"Accept-Language": "nl-BE,nl;q=0.9,fr-BE;q=0.8"}
 
 
 class AutoScout24IT(AutoScout24DE):
     name = "autoscout24_it"
     country = "IT"
     origin = "https://www.autoscout24.it"
+    headers = {"Accept-Language": "it-IT,it;q=0.9,en;q=0.8"}
 
 
 register(AutoScout24DE())

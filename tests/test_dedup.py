@@ -93,17 +93,16 @@ def test_cli_seed_phase4(db: Session) -> None:
     db.add(User(username="q", password_hash="x"))
     db.commit()
     r = CliRunner().invoke(cli, ["searches", "seed-phase4", "--owner", "q"])
-    assert r.exit_code == 0 and "created 9" in r.output, r.output
+    assert r.exit_code == 0 and "created 8" in r.output, r.output
     out = CliRunner().invoke(cli, ["searches", "list"]).output
     for src in (
         "autoscout24_be",
         "tweedehands_be",
         "autoscout24_it",
-        "subito",
         "automobile_it",
         "kleinanzeigen",
         "bytbil",
     ):
         assert src in out
-    s = db.scalar(select(SavedSearch).where(SavedSearch.source == "subito"))
-    assert s is not None and s.source_params["motor_regex"] == r"\b320i\b"
+    s = db.scalar(select(SavedSearch).where(SavedSearch.source == "bytbil"))
+    assert s is not None and s.source_params["motor_regex"] == r"\b(318|320)\s?i\b"

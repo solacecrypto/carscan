@@ -55,6 +55,7 @@ def extract_item_list(html: str) -> dict[str, Any]:
 class Gaspedaal:
     name = "gaspedaal"
     country = "NL"
+    headers = {"Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8"}
 
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
@@ -62,7 +63,7 @@ class Gaspedaal:
         seen: dict[str, RawListing] = {}
         page, total_pages = 1, 1
         while page <= min(total_pages, MAX_PAGES):
-            resp = client.get(build_search_url(params, page))
+            resp = client.get(build_search_url(params, page), headers=self.headers)
             if resp.status_code != 200:
                 raise ParseError(f"HTTP {resp.status_code} on Gaspedaal page {page}")
             lst = extract_item_list(resp.text)

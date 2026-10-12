@@ -21,7 +21,9 @@ USABLE_PRICE_TYPES = {"FIXED", "MIN_BID"}
 GEARBOX = {"Automaat": "automatic", "Handgeschakeld": "manual", "Semi-automaat": "semi-automatic"}
 BODY = {
     "Sedan": "sedan",
+    "Berline": "sedan",
     "Stationwagon": "estate",
+    "Break": "estate",
     "Coupé": "coupe",
     "Cabriolet": "convertible",
     "Hatchback (3/5-deurs)": "hatchback",
@@ -84,6 +86,7 @@ class Marktplaats:
     name = "marktplaats"
     country = "NL"
     origin = ORIGIN
+    headers = {"Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8", "Accept": "application/json"}
 
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
@@ -91,7 +94,9 @@ class Marktplaats:
         seen: dict[str, RawListing] = {}
         offset, total, max_page = 0, None, 1
         while total is None or (offset < total and offset // PAGE_SIZE < max_page):
-            resp = client.get(build_api_url(params, offset, origin=self.origin))
+            resp = client.get(
+                build_api_url(params, offset, origin=self.origin), headers=self.headers
+            )
             if resp.status_code != 200:
                 raise ParseError(f"HTTP {resp.status_code} from Marktplaats API")
             try:
@@ -183,6 +188,7 @@ class Tweedehands(Marktplaats):
     name = "tweedehands_be"
     country = "BE"
     origin = "https://www.2dehands.be"
+    headers = {"Accept-Language": "nl-BE,nl;q=0.9,fr-BE;q=0.8", "Accept": "application/json"}
 
 
 register(Marktplaats())

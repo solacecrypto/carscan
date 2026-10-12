@@ -71,7 +71,7 @@ class PoliteClient:
                 self._sleep(delay - elapsed)
         self._last_request_at = time.monotonic()
 
-    def get(self, url: str) -> httpx.Response:
+    def get(self, url: str, headers: dict[str, str] | None = None) -> httpx.Response:
         """GET with retries. Returns 2xx/3xx responses; raises BlockedError / ScrapeError."""
         attempt = 0
         while True:
@@ -79,7 +79,7 @@ class PoliteClient:
             self._wait()
             self.requests_made += 1
             try:
-                resp = self._client.get(url)
+                resp = self._client.get(url, headers=headers)
             except httpx.HTTPError as e:
                 if attempt > self.retries:
                     raise ScrapeError(f"network error after {attempt} attempts: {e}") from e
