@@ -1,4 +1,4 @@
-"""AutoScout24.de. See docs/sources/autoscout24_de.md for the investigation this is based on."""
+"""AutoScout24 (.de for deals, .nl for comparables). See docs/sources/autoscout24_*.md."""
 
 import json
 import re
@@ -45,7 +45,7 @@ BODY = {
 }
 
 
-def build_search_url(params: dict[str, Any], page: int) -> str:
+def build_search_url(params: dict[str, Any], page: int, origin: str = ORIGIN) -> str:
     """`params` mirrors the AutoScout24 query string (see docs). `path` picks the list page."""
     path = params.get("path", "/lst")
     query = {k: v for k, v in params.items() if k != "path"}
@@ -54,7 +54,7 @@ def build_search_url(params: dict[str, Any], page: int) -> str:
     query.setdefault("sort", "age")
     query.setdefault("desc", "1")
     query["page"] = page
-    return f"{ORIGIN}{path}?{urlencode(query, safe=',|')}"
+    return f"{origin}{path}?{urlencode(query, safe=',|')}"
 
 
 def extract_next_data(html: str) -> dict[str, Any]:
@@ -104,13 +104,14 @@ def _full_size(url: str) -> str:
 class AutoScout24DE:
     name = "autoscout24_de"
     country = "DE"
+    origin = ORIGIN
 
     # ---- search -----------------------------------------------------------------------
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         seen: dict[str, RawListing] = {}
         page, total_pages = 1, 1
         while page <= min(total_pages, MAX_PAGES):
-            url = build_search_url(params, page)
+            url = build_search_url(params, page, origin=self.origin)
             resp = client.get(url)
             if resp.status_code != 200:
                 raise ParseError(f"HTTP {resp.status_code} on search page {page}")
@@ -127,7 +128,7 @@ class AutoScout24DE:
                 seen[lid] = RawListing(
                     source=self.name,
                     source_listing_id=lid,
-                    url=ORIGIN + item["url"],
+                    url=self.origin + item["url"],
                     data=_scrub_listing(item),
                     fetched_at=fetched_at,
                 )
@@ -220,4 +221,11 @@ def _kw(s: str | None) -> int | None:
     return int(m.group(1)) if m else None
 
 
+class AutoScout24NL(AutoScout24DE):
+    name = "autoscout24_nl"
+    country = "NL"
+    origin = "https://www.autoscout24.nl"
+
+
 register(AutoScout24DE())
+register(AutoScout24NL())
