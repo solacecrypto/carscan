@@ -191,6 +191,15 @@ server$ echo "alias dc='docker compose -f ~/carscan/docker-compose.yml'" >> ~/.b
 server$ dc ps
 ```
 
+### 2.6b Check the deployment
+
+```bash
+server$ dc exec web carscan doctor
+```
+
+It checks secrets, database and migrations, the Telegram bot and group, the Claude key, and
+whether users and searches exist. Every line should say `ok`; a `FAIL` line tells you what to fix.
+
 ### 2.7 Telegram alerts
 
 1. In Telegram, talk to **@BotFather** → `/newbot` → pick a name and a username. Copy the

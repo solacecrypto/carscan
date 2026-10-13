@@ -1,7 +1,15 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
 services:
   postgres:
     image: postgres:16
     restart: unless-stopped
+    <<: *logging
     env_file: .env
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -14,15 +22,22 @@ services:
   web:
     build: .
     restart: unless-stopped
+    <<: *logging
     env_file: .env
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "alembic upgrade head && uvicorn app.web.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "alembic upgrade head && uvicorn app.web.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   worker:
     build: .
     restart: unless-stopped
+    <<: *logging
     env_file: .env
     depends_on:
       postgres:
@@ -32,6 +47,7 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    <<: *logging
     env_file: .env
     ports:
       - "80:80"

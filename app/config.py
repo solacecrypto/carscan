@@ -25,6 +25,22 @@ class Settings(BaseSettings):
         return bool(self.telegram_bot_token.get_secret_value() and self.telegram_chat_id)
 
     @property
+    def is_production(self) -> bool:
+        return self.domain not in ("localhost", "127.0.0.1")
+
+    def check_production_secrets(self) -> list[str]:
+        """Placeholder values that must not reach a public deployment."""
+        problems: list[str] = []
+        if self.is_production:
+            if self.secret_key.get_secret_value() in ("", "change-me", "devsecret"):
+                problems.append(
+                    "SECRET_KEY is a placeholder; generate one with: openssl rand -hex 32"
+                )
+            if "change-me" in self.database_url:
+                problems.append("DATABASE_URL still contains the placeholder password")
+        return problems
+
+    @property
     def insights_enabled(self) -> bool:
         return bool(self.anthropic_api_key.get_secret_value())
 

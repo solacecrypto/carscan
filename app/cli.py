@@ -1,7 +1,7 @@
 """Admin CLI. Inside the container: `docker compose exec web carscan --help`."""
 
 import typer
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 app = typer.Typer(no_args_is_help=True, help="Car Scanner admin commands")
 users = typer.Typer(no_args_is_help=True, help="Manage login accounts")
@@ -343,6 +343,104 @@ def insights_run(limit: int = typer.Option(50, help="max listings to analyse now
         typer.echo("disabled: ANTHROPIC_API_KEY is not set")
         return
     typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
+
+
+@app.command("doctor")
+def doctor() -> None:
+    """Check configuration, database, Telegram and Claude access. Run this first on a new server."""
+    import httpx
+    from sqlalchemy import text
+
+    from app.config import get_settings
+    from app.db import get_engine
+
+    settings = get_settings()
+    ok = True
+
+    def report(label: str, good: bool, detail: str = "") -> None:
+        nonlocal ok
+        ok = ok and good
+        typer.echo(f"[{'ok' if good else 'FAIL'}] {label}{(': ' + detail) if detail else ''}")
+
+    for p in settings.check_production_secrets():
+        report("secrets", False, p)
+    if settings.is_production and not settings.check_production_secrets():
+        report("secrets", True, "no placeholders")
+    report("domain", True, settings.site_url)
+    try:
+        with get_engine().connect() as conn:
+            version = conn.execute(text("select version()")).scalar() or ""
+            rev = conn.execute(text("select version_num from alembic_version")).scalar()
+        report("database", True, version.split(",")[0])
+        report(
+            "migrations",
+            rev is not None,
+            f"revision {rev}" if rev else "not applied: run alembic upgrade head",
+        )
+    except Exception as e:  # noqa: BLE001
+        report("database", False, str(e).splitlines()[0][:160])
+    token = settings.telegram_bot_token.get_secret_value()
+    if token:
+        try:
+            r = httpx.get(f"https://api.telegram.org/bot{token}/getMe", timeout=10)
+            name = r.json().get("result", {}).get("username")
+            report("telegram bot", r.status_code == 200, f"@{name}" if name else r.text[:120])
+            if settings.telegram_chat_id:
+                r = httpx.get(
+                    f"https://api.telegram.org/bot{token}/getChat",
+                    params={"chat_id": settings.telegram_chat_id},
+                    timeout=10,
+                )
+                title = r.json().get("result", {}).get("title") or r.json().get("result", {}).get(
+                    "username"
+                )
+                report(
+                    "telegram group",
+                    r.status_code == 200,
+                    title or r.json().get("description", "")[:120],
+                )
+            else:
+                report("telegram group", False, "TELEGRAM_CHAT_ID is empty")
+        except httpx.HTTPError as e:
+            report("telegram", False, str(e)[:120])
+    else:
+        report("telegram", True, "disabled (no token)")
+    if settings.insights_enabled:
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(
+                api_key=settings.anthropic_api_key.get_secret_value(), max_retries=0
+            )
+            client.models.retrieve(settings.claude_model)
+            report("claude", True, settings.claude_model)
+        except anthropic.AuthenticationError:
+            report("claude", False, "API key rejected")
+        except anthropic.NotFoundError:
+            report("claude", False, f"model {settings.claude_model!r} not found")
+        except anthropic.APIError as e:
+            report("claude", False, str(e)[:120])
+    else:
+        report("claude", True, "disabled (no ANTHROPIC_API_KEY)")
+    from app.db import SavedSearch, User, db_session
+
+    with db_session() as s:
+        users = s.scalar(select(func.count()).select_from(User)) or 0
+        searches = s.scalar(select(func.count()).select_from(SavedSearch)) or 0
+    report(
+        "users",
+        users > 0,
+        f"{users} (create one with: carscan users create <name>)" if not users else str(users),
+    )
+    report(
+        "saved searches",
+        searches > 0,
+        f"{searches} (seed with: carscan searches seed --owner <name>)"
+        if not searches
+        else str(searches),
+    )
+    typer.echo("all good" if ok else "fix the FAIL lines above")
+    raise typer.Exit(code=0 if ok else 1)
 
 
 @app.command("calibrate")

@@ -60,3 +60,33 @@ def test_listing_roundtrip(db: Session) -> None:
     row = db.scalar(select(Listing).where(Listing.source_listing_id == "abc"))
     assert row is not None and row.seller_type is SellerType.private and row.is_active
     assert db.scalar(select(User)) is None
+
+
+def test_doctor_runs_without_optional_services(db: Session) -> None:
+    from app.config import get_settings
+
+    r = CliRunner().invoke(cli, ["doctor"])
+    assert "[ok] database" in r.output and "[ok] migrations" in r.output, r.output
+    assert "telegram: disabled" in r.output and "claude: disabled" in r.output
+    assert "[FAIL] users" in r.output and r.exit_code == 1
+    assert get_settings().check_production_secrets() == []  # tests run with DOMAIN=localhost
+
+
+def test_production_secret_guard() -> None:
+    from app.config import Settings
+
+    s = Settings(
+        database_url="postgresql+psycopg://carscan:change-me@postgres/carscan",
+        secret_key="change-me",
+        domain="cars.example.com",
+    )
+    problems = s.check_production_secrets()
+    assert len(problems) == 2 and "SECRET_KEY" in problems[0]
+    assert (
+        Settings(
+            database_url="postgresql+psycopg://a:b@c/d",
+            secret_key="x" * 32,
+            domain="cars.example.com",
+        ).check_production_secrets()
+        == []
+    )

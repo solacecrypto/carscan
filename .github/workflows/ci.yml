@@ -1,0 +1,20 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv venv -p 3.12 .venv && uv pip install -e ".[dev]"
+      - run: .venv/bin/ruff check . && .venv/bin/ruff format --check .
+      - run: .venv/bin/pytest -q
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t carscan:ci .
+      - run: docker run --rm -e DATABASE_URL=postgresql+psycopg://x:y@localhost/z -e SECRET_KEY=ci carscan:ci carscan --help

@@ -13,6 +13,9 @@ from app.web.templating import TEMPLATES_DIR
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
+    problems = settings.check_production_secrets()
+    if problems:
+        raise RuntimeError("refusing to start with placeholder secrets: " + "; ".join(problems))
     app = FastAPI(title="Car Scanner", docs_url=None, redoc_url=None, openapi_url=None)
     secure = settings.domain not in ("localhost", "127.0.0.1")
     app.add_exception_handler(LoginRequired, login_required_handler)  # type: ignore[arg-type]
