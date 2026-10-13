@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.alerts import notify_admin, queue_alerts
 from app.db import ScrapeRun, ScrapeStatus, db_session
 from app.db.models import Listing, SavedSearch
+from app.insights import analyze_pending, default_analyzer
 from app.normalize import RawListing
 from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, get_scraper
 from app.storage import (
@@ -46,6 +47,7 @@ def run_saved_search(
     *,
     client: PoliteClient | None = None,
     detail_budget: int = DETAIL_FETCH_BUDGET,
+    insights_budget: int | None = None,
 ) -> RunSummary:
     started = datetime.now(UTC)
     with db_session() as s:
@@ -68,6 +70,10 @@ def run_saved_search(
             search.role,
         )
 
+    if insights_budget is None:
+        from app.config import get_settings
+
+        insights_budget = get_settings().insights_per_run
     log.info("scrape.start", run_id=run_id, source=source, search=name)
     scraper = get_scraper(source)
     own_client = client is None
@@ -94,6 +100,12 @@ def run_saved_search(
                 dedup = link_duplicates(s, result.new, now)
                 if dedup.linked:
                     log.info("scrape.dedup", linked=dedup.linked, checked=dedup.checked)
+                analyzer = default_analyzer() if insights_budget else None
+                if analyzer and result.new:
+                    counts = analyze_pending(
+                        s, analyzer, now, insights_budget, [x.id for x in result.new]
+                    )
+                    log.info("scrape.insights", **counts)
                 alerts = queue_alerts(s, search, result, now)
                 summary = RunSummary(
                     run_id,
@@ -198,3 +210,19 @@ def run_all_active_searches(
 
 def run_due_searches() -> list[RunSummary]:
     return run_all_active_searches(due_only=True)
+
+
+def analyze_backlog(limit: int | None = None) -> dict[str, int]:
+    """Catch-up pass: listings that still lack a current insight (older ones, budget overflow)."""
+    from app.config import get_settings
+
+    analyzer = default_analyzer()
+    if analyzer is None:
+        return {}
+    with db_session() as s:
+        counts = analyze_pending(
+            s, analyzer, datetime.now(UTC), limit or get_settings().insights_per_run
+        )
+    if any(counts.values()):
+        log.info("insights.backlog", **counts)
+    return counts

@@ -10,6 +10,25 @@
       {% for p in l.photos[1:] %}<a href="{{ p }}" target="_blank" rel="noopener" class="flex-none"><img src="{{ p }}" alt="" loading="lazy" class="h-20 w-28 flex-none rounded object-cover"></a>{% endfor %}
     </div>
     {% endif %}
+    {% set i = l.insight %}
+    {% if i %}
+    <div class="mt-4 rounded-xl bg-white p-4 shadow">
+      <h2 class="font-semibold">What the description says <span class="text-xs font-normal text-slate-400">(Claude, {{ i.language or '?' }})</span></h2>
+      {% if i.status == 'ok' %}
+      <p class="mt-1 text-sm text-slate-700">{{ i.summary }}</p>
+      {% include "listings/_insight_badges.html" %}
+      <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
+        <dt class="text-slate-500">Accident</dt><dd>{{ i.accident }}{% if i.accident_evidence %} <span class="text-xs text-slate-500">“{{ i.accident_evidence }}”</span>{% endif %}</dd>
+        <dt class="text-slate-500">Timing chain</dt><dd>{{ i.timing_chain.replace('_', ' ') }}</dd>
+        <dt class="text-slate-500">Service history</dt><dd>{{ i.service_history }}</dd>
+        <dt class="text-slate-500">Export only</dt><dd>{{ 'yes' if i.export_only else 'no' }}</dd>
+      </dl>
+      {% if i.defects %}<ul class="mt-2 list-disc pl-5 text-sm text-red-800">{% for d in i.defects %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+      {% else %}
+      <p class="mt-1 text-sm text-slate-500">Not analysed: {{ i.status }}{% if i.error %} · {{ i.error }}{% endif %}</p>
+      {% endif %}
+    </div>
+    {% endif %}
     {% if l.description %}
     <details class="mt-4 rounded-xl bg-white p-4 shadow"><summary class="cursor-pointer font-semibold">Description</summary>
       <pre class="mt-2 whitespace-pre-wrap font-sans text-sm text-slate-700">{{ l.description }}</pre></details>

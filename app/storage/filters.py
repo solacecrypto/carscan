@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy import Select, extract
 
-from app.db.models import Listing, SellerType
+from app.db.models import Listing, ListingInsight, SellerType
 
 FILTER_KEYS = (
     "price_min",
@@ -18,6 +18,10 @@ FILTER_KEYS = (
     "gearbox",
     "seller_type",
     "country",
+    "no_accident",
+    "no_export_only",
+    "chain_replaced",
+    "service_full",
 )
 
 
@@ -46,7 +50,16 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         return False
     if f.get("seller_type") and listing.seller_type != SellerType(f["seller_type"]):
         return False
-    return not (f.get("country") and listing.country != f["country"].upper())
+    if f.get("country") and listing.country != f["country"].upper():
+        return False
+    ins = listing.insight
+    if f.get("no_accident") and ins is not None and ins.accident == "yes":
+        return False
+    if f.get("no_export_only") and ins is not None and ins.export_only:
+        return False
+    if f.get("chain_replaced") and (ins is None or ins.timing_chain != "replaced"):
+        return False
+    return not (f.get("service_full") and (ins is None or ins.service_history != "full"))
 
 
 def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
@@ -71,4 +84,18 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
         stmt = stmt.where(Listing.seller_type == SellerType(f["seller_type"]))
     if f.get("country"):
         stmt = stmt.where(Listing.country == f["country"].upper())
+    if any(f.get(k) for k in ("no_accident", "no_export_only", "chain_replaced", "service_full")):
+        stmt = stmt.outerjoin(ListingInsight, ListingInsight.listing_id == Listing.id)
+        if f.get("no_accident"):
+            stmt = stmt.where(
+                (ListingInsight.accident.is_(None)) | (ListingInsight.accident != "yes")
+            )
+        if f.get("no_export_only"):
+            stmt = stmt.where(
+                (ListingInsight.export_only.is_(None)) | (ListingInsight.export_only.is_(False))
+            )
+        if f.get("chain_replaced"):
+            stmt = stmt.where(ListingInsight.timing_chain == "replaced")
+        if f.get("service_full"):
+            stmt = stmt.where(ListingInsight.service_history == "full")
     return stmt

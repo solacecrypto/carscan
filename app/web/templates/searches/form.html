@@ -49,6 +49,9 @@
       <label class="block text-sm">gearbox
         <select name="f_gearbox" class="mt-1 w-full rounded border border-slate-300 p-1.5">
           {% for g in gearboxes %}<option value="{{ g }}" {{ 'selected' if fv.get('gearbox') == g }}>{{ g or 'any' }}</option>{% endfor %}</select></label>
+      {% for key, label in [('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'chain replaced only'), ('service_full', 'full history only')] %}
+      <label class="flex items-center gap-2 self-end text-sm"><input type="checkbox" name="f_{{ key }}" value="1" {{ 'checked' if fv.get(key) }}> {{ label }}</label>
+      {% endfor %}
       <label class="block text-sm">seller type
         <select name="f_seller_type" class="mt-1 w-full rounded border border-slate-300 p-1.5">
           {% for t in seller_types %}<option value="{{ t }}" {{ 'selected' if fv.get('seller_type') == t }}>{{ t or 'any' }}</option>{% endfor %}</select></label>

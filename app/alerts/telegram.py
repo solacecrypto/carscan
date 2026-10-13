@@ -98,7 +98,30 @@ def format_alert(alert: Alert, site_url: str, old_price: int | None = None) -> s
         f'<a href="{e(listing.url)}">Original ad</a> · '
         f'<a href="{site_url}/listings/{listing.id}">On our site</a>',
     ]
+    flags = _flags_line(listing)
+    if flags:
+        lines.append(flags)
     return "\n".join(lines) + _status_line(alert)
+
+
+def _flags_line(listing: Listing) -> str:
+    ins = listing.insight
+    if ins is None or ins.status != "ok":
+        return ""
+    parts: list[str] = []
+    if ins.accident == "yes":
+        parts.append("⚠️ accident")
+    elif ins.accident == "no":
+        parts.append("✅ accident-free")
+    if ins.timing_chain == "replaced":
+        parts.append("✅ chain replaced")
+    if ins.service_history == "full":
+        parts.append("✅ full history")
+    if ins.export_only:
+        parts.append("⚠️ export only")
+    if ins.defects:
+        parts.append(f"⚠️ {len(ins.defects)} defect(s): " + html.escape("; ".join(ins.defects[:3])))
+    return "🔎 " + " · ".join(parts) if parts else ""
 
 
 def build_keyboard(alert: Alert) -> InlineKeyboardMarkup | None:
@@ -117,7 +140,7 @@ def build_keyboard(alert: Alert) -> InlineKeyboardMarkup | None:
 
 
 _LOAD = (
-    selectinload(Alert.listing),
+    selectinload(Alert.listing).selectinload(Listing.insight),
     selectinload(Alert.saved_search),
     selectinload(Alert.claimed_by),
 )

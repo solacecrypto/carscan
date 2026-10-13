@@ -33,6 +33,7 @@
           {% if l.duplicate_of_id %}· <span class="rounded bg-slate-200 px-1">duplicate</span>{% endif %}
           {% if not l.is_active %}· <span class="font-semibold text-red-600">gone</span>{% endif %}
         </div>
+        {% include "listings/_insight_badges.html" %}
         {% with listing=l %}{% include "listings/_status.html" %}{% endwith %}
       </div>
     </article>

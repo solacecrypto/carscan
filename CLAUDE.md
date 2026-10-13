@@ -7,7 +7,7 @@ to NL and resold at a profit. Not a SaaS: no billing, no signup, internal use on
 Delivered as a website: everything runs on one Linux VPS, users access it through a browser
 (desktop and mobile) behind a shared login. No local installs for users.
 
-## Roadmap (build strictly in order; only phase 1 is in scope now)
+## Roadmap (all six phases are built; see the status sections at the bottom)
 
 1. **Phase 1 (current):** one source (AutoScout24.de) → normalizer → Postgres → website with
    listings, filters and saved searches → Telegram group alerts → deployed on a VPS
@@ -126,6 +126,14 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - Never commit `.env`, fixtures may not contain personal data of private sellers
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
+
+## Phase 6 status (2026-10-13)
+
+Claude pass over descriptions done: `app/insights/` (schema, `ClaudeAnalyzer` via the
+official SDK with structured output + server-side fallback, service), `listing_insights`
+table, run inside each deals scrape before alerts (`INSIGHTS_PER_RUN`) plus a 10-minute
+backlog job, filters/badges/Telegram line/status counts, `carscan insights run`. Off without
+`ANTHROPIC_API_KEY` (`docs/insights.md`). Tested only against a fake client so far.
 
 ## Phase 5 status (2026-10-12)
 

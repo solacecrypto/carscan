@@ -57,6 +57,10 @@ def listings_index(
     price_dropped: bool = False,
     include_inactive: bool = False,
     include_duplicates: bool = False,
+    no_accident: bool = False,
+    no_export_only: bool = False,
+    chain_replaced: bool = False,
+    service_full: bool = False,
     sort: SortKey = "newest",
     page: int = Query(1, ge=1),
 ) -> HTMLResponse:
@@ -71,6 +75,10 @@ def listings_index(
         "gearbox": gearbox or None,
         "seller_type": seller_type or None,
         "country": country or None,
+        "no_accident": no_accident or None,
+        "no_export_only": no_export_only or None,
+        "chain_replaced": chain_replaced or None,
+        "service_full": service_full or None,
     }
     stmt = apply_sql(select(Listing), filters)
     if not include_inactive:
@@ -89,6 +97,7 @@ def listings_index(
             stmt.options(
                 selectinload(Listing.alerts).selectinload(Alert.claimed_by),
                 selectinload(Listing.duplicates),
+                selectinload(Listing.insight),
             )
             .order_by(SORTS[sort], Listing.id.desc())
             .offset((page - 1) * PAGE_SIZE)
@@ -124,6 +133,7 @@ def _load(db: DB, listing_id: int) -> Listing:
             selectinload(Listing.price_history),
             selectinload(Listing.duplicates),
             selectinload(Listing.duplicate_of),
+            selectinload(Listing.insight),
         )
     )
     if listing is None:

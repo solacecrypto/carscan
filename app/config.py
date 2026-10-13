@@ -15,10 +15,18 @@ class Settings(BaseSettings):
     domain: str = "localhost"
     log_level: str = "INFO"
     scrape_interval_minutes: int = 30
+    # phase 6: Claude pass over descriptions; off when the key is empty
+    anthropic_api_key: SecretStr = SecretStr("")
+    claude_model: str = "claude-opus-5-5"
+    insights_per_run: int = 40
 
     @property
     def telegram_enabled(self) -> bool:
         return bool(self.telegram_bot_token.get_secret_value() and self.telegram_chat_id)
+
+    @property
+    def insights_enabled(self) -> bool:
+        return bool(self.anthropic_api_key.get_secret_value())
 
     @property
     def site_url(self) -> str:

@@ -329,6 +329,22 @@ def searches_seed_phase4(
     typer.echo(f"created {created} searches")
 
 
+insights = typer.Typer(no_args_is_help=True, help="Claude pass over descriptions")
+app.add_typer(insights, name="insights")
+
+
+@insights.command("run")
+def insights_run(limit: int = typer.Option(50, help="max listings to analyse now")) -> None:
+    """Analyse listings that have a description but no current insight."""
+    from app.worker.jobs import analyze_backlog
+
+    counts = analyze_backlog(limit)
+    if not counts:
+        typer.echo("disabled: ANTHROPIC_API_KEY is not set")
+        return
+    typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
+
+
 @app.command("calibrate")
 def calibrate_cmd(as_json: bool = typer.Option(False, "--json")) -> None:
     """Compare estimates with logged actuals and print suggested costs.yaml values."""

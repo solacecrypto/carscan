@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: aa0277964296
+Revision ID: 02b12a0486cf
 Revises:
-Create Date: 2026-10-12 23:01:39.537637
+Create Date: 2026-10-13 18:49:05.521742
 """
 
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "aa0277964296"
+revision: str = "02b12a0486cf"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -146,6 +146,28 @@ def upgrade() -> None:
             ["owner_id"],
             ["users.id"],
         ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("listing_id"),
+    )
+    op.create_table(
+        "listing_insights",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("listing_id", sa.Integer(), nullable=False),
+        sa.Column("status", sa.String(length=16), nullable=False),
+        sa.Column("model", sa.String(length=64), nullable=True),
+        sa.Column("analyzed_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("description_hash", sa.String(length=64), nullable=False),
+        sa.Column("language", sa.String(length=8), nullable=True),
+        sa.Column("summary", sa.Text(), nullable=True),
+        sa.Column("accident", sa.String(length=16), nullable=True),
+        sa.Column("accident_evidence", sa.Text(), nullable=True),
+        sa.Column("timing_chain", sa.String(length=16), nullable=True),
+        sa.Column("service_history", sa.String(length=16), nullable=True),
+        sa.Column("export_only", sa.Boolean(), nullable=True),
+        sa.Column("defects", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("raw", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("error", sa.Text(), nullable=True),
+        sa.ForeignKeyConstraint(["listing_id"], ["listings.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("listing_id"),
     )
@@ -355,6 +377,7 @@ def downgrade() -> None:
     op.drop_table("saved_searches")
     op.drop_index(op.f("ix_price_history_listing_id"), table_name="price_history")
     op.drop_table("price_history")
+    op.drop_table("listing_insights")
     op.drop_table("deals")
     op.drop_table("users")
     op.drop_index(op.f("ix_listings_spread_eur"), table_name="listings")

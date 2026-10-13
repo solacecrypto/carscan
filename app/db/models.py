@@ -156,6 +156,9 @@ class Listing(Base):
     duplicates: Mapped[list[Listing]] = relationship(
         back_populates="duplicate_of", foreign_keys=[duplicate_of_id]
     )
+    insight: Mapped[ListingInsight | None] = relationship(
+        back_populates="listing", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class PriceHistory(Base):
@@ -354,6 +357,35 @@ class DealEvent(Base):
 
     deal: Mapped[Deal] = relationship(back_populates="events")
     user: Mapped[User | None] = relationship()
+
+
+class ListingInsight(Base):
+    """What Claude read in the seller's description (phase 6). One row per listing."""
+
+    __tablename__ = "listing_insights"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    listing_id: Mapped[int] = mapped_column(
+        ForeignKey("listings.id", ondelete="CASCADE"), unique=True
+    )
+    status: Mapped[str] = mapped_column(String(16))  # ok | refused | error | empty
+    model: Mapped[str | None] = mapped_column(String(64))
+    analyzed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    description_hash: Mapped[str] = mapped_column(String(64))
+    language: Mapped[str | None] = mapped_column(String(8))
+    summary: Mapped[str | None] = mapped_column(Text)
+    accident: Mapped[str | None] = mapped_column(String(16))  # yes | no | unknown
+    accident_evidence: Mapped[str | None] = mapped_column(Text)
+    timing_chain: Mapped[str | None] = mapped_column(String(16))  # replaced | due | not_mentioned
+    service_history: Mapped[str | None] = mapped_column(
+        String(16)
+    )  # full | partial | none | unknown
+    export_only: Mapped[bool | None] = mapped_column(Boolean)
+    defects: Mapped[list[str] | None] = mapped_column(JSONB)
+    raw: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    error: Mapped[str | None] = mapped_column(Text)
+
+    listing: Mapped[Listing] = relationship(back_populates="insight")
 
 
 class ScrapeRun(Base):

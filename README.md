@@ -47,6 +47,7 @@ docker compose exec web carscan costs recompute      # after editing costs.yaml
 docker compose exec web carscan values recompute     # NL value + spread
 docker compose exec web carscan dedup run            # re-link the same car across sources
 docker compose exec web carscan calibrate            # estimates vs logged actuals, suggested costs.yaml values
+docker compose exec web carscan insights run         # Claude pass over descriptions (needs ANTHROPIC_API_KEY)
 docker compose logs -f worker
 ```
 
@@ -149,6 +150,7 @@ Fill in:
 | `SECRET_KEY` | output of `openssl rand -hex 32` |
 | `DOMAIN` | your domain, e.g. `cars.example.com` |
 | `TELEGRAM_*` | see section 2.7; can stay empty for now |
+| `ANTHROPIC_API_KEY` | from console.anthropic.com → API Keys; empty = description analysis off |
 
 Save with `Ctrl+O`, `Enter`, exit with `Ctrl+X`.
 

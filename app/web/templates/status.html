@@ -16,6 +16,11 @@
   </div>
   {% endfor %}
 </div>
+<div class="mt-4 rounded-xl bg-white p-4 shadow text-sm">
+  <h2 class="font-semibold">Description analysis (Claude)</h2>
+  {% if insights.enabled %}<p>{{ insights.analysed }} of {{ insights.with_description }} active listings with a description analysed.</p>
+  {% else %}<p class="text-amber-700">Disabled: set ANTHROPIC_API_KEY in .env to enable.</p>{% endif %}
+</div>
 <h2 class="mt-6 font-semibold">Recent runs</h2>
 <div class="mt-2 overflow-x-auto rounded-xl bg-white shadow">
 <table class="w-full text-sm">
