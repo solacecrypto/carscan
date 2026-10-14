@@ -16,7 +16,7 @@ from app.alerts.telegram import (
 )
 from app.db import Alert, AlertStatus, Listing, SavedSearch, SellerType, User
 
-NOW = datetime(2026, 10, 12, 12, 0, tzinfo=UTC)
+NOW = datetime.now(UTC).replace(microsecond=0)
 
 
 class FakeBot:
@@ -214,3 +214,20 @@ async def test_website_change_is_synced_to_telegram(db: Session, alerts: dict) -
     db.expire_all()
     assert db.scalar(select(Alert.message_synced).where(Alert.id == alerts["b"])) is True
     assert await sync_unsynced(bot, "-100123", "https://site") == 0
+
+
+async def test_stale_alerts_expire_instead_of_sending(db: Session, alerts: dict) -> None:
+    from datetime import timedelta
+
+    from app.alerts.telegram import expire_stale_alerts
+
+    b = db.get(Alert, alerts["b"])
+    assert b is not None
+    b.created_at = NOW - timedelta(days=3)
+    db.commit()
+    bot = FakeBot()
+    sent = await deliver_pending(bot, "-100123", "https://site", pause=0)
+    db.expire_all()
+    assert sent == 1 and db.get(Alert, alerts["b"]).sent_at is not None  # type: ignore[union-attr]
+    assert "expired" in (db.get(Alert, alerts["b"]).send_error or "")  # type: ignore[union-attr]
+    assert expire_stale_alerts(db, NOW, timedelta(0)) == 0  # nothing pending any more

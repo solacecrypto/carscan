@@ -345,6 +345,28 @@ def insights_run(limit: int = typer.Option(50, help="max listings to analyse now
     typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
 
 
+alerts = typer.Typer(no_args_is_help=True, help="Telegram alert queue")
+app.add_typer(alerts, name="alerts")
+
+
+@alerts.command("expire")
+def alerts_expire(
+    hours: int = typer.Option(24, help="expire unsent alerts older than this"),
+    all_pending: bool = typer.Option(
+        False, "--all", help="expire every unsent alert, regardless of age"
+    ),
+) -> None:
+    """Drop queued alerts so enabling Telegram does not replay a backlog."""
+    from datetime import UTC, datetime, timedelta
+
+    from app.alerts.telegram import expire_stale_alerts
+    from app.db import db_session
+
+    with db_session() as s:
+        n = expire_stale_alerts(s, datetime.now(UTC), timedelta(hours=0 if all_pending else hours))
+    typer.echo(f"expired {n} alerts")
+
+
 @app.command("doctor")
 def doctor() -> None:
     """Check configuration, database, Telegram and Claude access. Run this first on a new server."""

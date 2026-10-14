@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import html
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
 import structlog
@@ -22,6 +22,7 @@ log = structlog.get_logger()
 
 MAX_SEND_ATTEMPTS = 3
 SEND_PAUSE_SECONDS = 3.0  # Telegram allows ~20 group messages per minute
+ALERT_MAX_AGE = timedelta(hours=24)  # older pending alerts are expired, never sent in a burst
 
 
 class BotLike(Protocol):
@@ -147,11 +148,25 @@ _LOAD = (
 
 
 # ---- sending --------------------------------------------------------------------------
+def expire_stale_alerts(s, now: datetime, max_age: timedelta = ALERT_MAX_AGE) -> int:  # type: ignore[no-untyped-def]
+    """Mark unsent alerts older than `max_age` as expired (first run, long outage, backlog)."""
+    rows = list(
+        s.scalars(select(Alert).where(Alert.sent_at.is_(None), Alert.created_at < now - max_age))
+    )
+    for a in rows:
+        a.sent_at = now
+        a.send_error = "expired: older than 24h when the bot caught up"
+    return len(rows)
+
+
 async def deliver_pending(
     bot: BotLike, chat_id: str, site_url: str, pause: float = SEND_PAUSE_SECONDS
 ) -> int:
     """Send every unsent alert. Returns the number sent."""
     with db_session() as s:
+        expired = expire_stale_alerts(s, datetime.now(UTC))
+        if expired:
+            log.info("telegram.alerts.expired", count=expired)
         ids = [a.id for a in pending_alerts(s) if a.send_attempts < MAX_SEND_ATTEMPTS]
     sent = 0
     for alert_id in ids:
