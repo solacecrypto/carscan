@@ -90,3 +90,13 @@ def test_production_secret_guard() -> None:
         ).check_production_secrets()
         == []
     )
+
+
+def test_database_url_scheme_is_normalised() -> None:
+    from app.config import Settings
+
+    s = Settings(database_url="postgres://u:p@h:5432/d", secret_key="x" * 32)
+    assert s.database_url == "postgresql+psycopg://u:p@h:5432/d"
+    assert Settings(database_url="postgresql://u:p@h/d", secret_key="x").database_url.startswith(
+        "postgresql+psycopg://"
+    )

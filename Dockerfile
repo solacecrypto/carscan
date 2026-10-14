@@ -9,6 +9,7 @@ RUN pip install --upgrade pip && pip install .
 
 COPY alembic.ini costs.yaml ./
 COPY migrations ./migrations
+COPY docker/entrypoint.sh /entrypoint.sh
 
 EXPOSE 8000
-CMD ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/entrypoint.sh"]

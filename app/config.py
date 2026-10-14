@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr = SecretStr("")
     claude_model: str = "claude-opus-5-5"
     insights_per_run: int = 40
+
+    @field_validator("database_url")
+    @classmethod
+    def _psycopg_scheme(cls, v: str) -> str:
+        """Managed Postgres hands out postgres:// URLs; SQLAlchemy needs the driver name."""
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix) :]
+        return v
 
     @property
     def telegram_enabled(self) -> bool:

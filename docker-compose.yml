@@ -27,7 +27,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "alembic upgrade head && uvicorn app.web.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+    environment:
+      ROLE: web
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
       interval: 30s
@@ -42,7 +43,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: python -m app.worker.main
+    environment:
+      ROLE: worker
 
   caddy:
     image: caddy:2
