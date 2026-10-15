@@ -86,6 +86,11 @@ def _smallest(article: Any, pred: Any) -> Any:
     return best[1] if best else None
 
 
+def _large(url: str) -> str:
+    """List thumbnails end in rule=$_2.AUTO (~200px); $_59.AUTO is the large variant."""
+    return re.sub(r"rule=\$_\d+\.AUTO", "rule=$_59.AUTO", url)
+
+
 def _parse_price(text: str | None) -> tuple[int | None, bool]:
     if not text:
         return None, False
@@ -168,7 +173,7 @@ class Kleinanzeigen:
             country="DE",
             city=loc.group(2) if loc else None,
             postcode=loc.group(1) if loc else None,
-            photos=[d["image"]] if d.get("image") else [],
+            photos=[_large(d["image"])] if d.get("image") else [],
             description=None,
             raw={"search": d, "negotiable": negotiable},
         )

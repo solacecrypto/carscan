@@ -154,9 +154,9 @@ class Marktplaats:
         is_dealer = bool(seller.get("showWebsiteUrl") or seller.get("isVerified"))
         loc = d.get("location") or {}
         photos = [
-            p.get("largeUrl") or p.get("url")
+            p.get("extraExtraLargeUrl") or p.get("largeUrl") or p.get("url")
             for p in d.get("pictures") or []
-            if p.get("largeUrl") or p.get("url")
+            if p.get("extraExtraLargeUrl") or p.get("largeUrl") or p.get("url")
         ]
         return NormalizedListing(
             source=self.name,

@@ -136,9 +136,11 @@ class AutomobileIt:
         lower = title.lower()
         fuel_txt = (det.get("fuelEmissions") or "").split("-")[0].strip().lower()
         body = next((b for hint, b in BODY_HINTS if hint in lower), None)
-        images = d.get("imageUrls") or [
-            p.get("sizes", {}).get("XL", {}).get("href") for p in d.get("pictures") or []
-        ]
+        images = (
+            [(p.get("sizes") or {}).get("XL", {}).get("href") for p in d.get("pictures") or []]
+            or d.get("imageUrls")
+            or []
+        )
         return NormalizedListing(
             source=self.name,
             source_listing_id=raw.source_listing_id,
