@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-{% set active = f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.country or f.new_hours or f.price_dropped or f.include_inactive or f.include_duplicates or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full %}
+{% set active = f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.profitable or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.country or f.new_hours or f.price_dropped or f.include_inactive or f.include_duplicates or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full %}
 <div class="mb-4 flex items-end justify-between">
   <div><h1>Listings</h1><p class="text-sm text-ink-400">Foreign cars worth importing, newest first</p></div>
 </div>
@@ -66,7 +66,7 @@
       </div>
     </div>
     <div class="grid grid-cols-2 gap-1 lg:grid-cols-4">
-      {% for name, text in [('price_dropped', 'price dropped'), ('include_inactive', 'include gone'), ('include_duplicates', 'include duplicates'),
+      {% for name, text in [('profitable', 'positive return only'), ('price_dropped', 'price dropped'), ('include_inactive', 'include gone'), ('include_duplicates', 'include duplicates'),
                             ('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'chain replaced'), ('service_full', 'full service history')] %}
       <label class="check"><input type="checkbox" name="{{ name }}" value="true" {{ 'checked' if f[name] }}> {{ text }}</label>
       {% endfor %}

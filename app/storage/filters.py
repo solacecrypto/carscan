@@ -14,6 +14,7 @@ FILTER_KEYS = (
     "price_max",
     "landed_max",
     "spread_min",
+    "profitable",
     "mileage_max",
     "new_hours",
     "year_min",
@@ -79,6 +80,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "price_max": num("price_max"),
         "landed_max": num("landed_max"),
         "spread_min": num("spread_min"),
+        "profitable": flag("profitable") or None,
         "mileage_max": num("mileage_max"),
         "year_min": num("year_min"),
         "year_max": num("year_max"),
@@ -111,6 +113,8 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
     if f.get("landed_max") and (
         listing.landed_cost_eur is None or listing.landed_cost_eur > int(f["landed_max"])
     ):
+        return False
+    if f.get("profitable") and (listing.spread_eur is None or listing.spread_eur <= 0):
         return False
     if f.get("spread_min") and (
         listing.spread_eur is None or listing.spread_eur < int(f["spread_min"])
@@ -154,6 +158,8 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
         stmt = stmt.where(Listing.price_eur <= int(f["price_max"]))
     if f.get("landed_max"):
         stmt = stmt.where(Listing.landed_cost_eur <= int(f["landed_max"]))
+    if f.get("profitable"):
+        stmt = stmt.where(Listing.spread_eur > 0)
     if f.get("spread_min"):
         stmt = stmt.where(Listing.spread_eur >= int(f["spread_min"]))
     if f.get("mileage_max"):

@@ -195,6 +195,8 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     )
     assert "No listings match" in results("/listings?make=Audi&make=Volvo")
     assert "No listings match" in client.get("/listings?spread_min=2000").text
+    assert "+€ 1.600" in results("/listings?profitable=true")  # spread 1600 > 0
+    assert "Reset filters" in client.get("/listings?profitable=true").text
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text
     assert "No listings match" in client.get("/listings?new_hours=1").text
