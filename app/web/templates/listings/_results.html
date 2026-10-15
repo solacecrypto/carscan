@@ -3,8 +3,8 @@
   <p class="mb-3 text-sm text-ink-400">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for l in listings %}
-    <article class="card group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }}">
-      <a href="/listings/{{ l.id }}" class="relative block">
+    <article class="card group transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }}">
+      <a href="/listings/{{ l.id }}" class="relative block overflow-hidden rounded-t-2xl">
         {% if l.photos %}
         <img src="{{ l.photos[0] }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover">
         {% else %}
