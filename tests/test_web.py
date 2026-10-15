@@ -181,9 +181,7 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert "320i" in client.get("/listings?make=bmw").text
     assert "No listings match" in client.get("/listings?model_key=vw-golf-6").text
     page = client.get("/listings").text
-    assert (
-        'name="model"' in page and "VW Golf VI" in page and 'name="make" list="brand-list"' in page
-    )
+    assert 'data-name="model"' in page and "VW Golf VI" in page and 'data-name="make"' in page
     results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
     assert "320i" in results(
         "/listings?price_min=&price_max=&gearbox=&model=BMW+E90%2FE91+318i%2F320i&country=DE&country=BE"
@@ -191,6 +189,11 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert "No listings match" in results("/listings?model=VW+Golf+VI+1.2%2F1.4+TSI")
     assert "No listings match" in results("/listings?country=IT&country=SE")
     assert "320i" in results("/listings?new_hours=24&price_min=abc")
+    assert "320i" in results("/listings?make=Audi&make=bmw")  # several brands
+    assert "320i" in results(
+        "/listings?model=VW+Golf+VI+1.2%2F1.4+TSI&model=BMW+E90%2FE91+318i%2F320i"
+    )
+    assert "No listings match" in results("/listings?make=Audi&make=Volvo")
     assert "No listings match" in client.get("/listings?spread_min=2000").text
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text

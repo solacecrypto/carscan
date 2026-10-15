@@ -3,7 +3,7 @@ and translated to SQL for the listings page."""
 
 from typing import Any
 
-from sqlalchemy import Select, extract
+from sqlalchemy import Select, extract, func
 
 from app.db.models import Listing, ListingInsight, SellerType
 
@@ -26,6 +26,13 @@ FILTER_KEYS = (
     "chain_replaced",
     "service_full",
 )
+
+
+def _list(value: Any) -> list[str]:
+    if not value:
+        return []
+    items = value if isinstance(value, list | tuple | set) else [value]
+    return [str(v).strip() for v in items if str(v).strip()]
 
 
 def _countries(value: Any) -> list[str]:
@@ -57,14 +64,17 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         return str(params.get(key, "")).lower() in ("1", "true", "on", "yes")
 
     getlist = getattr(params, "getlist", None)
-    countries = getlist("country") if getlist else params.get("country")
-    model = text("model") or text("model_key")
-    if model and models:
-        by_label = {label.lower(): key for key, label in models}
-        model = by_label.get(model.lower(), model)
+
+    def many(key: str) -> list[str]:
+        raw = getlist(key) if getlist else params.get(key)
+        return _list(raw)
+
+    countries = many("country")
+    by_label = {label.lower(): key for key, label in (models or [])}
+    model_keys = [by_label.get(m.lower(), m) for m in many("model") + many("model_key")]
     return {
-        "make": text("make"),
-        "model_key": model,
+        "make": many("make") or None,
+        "model_key": model_keys or None,
         "price_min": num("price_min"),
         "price_max": num("price_max"),
         "landed_max": num("landed_max"),
@@ -88,9 +98,11 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
 
 def matches(listing: Listing, filters: dict[str, Any]) -> bool:
     f = filters or {}
-    if f.get("make") and listing.make.lower() != str(f["make"]).lower():
+    makes = _list(f.get("make"))
+    if makes and listing.make.lower() not in {m.lower() for m in makes}:
         return False
-    if f.get("model_key") and listing.model_key != f["model_key"]:
+    models = _list(f.get("model_key"))
+    if models and listing.model_key not in models:
         return False
     if f.get("price_min") and listing.price_eur < int(f["price_min"]):
         return False
@@ -130,10 +142,12 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
 
 def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
     f = filters or {}
-    if f.get("make"):
-        stmt = stmt.where(Listing.make.ilike(str(f["make"])))
-    if f.get("model_key"):
-        stmt = stmt.where(Listing.model_key == f["model_key"])
+    makes = _list(f.get("make"))
+    if makes:
+        stmt = stmt.where(func.lower(Listing.make).in_([m.lower() for m in makes]))
+    models = _list(f.get("model_key"))
+    if models:
+        stmt = stmt.where(Listing.model_key.in_(models))
     if f.get("price_min"):
         stmt = stmt.where(Listing.price_eur >= int(f["price_min"]))
     if f.get("price_max"):

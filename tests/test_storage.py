@@ -144,8 +144,13 @@ def test_parse_filters_is_tolerant() -> None:
     assert f["price_min"] is None and f["price_max"] == 8000 and f["year_min"] is None
     assert (
         f["country"] == ["DE", "BE"]
-        and f["model_key"] == "vw-golf-6"
+        and f["model_key"] == ["vw-golf-6"]
         and f["no_accident"] is True
         and f["new_hours"] == 168
     )
     assert parse_filters(P({}), [])["country"] is None
+    g = parse_filters(
+        P({"make": ["BMW", "Audi"], "model": ["VW Golf VI 1.2/1.4 TSI", "vw-golf-7"]}),
+        [("vw-golf-6", "VW Golf VI 1.2/1.4 TSI")],
+    )
+    assert g["make"] == ["BMW", "Audi"] and g["model_key"] == ["vw-golf-6", "vw-golf-7"]

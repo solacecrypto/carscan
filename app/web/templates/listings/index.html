@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 {% set active = f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.country or f.new_hours or f.price_dropped or f.include_inactive or f.include_duplicates or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full %}
-{% set model_label = dict(models).get(f.model_key, f.model_key) if f.model_key else '' %}
 <div class="mb-4 flex items-end justify-between">
   <div><h1>Listings</h1><p class="text-sm text-ink-400">Foreign cars worth importing, newest first</p></div>
 </div>
@@ -10,20 +9,26 @@
     <span>Filters &amp; sort</span>
     <span class="text-xs font-normal text-ink-300">{{ 'active' if active else 'tap to refine' }}</span>
   </summary>
-  <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit, input changed delay:500ms from:input[name=make], input changed delay:500ms from:input[name=model]" hx-push-url="true" class="mt-4 space-y-4">
+  <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true" class="mt-4 space-y-4">
     <div class="grid gap-3 sm:grid-cols-2">
-      <label class="relative block">
+      {% set selected_models = f.model_key or [] %}
+      {% set labels = dict(models) %}
+      <div class="chips" data-name="make" data-list="brand-list">
         <span class="label">Brand</span>
-        <input name="make" list="brand-list" value="{{ f.make or '' }}" placeholder="any brand" autocomplete="off"
-               class="input !rounded-full !px-5 !py-3 !text-base font-medium">
+        <div class="input mt-1 flex min-h-[3.25rem] flex-wrap items-center gap-1.5 !rounded-full !px-4 !py-2">
+          {% for b in (f.make or []) %}<span class="chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950" data-value="{{ b }}">{{ b }} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="make" value="{{ b }}"></span>{% endfor %}
+          <input type="text" list="brand-list" placeholder="{{ 'add brand' if f.make else 'any brand' }}" autocomplete="off" class="min-w-[8rem] flex-1 bg-transparent text-base font-medium text-white outline-none placeholder:text-ink-300">
+        </div>
         <datalist id="brand-list">{% for b in brands %}<option value="{{ b }}">{% endfor %}</datalist>
-      </label>
-      <label class="relative block">
+      </div>
+      <div class="chips" data-name="model" data-list="model-list">
         <span class="label">Model</span>
-        <input name="model" list="model-list" value="{{ model_label }}" placeholder="any model" autocomplete="off"
-               class="input !rounded-full !px-5 !py-3 !text-base font-medium">
+        <div class="input mt-1 flex min-h-[3.25rem] flex-wrap items-center gap-1.5 !rounded-full !px-4 !py-2">
+          {% for key in selected_models %}<span class="chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950" data-value="{{ labels.get(key, key) }}">{{ labels.get(key, key) }} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="model" value="{{ labels.get(key, key) }}"></span>{% endfor %}
+          <input type="text" list="model-list" placeholder="{{ 'add model' if selected_models else 'any model' }}" autocomplete="off" class="min-w-[8rem] flex-1 bg-transparent text-base font-medium text-white outline-none placeholder:text-ink-300">
+        </div>
         <datalist id="model-list">{% for key, label in models %}<option value="{{ label }}" data-make="{{ model_makes.get(key, '') }}">{% endfor %}</datalist>
-      </label>
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {% macro num(name, label, val, step=1) -%}
@@ -68,19 +73,37 @@
   </form>
 </details>
 <script>
-  // The model suggestions follow the chosen brand; clearing the brand shows every model again.
+  // Brand and Model are chip inputs: type or pick a suggestion, press Enter or choose from the list
+  // to add a chip; × removes it. Model suggestions follow the selected brands.
   (function () {
     const form = document.getElementById('filters');
-    const brand = form.querySelector('input[name=make]');
-    const list = document.getElementById('model-list');
-    const all = Array.from(list.options).map(o => ({ value: o.value, make: o.dataset.make }));
-    function refresh() {
-      const b = brand.value.trim().toLowerCase();
-      list.innerHTML = '';
-      all.filter(o => !b || o.make.toLowerCase() === b).forEach(o => { const e = document.createElement('option'); e.value = o.value; e.dataset.make = o.make; list.appendChild(e); });
+    const modelList = document.getElementById('model-list');
+    const allModels = Array.from(modelList.options).map(o => ({ value: o.value, make: o.dataset.make }));
+    const allBrands = Array.from(document.getElementById('brand-list').options).map(o => o.value);
+    function selected(name) { return Array.from(form.querySelectorAll(`input[type=hidden][name=${name}]`)).map(i => i.value); }
+    function refreshModels() {
+      const brands = selected('make').map(b => b.toLowerCase());
+      modelList.innerHTML = '';
+      allModels.filter(o => !brands.length || brands.includes(o.make.toLowerCase()))
+        .forEach(o => { const e = document.createElement('option'); e.value = o.value; e.dataset.make = o.make; modelList.appendChild(e); });
     }
-    brand.addEventListener('input', refresh);
-    refresh();
+    function changed() { refreshModels(); form.dispatchEvent(new Event('change', { bubbles: true })); }
+    form.querySelectorAll('.chips').forEach(box => {
+      const name = box.dataset.name, text = box.querySelector('input[type=text]'), wrap = text.parentElement;
+      const options = () => name === 'make' ? allBrands : Array.from(modelList.options).map(o => o.value);
+      function add(raw) {
+        const match = options().find(v => v.toLowerCase() === raw.trim().toLowerCase());
+        if (!match || selected(name).some(v => v.toLowerCase() === match.toLowerCase())) { text.value = ''; return; }
+        const chip = document.createElement('span');
+        chip.className = 'chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950'; chip.dataset.value = match;
+        chip.innerHTML = `${match} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="${name}" value="${match.replace(/"/g, '&quot;')}">`;
+        wrap.insertBefore(chip, text); text.value = ''; text.placeholder = name === 'make' ? 'add brand' : 'add model'; changed();
+      }
+      text.addEventListener('change', () => add(text.value));
+      text.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); add(text.value); } if (e.key === 'Backspace' && !text.value) { const last = wrap.querySelector('.chip:last-of-type'); if (last) { last.remove(); changed(); } } });
+      wrap.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { b.closest('.chip').remove(); changed(); } else { text.focus(); } });
+    });
+    refreshModels();
   })();
 </script>
 {% include "listings/_results.html" %}
