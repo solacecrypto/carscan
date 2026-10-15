@@ -1,86 +1,202 @@
 {% extends "base.html" %}
 {% block content %}
-{% set active = f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.profitable or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.country or f.new_hours or f.price_dropped or f.include_inactive or f.include_duplicates or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full %}
-<div class="mb-4 flex items-end justify-between">
-  <div><h1>Listings</h1><p class="text-sm text-ink-400">Foreign cars worth importing, newest first</p></div>
-</div>
-<details class="panel mb-5 p-4" {{ 'open' if active }}>
-  <summary class="flex cursor-pointer items-center justify-between font-semibold text-white">
-    <span>Filters &amp; sort</span>
-    <span class="flex items-center gap-3 text-xs font-normal text-ink-300">
-      {% if active %}<a href="/listings" class="rounded-full border border-white/20 px-3 py-1 text-white hover:bg-white/10">Reset filters</a>{% else %}tap to refine{% endif %}
+{% set selected_models = f.model_key or [] %}
+{% set labels = dict(models) %}
+{# which filter groups carry a value: drives the accent bar, the open state and the counter #}
+{% set g = {
+  'brand': (f.make or selected_models) and true,
+  'price': (f.price_min or f.price_max or f.landed_max) and true,
+  'return': (f.profitable or f.spread_min) and true,
+  'year': (f.year_min or f.year_max) and true,
+  'mileage': f.mileage_max and true,
+  'gearbox': f.gearbox and true,
+  'seller': f.seller_type and true,
+  'country': f.country and true,
+  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full) and true,
+  'listed': (f.new_hours or f.price_dropped) and true,
+  'more': (f.include_inactive or f.include_duplicates) and true,
+} %}
+{% set n_active = g.values()|select|list|length %}
+{% set active = n_active > 0 %}
+
+{% macro icon(name) -%}
+<svg class="h-5 w-5 shrink-0 text-ink-300 group-open:text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {%- if name == 'brand' %}<path d="M3 13l2-5h14l2 5M4 13h16v5H4zM7 18v2M17 18v2M7 15.5h.01M17 15.5h.01"/>
+  {%- elif name == 'price' %}<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3.5 3.5 0 100 5M8 11h5M8 13h5"/>
+  {%- elif name == 'return' %}<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>
+  {%- elif name == 'year' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+  {%- elif name == 'mileage' %}<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M8 10v4M12 10v4M16 10v4"/>
+  {%- elif name == 'gearbox' %}<path d="M6 4v16M12 4v16M18 4v8M6 12h12"/>
+  {%- elif name == 'seller' %}<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>
+  {%- elif name == 'country' %}<path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.2"/>
+  {%- elif name == 'condition' %}<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4"/>
+  {%- elif name == 'listed' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+  {%- elif name == 'more' %}<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
+  {%- endif %}
+</svg>
+{%- endmacro %}
+
+{# one accordion row: icon, label, current value, chevron; accent bar when the group is set #}
+{% macro row(key, label, value) -%}
+<details class="frow group border-l-4 {{ 'border-brand-500' if g[key] else 'border-transparent' }}" {{ 'open' if g[key] }}>
+  <summary class="flex cursor-pointer select-none items-center gap-3 px-3 py-3 hover:bg-white/5">
+    {{ icon(key) }}
+    <span class="min-w-0 flex-1">
+      <span class="block text-sm {{ 'font-semibold text-white' if g[key] else 'font-medium text-ink-100' }}">{{ label }}</span>
+      {% if value %}<span class="block truncate text-xs text-brand-300">{{ value }}</span>{% endif %}
     </span>
+    <svg class="h-4 w-4 shrink-0 text-ink-400 transition group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
   </summary>
-  <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true" class="mt-4 space-y-4">
-    <div class="grid gap-3 sm:grid-cols-2">
-      {% set selected_models = f.model_key or [] %}
-      {% set labels = dict(models) %}
-      <div class="chips" data-name="make" data-list="brand-list">
-        <span class="label">Brand</span>
-        <div class="input mt-1 flex min-h-[3.25rem] flex-wrap items-center gap-1.5 !rounded-full !px-4 !py-2">
-          {% for b in (f.make or []) %}<span class="chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950" data-value="{{ b }}">{{ b }} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="make" value="{{ b }}"></span>{% endfor %}
-          <input type="text" list="brand-list" placeholder="{{ 'add brand' if f.make else 'any brand' }}" autocomplete="off" class="min-w-[8rem] flex-1 bg-transparent text-base font-medium text-white outline-none placeholder:text-ink-300">
-        </div>
-        <datalist id="brand-list">{% for b in brands %}<option value="{{ b }}">{% endfor %}</datalist>
+  <div class="space-y-3 px-3 pb-4 pt-1">{{ caller() }}</div>
+</details>
+{%- endmacro %}
+
+{% macro num(name, label, val, step=1, placeholder='') -%}
+<label class="label block text-xs">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" placeholder="{{ placeholder }}" class="input"></label>
+{%- endmacro %}
+
+{# radio pills: one group, empty value = any #}
+{% macro pills(name, options, current) -%}
+<div class="flex flex-wrap gap-1.5">
+  {% for v, t in options %}
+  <label class="cursor-pointer">
+    <input type="radio" name="{{ name }}" value="{{ v }}" class="peer sr-only" {{ 'checked' if (current|string == v|string) or (not current and not v) }}>
+    <span class="pill inline-block border border-white/15 px-3 py-1.5 text-xs text-ink-200 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ t }}</span>
+  </label>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro checks(items) -%}
+<div class="space-y-0.5">
+  {% for name, text in items %}
+  <label class="check !px-1"><input type="checkbox" name="{{ name }}" value="true" {{ 'checked' if f[name] }}> {{ text }}</label>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+<div class="mb-4 flex items-end justify-between gap-3">
+  <div><h1>Listings</h1><p class="text-sm text-ink-400">Foreign cars worth importing, newest first</p></div>
+  <button type="button" id="filters-toggle" class="btn-ghost lg:hidden" aria-controls="filter-panel" aria-expanded="false">
+    Filters{% if n_active %} <span class="ml-1 rounded-full bg-brand-500 px-2 py-0.5 text-xs font-bold text-ink-950">{{ n_active }}</span>{% endif %}
+  </button>
+</div>
+
+<div class="lg:flex lg:items-start lg:gap-6">
+  <aside id="filter-panel" class="mb-5 hidden lg:sticky lg:top-16 lg:mb-0 lg:block lg:w-72 lg:shrink-0">
+    <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit, change from:#sort" hx-push-url="true"
+          class="panel divide-y divide-white/10 overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3">
+        <span class="flex items-center gap-2 font-semibold text-white">
+          <svg class="h-5 w-5 text-ink-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/></svg>
+          Filters
+        </span>
+        <a href="/listings" class="text-sm font-semibold {{ 'text-brand-400 hover:text-brand-300' if active else 'text-ink-500' }}">Reset filters</a>
       </div>
-      <div class="chips" data-name="model" data-list="model-list">
-        <span class="label">Model</span>
-        <div class="input mt-1 flex min-h-[3.25rem] flex-wrap items-center gap-1.5 !rounded-full !px-4 !py-2">
-          {% for key in selected_models %}<span class="chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950" data-value="{{ labels.get(key, key) }}">{{ labels.get(key, key) }} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="model" value="{{ labels.get(key, key) }}"></span>{% endfor %}
-          <input type="text" list="model-list" placeholder="{{ 'add model' if selected_models else 'any model' }}" autocomplete="off" class="min-w-[8rem] flex-1 bg-transparent text-base font-medium text-white outline-none placeholder:text-ink-300">
+
+      {% call row('brand', 'Brand and model', ((f.make or [])|join(', ')) ~ ((' · ' if f.make and selected_models) ~ (selected_models|length ~ ' model' ~ ('' if selected_models|length == 1 else 's') if selected_models else '')) if g.brand else '') %}
+        <div class="chips" data-name="make" data-list="brand-list">
+          <span class="label text-xs">Brand</span>
+          <div class="input mt-1 flex min-h-[2.75rem] flex-wrap items-center gap-1.5 !rounded-xl !px-3 !py-1.5">
+            {% for b in (f.make or []) %}<span class="chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950" data-value="{{ b }}">{{ b }} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="make" value="{{ b }}"></span>{% endfor %}
+            <input type="text" list="brand-list" placeholder="{{ 'add brand' if f.make else 'any brand' }}" autocomplete="off" class="min-w-[6rem] flex-1 bg-transparent text-sm font-medium text-white outline-none placeholder:text-ink-300">
+          </div>
+          <datalist id="brand-list">{% for b in brands %}<option value="{{ b }}">{% endfor %}</datalist>
         </div>
-        <datalist id="model-list">{% for key, label in models %}<option value="{{ label }}" data-make="{{ model_makes.get(key, '') }}">{% endfor %}</datalist>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {% macro num(name, label, val, step=1) -%}
-      <label class="label block">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" class="input"></label>
-      {%- endmacro %}
-      {% macro sel(name, label, options, current) -%}
-      <label class="label block">{{ label }}
-        <select name="{{ name }}" class="input">
-          {% for v, t in options %}<option value="{{ v }}" {{ 'selected' if (current|string == v|string) or (not current and not v) }}>{{ t }}</option>{% endfor %}
-        </select></label>
-      {%- endmacro %}
-      {{ num('price_min', 'Price from €', f.price_min, 100) }}
-      {{ num('price_max', 'Price to €', f.price_max, 100) }}
-      {{ num('landed_max', 'Landed cost to €', f.landed_max, 100) }}
-      {{ num('spread_min', 'Spread from €', f.spread_min, 100) }}
-      {{ num('mileage_max', 'Max km', f.mileage_max, 1000) }}
-      {{ num('year_min', 'Year from', f.year_min) }}
-      {{ num('year_max', 'Year to', f.year_max) }}
-      {{ sel('gearbox', 'Gearbox', [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')], f.gearbox) }}
-      {{ sel('seller_type', 'Seller', [('', 'any'), ('dealer', 'dealer'), ('private', 'private')], f.seller_type) }}
-      {{ sel('new_hours', 'New', [('', 'any time'), (24, 'today'), (168, 'this week'), (720, 'this month')], f.new_hours) }}
-      {{ sel('sort', 'Sort', [('newest', 'newest first'), ('spread_desc', 'spread ↓'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('landed_asc', 'landed cost ↑'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change')], sort) }}
-      <div class="col-span-2 sm:col-span-1">
-        <span class="label block">Country</span>
-        <div class="mt-1 flex flex-wrap gap-1.5">
-          {% for c in ['DE', 'BE', 'IT', 'SE'] %}
+        <div class="chips" data-name="model" data-list="model-list">
+          <span class="label text-xs">Model</span>
+          <div class="input mt-1 flex min-h-[2.75rem] flex-wrap items-center gap-1.5 !rounded-xl !px-3 !py-1.5">
+            {% for key in selected_models %}<span class="chip pill bg-brand-500 px-3 py-1 text-xs text-ink-950" data-value="{{ labels.get(key, key) }}">{{ labels.get(key, key) }} <button type="button" class="ml-1 font-bold" aria-label="remove">×</button><input type="hidden" name="model" value="{{ labels.get(key, key) }}"></span>{% endfor %}
+            <input type="text" list="model-list" placeholder="{{ 'add model' if selected_models else 'any model' }}" autocomplete="off" class="min-w-[6rem] flex-1 bg-transparent text-sm font-medium text-white outline-none placeholder:text-ink-300">
+          </div>
+          <datalist id="model-list">{% for key, label in models %}<option value="{{ label }}" data-make="{{ model_makes.get(key, '') }}">{% endfor %}</datalist>
+        </div>
+      {% endcall %}
+
+      {% call row('price', 'Price', (('€ ' ~ f.price_min if f.price_min else '') ~ (' – ' if f.price_min and f.price_max else ('up to ' if f.price_max and not f.price_min else '')) ~ (('€ ' if not f.price_min else '') ~ f.price_max if f.price_max else '') ~ (' · landed ≤ € ' ~ f.landed_max if f.landed_max else '')).strip() if g.price else '') %}
+        <div class="grid grid-cols-2 gap-2">
+          {{ num('price_min', 'From €', f.price_min, 100, 'min') }}
+          {{ num('price_max', 'To €', f.price_max, 100, 'max') }}
+        </div>
+        {{ num('landed_max', 'Landed cost up to €', f.landed_max, 100, 'purchase + transport + BPM + fees') }}
+      {% endcall %}
+
+      {% call row('return', 'Return', ('positive only' if f.profitable else '') ~ (' · ' if f.profitable and f.spread_min else '') ~ ('spread ≥ € ' ~ f.spread_min if f.spread_min else '') if g.return else '') %}
+        {{ checks([('profitable', 'positive return only')]) }}
+        {{ num('spread_min', 'Spread at least €', f.spread_min, 100, 'NL value − landed cost') }}
+      {% endcall %}
+
+      {% call row('year', 'Build year', (f.year_min|string if f.year_min else '…') ~ ' – ' ~ (f.year_max|string if f.year_max else '…') if g.year else '') %}
+        <div class="grid grid-cols-2 gap-2">
+          {{ num('year_min', 'From', f.year_min, 1, '2008') }}
+          {{ num('year_max', 'To', f.year_max, 1, '2015') }}
+        </div>
+      {% endcall %}
+
+      {% call row('mileage', 'Mileage', ('up to ' ~ f.mileage_max ~ ' km') if g.mileage else '') %}
+        {{ num('mileage_max', 'Up to km', f.mileage_max, 1000, '150000') }}
+      {% endcall %}
+
+      {% call row('gearbox', 'Transmission', f.gearbox if g.gearbox else '') %}
+        {{ pills('gearbox', [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')], f.gearbox) }}
+      {% endcall %}
+
+      {% call row('seller', 'Seller', f.seller_type if g.seller else '') %}
+        {{ pills('seller_type', [('', 'any'), ('dealer', 'dealer'), ('private', 'private')], f.seller_type) }}
+      {% endcall %}
+
+      {% call row('country', 'Location', (f.country|join(', ')) if g.country else '') %}
+        <div class="flex flex-wrap gap-1.5">
+          {% for c, t in [('DE', 'Germany'), ('BE', 'Belgium'), ('IT', 'Italy'), ('SE', 'Sweden')] %}
           <label class="cursor-pointer">
             <input type="checkbox" name="country" value="{{ c }}" class="peer sr-only" {{ 'checked' if f.country and c in f.country }}>
-            <span class="pill border border-white/15 px-3 py-1.5 text-xs text-ink-200 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ c }}</span>
+            <span class="pill inline-block border border-white/15 px-3 py-1.5 text-xs text-ink-200 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ t }}</span>
           </label>
           {% endfor %}
         </div>
-      </div>
+      {% endcall %}
+
+      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full)]|select|join(', ')) if g.condition else '') %}
+        {{ checks([('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')]) }}
+      {% endcall %}
+
+      {% call row('listed', 'Listed', ([({24: 'today', 168: 'this week', 720: 'this month'}.get(f.new_hours, 'last ' ~ f.new_hours ~ ' h') if f.new_hours), ('price dropped' if f.price_dropped)]|select|join(' · ')) if g.listed else '') %}
+        {{ pills('new_hours', [('', 'any time'), (24, 'today'), (168, 'this week'), (720, 'this month')], f.new_hours) }}
+        {{ checks([('price_dropped', 'price dropped')]) }}
+      {% endcall %}
+
+      {% call row('more', 'More', ([('gone' if f.include_inactive), ('duplicates' if f.include_duplicates)]|select|join(', ')) if g.more else '') %}
+        {{ checks([('include_inactive', 'include gone cars'), ('include_duplicates', 'include duplicates')]) }}
+      {% endcall %}
+
+      <noscript><div class="p-3"><button class="btn-primary w-full">Apply</button></div></noscript>
+    </form>
+  </aside>
+
+  <div class="min-w-0 flex-1">
+    <div class="mb-3 flex items-center justify-end gap-2 text-sm text-ink-500">
+      <label for="sort">Sort by</label>
+      <select id="sort" name="sort" form="filters" class="input !mt-0 !w-auto !py-1.5">
+        {% for v, t in [('newest', 'newest first'), ('spread_desc', 'spread, highest first'), ('price_asc', 'price, lowest first'), ('price_desc', 'price, highest first'), ('landed_asc', 'landed cost, lowest first'), ('mileage', 'mileage, lowest first'), ('year_desc', 'year, newest first'), ('price_change', 'recent price change')] %}
+        <option value="{{ v }}" {{ 'selected' if sort == v }}>{{ t }}</option>
+        {% endfor %}
+      </select>
     </div>
-    <div class="grid grid-cols-2 gap-1 lg:grid-cols-4">
-      {% for name, text in [('profitable', 'positive return only'), ('price_dropped', 'price dropped'), ('include_inactive', 'include gone'), ('include_duplicates', 'include duplicates'),
-                            ('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'chain replaced'), ('service_full', 'full service history')] %}
-      <label class="check"><input type="checkbox" name="{{ name }}" value="true" {{ 'checked' if f[name] }}> {{ text }}</label>
-      {% endfor %}
-    </div>
-    <div class="flex items-center justify-between">
-      <a href="/listings" class="btn-ghost !bg-white/10 !text-ink-100 hover:!bg-white/20">Reset filters</a>
-      <noscript><button class="btn-primary">Apply</button></noscript>
-    </div>
-  </form>
-</details>
+    {% include "listings/_results.html" %}
+  </div>
+</div>
+
 <script>
-  // Brand and Model are chip inputs: type or pick a suggestion, press Enter or choose from the list
-  // to add a chip; × removes it. Model suggestions follow the selected brands.
   (function () {
+    // Mobile: the sidebar is a drawer behind the Filters button; on large screens it is always shown.
+    const panel = document.getElementById('filter-panel'), toggle = document.getElementById('filters-toggle');
+    toggle.addEventListener('click', () => {
+      const open = panel.classList.toggle('hidden') === false;
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    // Brand and Model are chip inputs: type or pick a suggestion, press Enter or choose from the list
+    // to add a chip; × removes it. Model suggestions follow the selected brands.
     const form = document.getElementById('filters');
     const modelList = document.getElementById('model-list');
     const allModels = Array.from(modelList.options).map(o => ({ value: o.value, make: o.dataset.make }));
@@ -109,7 +225,16 @@
       wrap.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { b.closest('.chip').remove(); changed(); } else { text.focus(); } });
     });
     refreshModels();
+
+    // Keep the accent bar and the value line of each row in step as the user changes things
+    // (the server renders them on a full page load; htmx only swaps the results).
+    form.addEventListener('change', () => {
+      form.querySelectorAll('details.frow').forEach(d => {
+        const set = Array.from(d.querySelectorAll('input, select')).some(i =>
+          (i.type === 'checkbox' || i.type === 'radio') ? (i.checked && i.value !== '') : (i.type !== 'text' && i.value !== ''));
+        d.classList.toggle('border-brand-500', set); d.classList.toggle('border-transparent', !set);
+      });
+    });
   })();
 </script>
-{% include "listings/_results.html" %}
 {% endblock %}
