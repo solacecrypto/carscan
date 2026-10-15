@@ -42,6 +42,8 @@ def parse_items(html: str) -> list[dict[str, Any]]:
     tree = LexborHTMLParser(html)
     nodes = tree.css("li.result-list-item")
     if not nodes and "result-list" not in html:
+        if "Inga fordon matchade" in html:  # genuine empty result page
+            return []
         raise ParseError("no result list found (markup changed or blocked)")
     out: list[dict[str, Any]] = []
     for n in nodes:

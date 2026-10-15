@@ -276,3 +276,20 @@ def test_bytbil_parse() -> None:
         and n.raw["price_sek"] > 0
         and n.price_eur == to_eur(n.raw["price_sek"], "SEK")
     )
+
+
+def test_bytbil_empty_result_page_is_not_an_error() -> None:
+    from app.scrapers.bytbil import parse_items
+
+    html = "<html><body><h2>Inga fordon matchade sökningen!</h2></body></html>"
+    assert parse_items(html) == []
+
+
+def test_bytbil_unknown_page_still_raises() -> None:
+    import pytest
+
+    from app.scrapers.bytbil import parse_items
+    from app.scrapers.errors import ParseError
+
+    with pytest.raises(ParseError):
+        parse_items("<html><body>Access denied</body></html>")

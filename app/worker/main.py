@@ -7,6 +7,7 @@
 
 import signal
 import time
+from datetime import UTC, datetime
 
 import structlog
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -22,6 +23,8 @@ log = structlog.get_logger()
 def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
     """Every few minutes, run the searches whose own interval has elapsed."""
     scheduler = BackgroundScheduler(timezone="UTC")
+    # One job only: max_instances=1 keeps a long pass from overlapping with the next tick.
+    # (A separate start-up job would run concurrently with it and double-run searches.)
     scheduler.add_job(
         run_due_searches,
         IntervalTrigger(minutes=min(5, interval_minutes), jitter=30),
@@ -29,8 +32,8 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         max_instances=1,
         coalesce=True,
         misfire_grace_time=600,
+        next_run_time=datetime.now(UTC),
     )
-    scheduler.add_job(run_due_searches, id="scrape_due_initial", max_instances=1)
     scheduler.add_job(
         analyze_backlog,
         IntervalTrigger(minutes=10, jitter=60),
