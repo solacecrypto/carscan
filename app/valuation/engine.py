@@ -94,6 +94,7 @@ class ValuationConfig:
     close_mileage_pct: float = 15.0
     close_mileage_km: int = 20_000  # or this many km, whichever is larger
     close_power_kw: int = 15
+    close_max_deviation_pct: float = 30.0  # benchmark must sit this close to the median
 
     @classmethod
     def from_mapping(cls, m: dict[str, Decimal]) -> ValuationConfig:
@@ -111,6 +112,7 @@ class ValuationConfig:
             ("close_mileage_pct", float),
             ("close_mileage_km", int),
             ("close_power_kw", int),
+            ("close_max_deviation_pct", float),
         ):
             if f in m:
                 kw[f] = typ(m[f])
@@ -148,11 +150,12 @@ def _quartile(values: list[float], q: float) -> float:
 def match_facts(target: Target, c: Comp, cfg: ValuationConfig) -> dict[str, Any] | None:
     """Why a comparable counts as a close match of the target, or None when it does not.
 
-    Engine, gearbox, fuel and power only count when both sides know them; year and mileage
-    must be within the close windows. ``perfect`` = same year and mileage within 5%."""
+    The engine designation must be known on both sides and equal; gearbox, fuel and power
+    only count when both sides know them; year and mileage must be within the close windows.
+    ``perfect`` = same year and mileage within 5%."""
     if target.year is None or c.year is None or abs(c.year - target.year) > cfg.close_year_window:
         return None
-    if target.engine and c.engine and target.engine != c.engine:
+    if not target.engine or target.engine != c.engine:
         return None
     if target.gearbox and c.gearbox and target.gearbox != c.gearbox:
         return None
@@ -246,6 +249,12 @@ def estimate_value(target: Target, comps: list[Comp], cfg: ValuationConfig) -> V
     close.sort(key=lambda t: _closeness(target, t[0], t[1]))
     benchmark: dict[str, Any] | None = None
     value = median_value
+    # a mislabelled or absurdly priced "match" must not set the value: the benchmark has to
+    # sit within close_max_deviation_pct of the reference (median of the close matches when
+    # there are at least three, else of the whole pool)
+    reference = median([adjusted(c) for c, _ in close]) if len(close) >= 3 else med
+    tolerance = reference * cfg.close_max_deviation_pct / 100
+    close = [(c, f) for c, f in close if abs(adjusted(c) - reference) <= tolerance]
     if close:
         best, facts = close[0]
         value = adjusted(best) * (1 - cfg.haircut_pct / 100)

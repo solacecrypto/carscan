@@ -209,3 +209,18 @@ def test_without_close_match_the_median_method_is_unchanged() -> None:
     est = estimate_value(target, comps, CFG)
     assert est is not None and est.method == "median" and est.benchmark is None
     assert est.value_eur == round(7800 * 0.93) and est.median_value_eur == est.value_eur
+
+
+def test_outlier_match_is_not_used_as_benchmark() -> None:
+    target = Target("320i", "sedan", 2012, 160_000, engine="320i", gearbox="manual")
+    comps = [
+        _cx(1, 2012, 158_000, 19_000, engine="320i", gearbox="manual"),  # mispriced "match"
+        _cx(2, 2012, 150_000, 8000, engine="318i", gearbox="manual"),
+        _cx(3, 2012, 170_000, 7600, engine="318i", gearbox="manual"),
+        _cx(4, 2013, 130_000, 8400, engine="318i", gearbox="manual"),
+    ]
+    est = estimate_value(target, comps, CFG)
+    assert est is not None and est.method == "median" and est.benchmark is None
+    # unknown engine on the target: never a close match
+    est = estimate_value(Target("320i", "sedan", 2012, 160_000), comps, CFG)
+    assert est is not None and est.method == "median"

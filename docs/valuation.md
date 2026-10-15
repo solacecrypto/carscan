@@ -40,6 +40,9 @@ gearbox when both are known, same fuel, power within `close_power_kw`, registrat
 `close_year_window` years and mileage within `close_mileage_pct` % (at least
 `close_mileage_km`). The best one (perfect matches first, then most shared facts, smallest
 gaps) becomes the **benchmark**: NL value = its mileage-adjusted asking price × (1 − haircut).
+A match whose adjusted price is more than `close_max_deviation_pct` away from the reference
+(median of the close matches when there are ≥ 3, else of the whole pool) is skipped, so a
+mislabelled or absurdly priced ad cannot set the value.
 The breakdown keeps `method` (`benchmark` | `median`), `benchmark` with the match facts, and
 `median_value_eur` for context. Without a close match the median method applies unchanged.
 

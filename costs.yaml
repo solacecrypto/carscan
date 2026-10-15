@@ -80,3 +80,4 @@ valuation:
   close_mileage_pct: 15
   close_mileage_km: 20000
   close_power_kw: 15
+  close_max_deviation_pct: 30   # a match priced further from the median than this is ignored
