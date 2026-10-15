@@ -10,7 +10,7 @@
     <span>Filters &amp; sort</span>
     <span class="text-xs font-normal text-ink-300">{{ 'active' if active else 'tap to refine' }}</span>
   </summary>
-  <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit, search" hx-push-url="true" class="mt-4 space-y-4">
+  <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit, input changed delay:500ms from:input[name=make], input changed delay:500ms from:input[name=model]" hx-push-url="true" class="mt-4 space-y-4">
     <div class="grid gap-3 sm:grid-cols-2">
       <label class="relative block">
         <span class="label">Brand</span>

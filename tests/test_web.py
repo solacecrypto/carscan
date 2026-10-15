@@ -195,6 +195,10 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text
     assert "No listings match" in client.get("/listings?new_hours=1").text
+    pushed = client.get(
+        "/listings?make=&gearbox=automatic&price_min=", headers={"HX-Request": "true"}
+    )
+    assert pushed.headers["HX-Push-Url"] == "/listings?gearbox=automatic"
     partial = client.get("/listings?sort=mileage", headers={"HX-Request": "true"}).text
     assert (
         partial.lstrip().startswith('<div id="results">')

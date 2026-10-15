@@ -67,8 +67,12 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "f": f,
         "query": _clean_query(request),
     }
-    name = "listings/_results.html" if request.headers.get("HX-Request") else "listings/index.html"
-    return templates.TemplateResponse(request, name, ctx)
+    if request.headers.get("HX-Request"):
+        resp = templates.TemplateResponse(request, "listings/_results.html", ctx)
+        clean = ctx["query"]
+        resp.headers["HX-Push-Url"] = "/listings" + (f"?{clean}" if clean else "")
+        return resp
+    return templates.TemplateResponse(request, "listings/index.html", ctx)
 
 
 def _clean_query(request: Request) -> str:
