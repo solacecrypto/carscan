@@ -175,7 +175,8 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert "No listings match" in client.get("/listings?price_max=5000").text
     assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
     assert "No listings match" in client.get("/listings?landed_max=7000").text
-    assert "+€ 1.600 (20.8%)" in client.get("/listings?spread_min=1000&sort=spread_desc").text
+    page = client.get("/listings?spread_min=1000&sort=spread_desc").text
+    assert "+€ 1.600" in page and "(20.8%)" in page
     assert "No listings match" in client.get("/listings?make=Audi").text
     assert "320i" in client.get("/listings?make=bmw").text
     assert "No listings match" in client.get("/listings?model_key=vw-golf-6").text

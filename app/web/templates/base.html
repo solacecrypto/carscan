@@ -4,25 +4,67 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}{{ title }}{% endblock %} · Car Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            ink: { 50: '#f4f6f8', 100: '#e7ebf0', 200: '#cfd6df', 300: '#a9b4c3', 400: '#7a889c', 500: '#55657c', 600: '#3f4d62', 700: '#2f3b4c', 800: '#1f2937', 900: '#121a26', 950: '#0b1017' },
+            brand: { 50: '#fff8eb', 100: '#ffeec6', 200: '#ffd98a', 300: '#ffbf4d', 400: '#f5a623', 500: '#e08a0b', 600: '#bf6d05', 700: '#984f08', 800: '#7c3f0e', 900: '#663410' },
+            good: { 100: '#dcf5e7', 700: '#15803d' },
+            bad: { 100: '#fde4e4', 700: '#b91c1c' },
+          },
+          boxShadow: { card: '0 1px 2px rgba(18,26,38,.06), 0 8px 24px -12px rgba(18,26,38,.25)' },
+        },
+      },
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer components {
+      .card { @apply rounded-2xl bg-white shadow-card ring-1 ring-ink-900/5; }
+      .panel { @apply rounded-2xl bg-gradient-to-br from-ink-800 to-ink-900 text-ink-100 shadow-card; }
+      .label { @apply text-[11px] font-semibold uppercase tracking-wider text-ink-400; }
+      .input { @apply mt-1 w-full rounded-lg border-0 bg-ink-100/80 px-3 py-2 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-400; }
+      .panel .input { @apply bg-white/10 text-white ring-white/15 placeholder:text-ink-300 focus:bg-white/15 focus:ring-brand-400; }
+      .panel .label { @apply text-ink-300; }
+      .panel select.input option { @apply text-ink-900; }
+      .check { @apply flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/10; }
+      .check input { @apply h-4 w-4 rounded border-ink-300 text-brand-500 focus:ring-brand-400; }
+      .btn { @apply inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition; }
+      .btn-primary { @apply btn bg-brand-500 text-ink-950 hover:bg-brand-400; }
+      .btn-dark { @apply btn bg-ink-900 text-white hover:bg-ink-700; }
+      .btn-ghost { @apply btn bg-ink-100 text-ink-700 hover:bg-ink-200; }
+      .btn-outline { @apply btn border border-ink-300 text-ink-700 hover:border-ink-500; }
+      .pill { @apply rounded-full px-2 py-0.5 text-[11px] font-semibold; }
+      .kv dt { @apply text-ink-400; }
+      h1 { @apply text-2xl font-bold tracking-tight text-ink-900; }
+      h2 { @apply font-semibold text-ink-900; }
+    }
+  </style>
   <script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
 </head>
-<body class="min-h-full bg-slate-100 text-slate-900" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
+<body class="min-h-full bg-ink-50 text-ink-900 antialiased" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
   {% if user %}
-  <nav class="bg-slate-900 text-slate-100">
-    <div class="mx-auto flex max-w-6xl items-center gap-1 px-3 py-2 text-sm">
-      <a href="/listings" class="rounded px-3 py-2 font-semibold hover:bg-slate-700">Listings</a>
-      <a href="/deals" class="rounded px-3 py-2 hover:bg-slate-700">Deals</a>
-      <a href="/searches" class="rounded px-3 py-2 hover:bg-slate-700">Searches</a>
-      <a href="/status" class="rounded px-3 py-2 hover:bg-slate-700">Status</a>
-      <form method="post" action="/logout" class="ml-auto">
+  <nav class="sticky top-0 z-20 border-b border-white/10 bg-ink-950/95 text-ink-100 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto whitespace-nowrap px-3 py-2 text-sm [scrollbar-width:none]">
+      <a href="/listings" class="mr-2 flex shrink-0 items-center gap-2 font-bold tracking-tight text-white">
+        <span class="inline-block h-6 w-6 rounded-md bg-brand-500"></span><span class="hidden sm:inline">Car Scanner</span></a>
+      {% set path = request.url.path %}
+      {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/searches', 'Searches'), ('/calibration', 'Calibration'), ('/status', 'Status')] %}
+      <a href="{{ href }}" class="shrink-0 rounded-lg px-3 py-1.5 {{ 'bg-white/10 text-white' if path.startswith(href) or (href == '/listings' and path == '/') else 'text-ink-300 hover:bg-white/5 hover:text-white' }}">{{ text }}</a>
+      {% endfor %}
+      <form method="post" action="/logout" class="ml-auto shrink-0">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button class="whitespace-nowrap rounded px-2 py-2 text-xs text-slate-300 hover:bg-slate-700" title="{{ user.username }}">log out</button>
+        <button class="whitespace-nowrap rounded-lg px-2 py-1.5 text-xs text-ink-400 hover:text-white" title="{{ user.username }}">log out</button>
       </form>
     </div>
   </nav>
   {% endif %}
-  <main class="mx-auto max-w-6xl px-3 py-4 sm:px-4">
+  <main class="mx-auto max-w-6xl px-3 py-5 sm:px-4">
     {% block content %}{% endblock %}
   </main>
 </body>

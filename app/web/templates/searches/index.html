@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="flex items-center justify-between">
-  <h1 class="text-xl font-bold">Saved searches</h1>
-  <a href="/searches/new" class="rounded bg-slate-900 px-3 py-1.5 text-sm text-white">+ New</a>
+  <h1>Saved searches</h1>
+  <a href="/searches/new" class="btn-primary">+ New</a>
 </div>
-<table class="mt-4 w-full rounded-xl bg-white p-2 text-sm shadow">
+<table class="mt-4 w-full card p-2 text-sm">
   <tbody>{% for s in searches %}{% include "searches/_row.html" %}{% else %}
-  <tr><td class="p-4 text-slate-500">No saved searches yet.</td></tr>{% endfor %}</tbody>
+  <tr><td class="p-4 text-ink-400">No saved searches yet.</td></tr>{% endfor %}</tbody>
 </table>
 {% endblock %}

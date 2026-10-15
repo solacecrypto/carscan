@@ -1,63 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<details class="mb-4 rounded-xl bg-white p-3 shadow" {{ 'open' if f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.new_hours or f.price_dropped or f.include_inactive }}>
-  <summary class="cursor-pointer font-semibold">Filters &amp; sort</summary>
+{% set active = f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.country or f.new_hours or f.price_dropped or f.include_inactive or f.include_duplicates or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full %}
+<div class="mb-4 flex items-end justify-between">
+  <div><h1>Listings</h1><p class="text-sm text-ink-400">Foreign cars worth importing, newest first</p></div>
+</div>
+<details class="panel mb-5 p-4" {{ 'open' if active }}>
+  <summary class="flex cursor-pointer items-center justify-between font-semibold text-white">
+    <span>Filters &amp; sort</span>
+    <span class="text-xs font-normal text-ink-300">{{ 'active' if active else 'tap to refine' }}</span>
+  </summary>
   <form hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true"
-        class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+        class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
     {% macro num(name, label, val, step=1) -%}
-    <label class="block">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" min="0"
-      class="mt-1 w-full rounded border border-slate-300 p-1.5"></label>
+    <label class="label block">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" min="0" class="input"></label>
     {%- endmacro %}
-    <label class="block">Make
-      <select name="make" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        <option value="">any</option>
-        {% for m in makes %}<option value="{{ m }}" {{ 'selected' if f.make == m }}>{{ m }}</option>{% endfor %}
+    {% macro sel(name, label, options, current) -%}
+    <label class="label block">{{ label }}
+      <select name="{{ name }}" class="input">
+        {% for v, t in options %}<option value="{{ v }}" {{ 'selected' if (current == v) or (not current and not v) }}>{{ t }}</option>{% endfor %}
       </select></label>
-    <label class="block">Model
-      <select name="model_key" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        <option value="">any</option>
-        {% for key, label in models %}<option value="{{ key }}" {{ 'selected' if f.model_key == key }}>{{ label }}</option>{% endfor %}
-      </select></label>
+    {%- endmacro %}
+    <label class="label block">Make
+      <select name="make" class="input"><option value="">any</option>
+        {% for m in makes %}<option value="{{ m }}" {{ 'selected' if f.make == m }}>{{ m }}</option>{% endfor %}</select></label>
+    <label class="label block">Model
+      <select name="model_key" class="input"><option value="">any</option>
+        {% for key, label in models %}<option value="{{ key }}" {{ 'selected' if f.model_key == key }}>{{ label }}</option>{% endfor %}</select></label>
     {{ num('price_min', 'Price from €', f.price_min, 100) }}
     {{ num('price_max', 'Price to €', f.price_max, 100) }}
     {{ num('landed_max', 'Landed cost to €', f.landed_max, 100) }}
-    <label class="block">Spread from €<input type="number" name="spread_min" value="{{ f.spread_min if f.spread_min is not none }}" step="100" class="mt-1 w-full rounded border border-slate-300 p-1.5"></label>
+    <label class="label block">Spread from €<input type="number" name="spread_min" value="{{ f.spread_min if f.spread_min is not none }}" step="100" class="input"></label>
     {{ num('mileage_max', 'Max km', f.mileage_max, 1000) }}
     {{ num('year_min', 'Year from', f.year_min) }}
     {{ num('year_max', 'Year to', f.year_max) }}
-    <label class="block">Gearbox
-      <select name="gearbox" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        {% for v, t in [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')] %}
-        <option value="{{ v }}" {{ 'selected' if f.gearbox == v or (not f.gearbox and not v) }}>{{ t }}</option>{% endfor %}
-      </select></label>
-    <label class="block">Seller
-      <select name="seller_type" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        {% for v, t in [('', 'any'), ('dealer', 'dealer'), ('private', 'private')] %}
-        <option value="{{ v }}" {{ 'selected' if f.seller_type == v or (not f.seller_type and not v) }}>{{ t }}</option>{% endfor %}
-      </select></label>
-    <label class="block">Country
-      <select name="country" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        {% for v in ['', 'DE', 'BE', 'SE', 'IT', 'NL'] %}
-        <option value="{{ v }}" {{ 'selected' if f.country == v or (not f.country and not v) }}>{{ v or 'any' }}</option>{% endfor %}
-      </select></label>
-    <label class="block">New in last
-      <select name="new_hours" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        {% for v, t in [('', 'any time'), (1, '1 hour'), (6, '6 hours'), (24, '24 hours'), (72, '3 days'), (168, '7 days')] %}
-        <option value="{{ v }}" {{ 'selected' if f.new_hours == v }}>{{ t }}</option>{% endfor %}
-      </select></label>
-    <label class="block">Sort
-      <select name="sort" class="mt-1 w-full rounded border border-slate-300 p-1.5">
-        {% for v, t in [('newest', 'newest first'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change'), ('landed_asc', 'landed cost ↑'), ('spread_desc', 'spread ↓')] %}
-        <option value="{{ v }}" {{ 'selected' if sort == v }}>{{ t }}</option>{% endfor %}
-      </select></label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="price_dropped" value="true" {{ 'checked' if f.price_dropped }}> price dropped</label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="include_inactive" value="true" {{ 'checked' if f.include_inactive }}> include gone</label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="include_duplicates" value="true" {{ 'checked' if f.include_duplicates }}> include duplicates</label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="no_accident" value="true" {{ 'checked' if f.no_accident }}> hide accident cars</label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="no_export_only" value="true" {{ 'checked' if f.no_export_only }}> hide export-only</label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="chain_replaced" value="true" {{ 'checked' if f.chain_replaced }}> chain replaced</label>
-    <label class="flex items-center gap-2 self-end"><input type="checkbox" name="service_full" value="true" {{ 'checked' if f.service_full }}> full service history</label>
-    <noscript><button class="rounded bg-slate-900 px-3 py-1.5 text-white">Apply</button></noscript>
+    {{ sel('gearbox', 'Gearbox', [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')], f.gearbox) }}
+    {{ sel('seller_type', 'Seller', [('', 'any'), ('dealer', 'dealer'), ('private', 'private')], f.seller_type) }}
+    {{ sel('country', 'Country', [('', 'any'), ('DE', 'DE'), ('BE', 'BE'), ('IT', 'IT'), ('SE', 'SE'), ('NL', 'NL')], f.country) }}
+    {{ sel('new_hours', 'New in last', [('', 'any time'), (1, '1 hour'), (6, '6 hours'), (24, '24 hours'), (72, '3 days'), (168, '7 days')], f.new_hours) }}
+    {{ sel('sort', 'Sort', [('newest', 'newest first'), ('spread_desc', 'spread ↓'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('landed_asc', 'landed cost ↑'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change')], sort) }}
+    <div class="col-span-2 grid grid-cols-2 gap-1 sm:col-span-3 lg:col-span-4 lg:grid-cols-4">
+      {% for name, text in [('price_dropped', 'price dropped'), ('include_inactive', 'include gone'), ('include_duplicates', 'include duplicates'),
+                            ('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'chain replaced'), ('service_full', 'full service history')] %}
+      <label class="check"><input type="checkbox" name="{{ name }}" value="true" {{ 'checked' if f[name] }}> {{ text }}</label>
+      {% endfor %}
+    </div>
+    <noscript><button class="btn-primary">Apply</button></noscript>
   </form>
 </details>
 {% include "listings/_results.html" %}

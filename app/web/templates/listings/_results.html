@@ -1,53 +1,55 @@
 <div id="results">
   {% with count=0, query=query|replace('page=' ~ page, '')|trim('&') %}{% include "listings/_poller.html" %}{% endwith %}
-  <p class="mb-3 text-sm text-slate-600">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
-  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  <p class="mb-3 text-sm text-ink-400">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for l in listings %}
-    <article class="overflow-hidden rounded-xl bg-white shadow {{ 'opacity-60' if not l.is_active }}">
-      <a href="/listings/{{ l.id }}" class="block">
+    <article class="card group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }}">
+      <a href="/listings/{{ l.id }}" class="relative block">
         {% if l.photos %}
         <img src="{{ l.photos[0] }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover">
         {% else %}
-        <div class="aspect-[4/3] w-full bg-slate-200"></div>
+        <div class="flex aspect-[4/3] w-full items-center justify-center bg-ink-100 text-xs text-ink-400">no photo</div>
+        {% endif %}
+        <div class="absolute left-2 top-2 flex gap-1">
+          <span class="pill bg-ink-950/80 text-white backdrop-blur">{{ l.country }}</span>
+          {% if l.duplicates %}<span class="pill bg-brand-500/90 text-ink-950">also on {{ l.duplicates|map(attribute='source')|join(', ') }}</span>{% endif %}
+          {% if not l.is_active %}<span class="pill bg-bad-700 text-white">gone</span>{% endif %}
+        </div>
+        {% if l.spread_eur is not none %}
+        <div class="absolute bottom-2 right-2 rounded-lg px-2 py-1 text-sm font-bold shadow {{ 'bg-good-100 text-good-700' if l.spread_eur > 0 else 'bg-white/90 text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}</div>
         {% endif %}
       </a>
-      <div class="space-y-1 p-3">
+      <div class="space-y-1.5 p-3.5">
         <div class="flex items-start justify-between gap-2">
-          <a href="/listings/{{ l.id }}" class="font-semibold leading-tight">{{ l.make }} {{ l.model }}
-            <span class="block text-xs font-normal text-slate-500">{{ l.variant or '' }}</span></a>
-          <div class="text-right">
+          <a href="/listings/{{ l.id }}" class="min-w-0 font-semibold leading-tight">{{ l.make }} {{ l.model }}
+            <span class="block truncate text-xs font-normal text-ink-400" title="{{ l.variant or '' }}">{{ l.variant or '' }}</span></a>
+          <div class="shrink-0 text-right">
             <div class="text-lg font-bold">{{ l.price_eur|eur }}</div>
-            {% if l.previous_price_eur and l.previous_price_eur > l.price_eur %}
-            <div class="text-xs text-green-700">was {{ l.previous_price_eur|eur }}</div>
-            {% endif %}
-            {% if l.landed_cost_eur %}<div class="text-xs text-slate-500" title="estimated landed cost incl. transport, BPM and fees">landed ≈ {{ l.landed_cost_eur|eur }}</div>{% endif %}
-            {% if l.nl_value_eur %}<div class="text-xs text-slate-500" title="NL value from {{ l.nl_value_n }} comparables">NL ≈ {{ l.nl_value_eur|eur }}</div>{% endif %}
-            {% if l.spread_eur is not none %}<div class="text-sm font-semibold {{ 'text-green-700' if l.spread_eur > 0 else 'text-red-600' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} ({{ l.spread_pct }}%)</div>{% endif %}
+            {% if l.previous_price_eur and l.previous_price_eur > l.price_eur %}<div class="text-xs text-good-700">was {{ l.previous_price_eur|eur }}</div>{% endif %}
           </div>
         </div>
-        <div class="text-sm text-slate-700">
+        <div class="text-sm text-ink-600">
           {{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}{% if l.power_kw %} · {{ l.power_kw }} kW{% endif %}
         </div>
-        <div class="text-xs text-slate-500">
-          {{ l.city or '' }} {{ l.country }} · {{ l.seller_type.value }} · {{ l.source }} · seen {{ l.first_seen|timeago }}
-          {% if l.duplicates %}· <span class="rounded bg-indigo-100 px-1 text-indigo-800">also on {{ l.duplicates|map(attribute='source')|join(', ') }}</span>{% endif %}
-          {% if l.duplicate_of_id %}· <span class="rounded bg-slate-200 px-1">duplicate</span>{% endif %}
-          {% if not l.is_active %}· <span class="font-semibold text-red-600">gone</span>{% endif %}
+        <div class="flex flex-wrap gap-x-2 text-xs text-ink-400">
+          {% if l.landed_cost_eur %}<span title="estimated landed cost">landed ≈ {{ l.landed_cost_eur|eur }}</span>{% endif %}
+          {% if l.nl_value_eur %}<span title="NL value from {{ l.nl_value_n }} comparables">NL ≈ {{ l.nl_value_eur|eur }}{% if l.spread_pct is not none %} ({{ l.spread_pct }}%){% endif %}</span>{% endif %}
         </div>
+        <div class="text-xs text-ink-400">{{ l.city or '' }} · {{ l.seller_type.value }} · {{ l.source }} · seen {{ l.first_seen|timeago }}</div>
         {% include "listings/_insight_badges.html" %}
         {% with listing=l %}{% include "listings/_status.html" %}{% endwith %}
       </div>
     </article>
     {% else %}
-    <p class="text-slate-500">No listings match.</p>
+    <p class="col-span-full rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">No listings match.</p>
     {% endfor %}
   </div>
   {% if pages > 1 %}
-  <nav class="mt-4 flex items-center justify-center gap-3 text-sm">
+  <nav class="mt-5 flex items-center justify-center gap-3 text-sm">
     {% set q = query.replace('page=' ~ page, '') %}
-    {% if page > 1 %}<a class="rounded bg-white px-3 py-1 shadow" href="/listings?{{ q }}&page={{ page - 1 }}">← Prev</a>{% endif %}
-    <span>Page {{ page }} / {{ pages }}</span>
-    {% if page < pages %}<a class="rounded bg-white px-3 py-1 shadow" href="/listings?{{ q }}&page={{ page + 1 }}">Next →</a>{% endif %}
+    {% if page > 1 %}<a class="btn-outline" href="/listings?{{ q }}&page={{ page - 1 }}">← Prev</a>{% endif %}
+    <span class="text-ink-400">Page {{ page }} / {{ pages }}</span>
+    {% if page < pages %}<a class="btn-outline" href="/listings?{{ q }}&page={{ page + 1 }}">Next →</a>{% endif %}
   </nav>
   {% endif %}
 </div>

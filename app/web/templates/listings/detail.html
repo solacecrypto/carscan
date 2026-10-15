@@ -1,60 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
 {% set l = listing %}
-<a href="/listings" class="text-sm text-slate-500">← Listings</a>
+<a href="/listings" class="text-sm text-ink-400 hover:text-ink-700">← Listings</a>
 <div class="mt-2 grid gap-4 lg:grid-cols-5">
-  <div class="lg:col-span-3">
+  <div class="min-w-0 lg:col-span-3">
     {% if l.photos %}
-    <img src="{{ l.photos[0] }}" alt="" class="w-full rounded-xl object-cover shadow">
+    <img src="{{ l.photos[0] }}" alt="" class="w-full rounded-2xl object-cover shadow-card">
     <div class="mt-2 flex gap-2 overflow-x-auto">
       {% for p in l.photos[1:] %}<a href="{{ p }}" target="_blank" rel="noopener" class="flex-none"><img src="{{ p }}" alt="" loading="lazy" class="h-20 w-28 flex-none rounded object-cover"></a>{% endfor %}
     </div>
     {% endif %}
     {% set i = l.insight %}
     {% if i %}
-    <div class="mt-4 rounded-xl bg-white p-4 shadow">
-      <h2 class="font-semibold">What the description says <span class="text-xs font-normal text-slate-400">(Claude, {{ i.language or '?' }})</span></h2>
+    <div class="mt-4 card p-4">
+      <h2 class="font-semibold">What the description says <span class="text-xs font-normal text-ink-300">(Claude, {{ i.language or '?' }})</span></h2>
       {% if i.status == 'ok' %}
-      <p class="mt-1 text-sm text-slate-700">{{ i.summary }}</p>
+      <p class="mt-1 text-sm text-ink-700">{{ i.summary }}</p>
       {% include "listings/_insight_badges.html" %}
       <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
-        <dt class="text-slate-500">Accident</dt><dd>{{ i.accident }}{% if i.accident_evidence %} <span class="text-xs text-slate-500">“{{ i.accident_evidence }}”</span>{% endif %}</dd>
-        <dt class="text-slate-500">Timing chain</dt><dd>{{ i.timing_chain.replace('_', ' ') }}</dd>
-        <dt class="text-slate-500">Service history</dt><dd>{{ i.service_history }}</dd>
-        <dt class="text-slate-500">Export only</dt><dd>{{ 'yes' if i.export_only else 'no' }}</dd>
+        <dt class="text-ink-400">Accident</dt><dd>{{ i.accident }}{% if i.accident_evidence %} <span class="text-xs text-ink-400">“{{ i.accident_evidence }}”</span>{% endif %}</dd>
+        <dt class="text-ink-400">Timing chain</dt><dd>{{ i.timing_chain.replace('_', ' ') }}</dd>
+        <dt class="text-ink-400">Service history</dt><dd>{{ i.service_history }}</dd>
+        <dt class="text-ink-400">Export only</dt><dd>{{ 'yes' if i.export_only else 'no' }}</dd>
       </dl>
-      {% if i.defects %}<ul class="mt-2 list-disc pl-5 text-sm text-red-800">{% for d in i.defects %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+      {% if i.defects %}<ul class="mt-2 list-disc pl-5 text-sm text-bad-700">{% for d in i.defects %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
       {% else %}
-      <p class="mt-1 text-sm text-slate-500">Not analysed: {{ i.status }}{% if i.error %} · {{ i.error }}{% endif %}</p>
+      <p class="mt-1 text-sm text-ink-400">Not analysed: {{ i.status }}{% if i.error %} · {{ i.error }}{% endif %}</p>
       {% endif %}
     </div>
     {% endif %}
     {% if l.description %}
-    <details class="mt-4 rounded-xl bg-white p-4 shadow"><summary class="cursor-pointer font-semibold">Description</summary>
-      <pre class="mt-2 whitespace-pre-wrap font-sans text-sm text-slate-700">{{ l.description }}</pre></details>
+    <details class="mt-4 card p-4"><summary class="cursor-pointer font-semibold">Description</summary>
+      <pre class="mt-2 whitespace-pre-wrap font-sans text-sm text-ink-700">{{ l.description }}</pre></details>
     {% endif %}
   </div>
-  <div class="space-y-4 lg:col-span-2">
-    <div class="rounded-xl bg-white p-4 shadow">
-      <h1 class="text-xl font-bold">{{ l.make }} {{ l.model }}</h1>
-      <p class="text-sm text-slate-500">{{ l.variant or '' }}</p>
+  <div class="min-w-0 space-y-4 lg:col-span-2">
+    <div class="card p-4">
+      <h1>{{ l.make }} {{ l.model }}</h1>
+      <p class="text-sm text-ink-400">{{ l.variant or '' }}</p>
       <p class="mt-2 text-3xl font-bold">{{ l.price_eur|eur }}
-        {% if l.vat_deductible %}<span class="text-xs font-normal text-slate-500">VAT deductible</span>{% endif %}</p>
-      {% if not l.is_active %}<p class="mt-1 text-sm font-semibold text-red-600">No longer listed (last seen {{ l.last_seen|timeago }})</p>{% endif %}
+        {% if l.vat_deductible %}<span class="text-xs font-normal text-ink-400">VAT deductible</span>{% endif %}</p>
+      {% if not l.is_active %}<p class="mt-1 text-sm font-semibold text-bad-700">No longer listed (last seen {{ l.last_seen|timeago }})</p>{% endif %}
       <div class="mt-3">{% include "listings/_status.html" %}</div>
       <div class="mt-3">
         {% if deal %}
-        <a href="/deals/{{ deal.id }}" class="inline-block rounded bg-indigo-600 px-3 py-1 text-sm font-medium text-white">Deal: {{ deal.stage.value }} · {{ deal.owner.username }} →</a>
+        <a href="/deals/{{ deal.id }}" class="inline-block btn-primary">Deal: {{ deal.stage.value }} · {{ deal.owner.username }} →</a>
         {% else %}
         <form method="post" action="/deals" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="listing_id" value="{{ l.id }}">
-          <button class="rounded border border-indigo-600 px-3 py-1 text-sm font-medium text-indigo-700">Track as deal</button></form>
+          <button class="btn-outline">Track as deal</button></form>
         {% endif %}
       </div>
       <a href="{{ l.url }}" target="_blank" rel="noopener"
-         class="mt-4 block rounded bg-slate-900 py-2 text-center font-medium text-white">Open original ad ↗</a>
+         class="btn-dark mt-4 w-full py-2.5">Open original ad ↗</a>
       {% if l.duplicates or l.duplicate_of %}
       <div class="mt-3 text-sm">
-        <span class="text-slate-500">Same car on:</span>
+        <span class="text-ink-400">Same car on:</span>
         {% for d in l.duplicates %}<a class="ml-1 underline" href="/listings/{{ d.id }}">{{ d.source }} ({{ d.price_eur|eur }})</a>{% endfor %}
         {% if l.duplicate_of %}<a class="ml-1 underline" href="/listings/{{ l.duplicate_of.id }}">{{ l.duplicate_of.source }} ({{ l.duplicate_of.price_eur|eur }}, canonical)</a>{% endif %}
       </div>
@@ -67,53 +67,53 @@
                       ('Seller', l.seller_type.value ~ (' · ' ~ l.seller_name if l.seller_name else '')),
                       ('Location', (l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' (' ~ l.country ~ ')'),
                       ('Source', l.source), ('First seen', l.first_seen|timeago), ('Last seen', l.last_seen|timeago)] %}
-      <dt class="text-slate-500">{{ k }}</dt><dd>{{ v or '–' }}</dd>
+      <dt class="text-ink-400">{{ k }}</dt><dd>{{ v or '–' }}</dd>
       {% endfor %}
     </dl>
-    <div class="rounded-xl bg-white p-4 shadow">
+    <div class="card p-4">
       <h2 class="font-semibold">Landed cost estimate</h2>
       {% set c = l.cost_breakdown %}
       {% if c and c.total_eur %}
       <p class="text-2xl font-bold">{{ c.total_eur|eur }}</p>
       <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
-        <dt class="text-slate-500">Purchase</dt><dd>{{ c.purchase_eur|eur }}</dd>
-        <dt class="text-slate-500">Transport ({{ l.country }})</dt><dd>{{ c.transport_eur|eur }}</dd>
-        <dt class="text-slate-500">BPM</dt><dd>{{ c.bpm_eur|eur }}
-          {% if c.bpm %}<span class="text-xs text-slate-500">(bruto {{ c.bpm.bruto_eur|eur }} at {{ c.bpm.tariff_year or '–' }} tariff, {{ c.bpm.depreciation_pct }}% off, {{ c.bpm.co2_g_km }} g/km{{ ' assumed' if c.bpm.co2_estimated }})</span>{% endif %}</dd>
-        <dt class="text-slate-500">RDW &amp; fees</dt><dd>{{ c.fees_eur|eur }}</dd>
+        <dt class="text-ink-400">Purchase</dt><dd>{{ c.purchase_eur|eur }}</dd>
+        <dt class="text-ink-400">Transport ({{ l.country }})</dt><dd>{{ c.transport_eur|eur }}</dd>
+        <dt class="text-ink-400">BPM</dt><dd>{{ c.bpm_eur|eur }}
+          {% if c.bpm %}<span class="text-xs text-ink-400">(bruto {{ c.bpm.bruto_eur|eur }} at {{ c.bpm.tariff_year or '–' }} tariff, {{ c.bpm.depreciation_pct }}% off, {{ c.bpm.co2_g_km }} g/km{{ ' assumed' if c.bpm.co2_estimated }})</span>{% endif %}</dd>
+        <dt class="text-ink-400">RDW &amp; fees</dt><dd>{{ c.fees_eur|eur }}</dd>
       </dl>
-      {% if c.bpm and c.bpm.notes %}<p class="mt-2 text-xs text-amber-700">{{ c.bpm.notes|join(' · ') }}</p>{% endif %}
-      <p class="mt-2 text-xs text-slate-400">Estimate, config v{{ c.config_version }}. Method: docs/landed_cost.md</p>
+      {% if c.bpm and c.bpm.notes %}<p class="mt-2 text-xs text-brand-700">{{ c.bpm.notes|join(' · ') }}</p>{% endif %}
+      <p class="mt-2 text-xs text-ink-300">Estimate, config v{{ c.config_version }}. Method: docs/landed_cost.md</p>
       {% else %}
-      <p class="text-sm text-slate-500">Not available (missing first registration date or unsupported fuel).</p>
+      <p class="text-sm text-ink-400">Not available (missing first registration date or unsupported fuel).</p>
       {% endif %}
     </div>
-    <div class="rounded-xl bg-white p-4 shadow">
+    <div class="card p-4">
       <h2 class="font-semibold">NL value &amp; spread</h2>
       {% set v = l.nl_value_breakdown %}
       {% if v %}
       <p class="text-2xl font-bold">{{ l.nl_value_eur|eur }}
-        {% if l.spread_eur is not none %}<span class="ml-2 text-lg {{ 'text-green-700' if l.spread_eur > 0 else 'text-red-600' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} · {{ l.spread_pct }}%</span>{% endif %}</p>
-      <p class="mt-1 text-xs text-slate-500">Median asking {{ v.asking_median_eur|eur }} (IQR {{ v.asking_q1_eur|eur }} – {{ v.asking_q3_eur|eur }}) from {{ v.n }} comparables within ±{{ v.year_window }} y / ±{{ v.mileage_window_km|km }}, mileage-adjusted at € {{ v.km_rate_eur }}/km, minus {{ v.haircut_pct }}% haircut.</p>
+        {% if l.spread_eur is not none %}<span class="ml-2 text-lg {{ 'text-good-700' if l.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} · {{ l.spread_pct }}%</span>{% endif %}</p>
+      <p class="mt-1 text-xs text-ink-400">Median asking {{ v.asking_median_eur|eur }} (IQR {{ v.asking_q1_eur|eur }} – {{ v.asking_q3_eur|eur }}) from {{ v.n }} comparables within ±{{ v.year_window }} y / ±{{ v.mileage_window_km|km }}, mileage-adjusted at € {{ v.km_rate_eur }}/km, minus {{ v.haircut_pct }}% haircut.</p>
       {% if nearest %}
-      <ul class="mt-2 divide-y divide-slate-100 text-sm">
+      <ul class="mt-2 divide-y divide-ink-100 text-sm">
         {% for c in nearest %}
         <li class="flex items-center justify-between gap-2 py-1">
           <a href="{{ c.url }}" target="_blank" rel="noopener" class="truncate underline">{{ c.variant or (c.make ~ ' ' ~ c.model) }}</a>
-          <span class="whitespace-nowrap text-slate-600">{{ c.first_registration.year if c.first_registration }} · {{ c.mileage_km|km }} · <b>{{ c.price_eur|eur }}</b> <span class="text-xs text-slate-400">{{ c.source }}</span></span>
+          <span class="whitespace-nowrap text-ink-600">{{ c.first_registration.year if c.first_registration }} · {{ c.mileage_km|km }} · <b>{{ c.price_eur|eur }}</b> <span class="text-xs text-ink-300">{{ c.source }}</span></span>
         </li>
         {% endfor %}
       </ul>
       {% endif %}
       {% else %}
-      <p class="text-sm text-slate-500">Not enough comparables yet (run the NL comparables searches).</p>
+      <p class="text-sm text-ink-400">Not enough comparables yet (run the NL comparables searches).</p>
       {% endif %}
     </div>
-    <div class="rounded-xl bg-white p-4 shadow">
+    <div class="card p-4">
       <h2 class="font-semibold">Price history</h2>
       <ul class="mt-2 text-sm">
         {% for h in l.price_history|reverse %}
-        <li class="flex justify-between border-b border-slate-100 py-1"><span>{{ h.seen_at.strftime('%Y-%m-%d %H:%M') }}</span><span class="font-medium">{{ h.price_eur|eur }}</span></li>
+        <li class="flex justify-between border-b border-ink-100 py-1"><span>{{ h.seen_at.strftime('%Y-%m-%d %H:%M') }}</span><span class="font-medium">{{ h.price_eur|eur }}</span></li>
         {% endfor %}
       </ul>
     </div>
