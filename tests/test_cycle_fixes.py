@@ -93,7 +93,10 @@ def test_due_order_is_fair_and_interrupted_runs_close(db: Session) -> None:
     old = SavedSearch(name="old", owner=u, source="autoscout24_de", interval_minutes=30)
     fresh = SavedSearch(name="fresh", owner=u, source="autoscout24_de", interval_minutes=30)
     never = SavedSearch(name="never", owner=u, source="kleinanzeigen", interval_minutes=60)
-    db.add_all([u, old, fresh, never])
+    comps = SavedSearch(
+        name="comps", owner=u, source="marktplaats", role="comparables", interval_minutes=720
+    )
+    db.add_all([u, old, fresh, never, comps])
     db.flush()
     db.add_all(
         [
@@ -118,11 +121,9 @@ def test_due_order_is_fair_and_interrupted_runs_close(db: Session) -> None:
         ]
     )
     db.commit()
-    assert due_search_ids(db, NOW, due_only=True) == [
-        never.id,
-        old.id,
-    ]  # never-run first, then longest waiting
-    assert due_search_ids(db, NOW, due_only=False) == [never.id, old.id, fresh.id]
+    # never-run first (comparables before deals), then longest waiting
+    assert due_search_ids(db, NOW, due_only=True) == [comps.id, never.id, old.id]
+    assert due_search_ids(db, NOW, due_only=False) == [comps.id, never.id, old.id, fresh.id]
     assert cleanup_interrupted_runs(db, NOW, max_age_minutes=120) == 1
     db.commit()
     r = db.scalar(select(ScrapeRun).where(ScrapeRun.error.isnot(None)))

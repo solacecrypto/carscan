@@ -243,8 +243,9 @@ def _enrich_new(
 
 
 def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]:
-    """Active searches whose interval has elapsed, longest-waiting first (never-run before all)."""
-    candidates: list[tuple[datetime | None, int]] = []
+    """Active searches whose interval has elapsed, longest-waiting first. Never-run searches go
+    before all others, comparables first so a new model has NL prices before its cars arrive."""
+    candidates: list[tuple[datetime | None, bool, int]] = []
     for search in session.scalars(select(SavedSearch).where(SavedSearch.active.is_(True))):
         last = session.scalar(
             select(ScrapeRun.started_at)
@@ -258,9 +259,9 @@ def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]
             and last > now - timedelta(minutes=search.interval_minutes)
         ):
             continue
-        candidates.append((last, search.id))
-    candidates.sort(key=lambda t: (t[0] is not None, t[0] or now, t[1]))
-    return [i for _, i in candidates]
+        candidates.append((last, search.role == "comparables", search.id))
+    candidates.sort(key=lambda t: (t[0] is not None, t[0] is None and not t[1], t[0] or now, t[2]))
+    return [i for _, _, i in candidates]
 
 
 def cleanup_interrupted_runs(session: Session, now: datetime, max_age_minutes: int = 120) -> int:

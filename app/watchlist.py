@@ -52,9 +52,9 @@ DEFAULT_INTERVALS = {
     "automobile_it": 360,
     "bytbil": 360,
     "subito": 120,
-    "autoscout24_nl": 360,
-    "marktplaats": 360,
-    "gaspedaal": 360,
+    "autoscout24_nl": 720,  # NL asking prices move slowly; twice a day is plenty
+    "marktplaats": 720,
+    "gaspedaal": 720,
 }
 
 
@@ -307,8 +307,13 @@ def sync(
                 )
             )
             created += 1
-        elif row.source_params != spec.params or not row.active:
+        elif (
+            row.source_params != spec.params
+            or not row.active
+            or row.interval_minutes != spec.interval_minutes
+        ):
             row.source_params, row.active = spec.params, True
+            row.interval_minutes = spec.interval_minutes
             updated += 1
     if prune:
         for row in rows:
