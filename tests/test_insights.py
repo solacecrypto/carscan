@@ -149,7 +149,8 @@ def test_scrape_run_analyses_new_listings_within_budget(db: Session, monkeypatch
     db.expire_all()
     n = db.scalar(select(ListingInsight).where(ListingInsight.status == "ok"))
     assert n is not None
-    assert db.query(ListingInsight).count() == 3  # budget respected; 5 had descriptions
+    assert db.query(ListingInsight).filter_by(status="ok").count() == 3  # Claude budget respected
+    assert db.query(ListingInsight).count() == 5  # the other two got rule-based tags
 
 
 def test_claude_analyzer_request_shape_and_refusal() -> None:
@@ -268,3 +269,90 @@ def test_enrichment_gating_by_provisional_spread(db: Session, monkeypatch) -> No
         "unknown",
     ]  # dear car has negative spread; unknown model has no comps
     assert len(_select_for_enrichment(db, raws, items, None)) == 3
+
+
+def test_rule_tags_and_claude_precedence(db: Session) -> None:
+    from app.insights import apply_rules
+    from app.insights.rules import extract_tags
+
+    text = (
+        "Unfallfrei, Steuerkette bei 150.000 km erneuert, TÜV neu bis 03/2027. "
+        "Scheckheftgepflegt. Leider Klimaanlage defekt."
+    )
+    tags = extract_tags(text)
+    assert [t.key for t in tags] == [
+        "ac_broken",
+        "chain_replaced",
+        "accident_free",
+        "tuv_new",
+        "full_history",
+    ]
+    assert tags[1].evidence.startswith("Unfallfrei, Steuerkette bei 150.000 km erneuert")
+    assert [
+        t.key
+        for t in extract_tags("Auto a fatto incidente nel 2019, catena sostituita. Solo export.")
+    ] == ["accident", "export_only", "chain_replaced"]
+    assert (
+        extract_tags("Schadevrij en zuinig.")[0].key == "accident_free"
+    )  # 'schade' inside schadevrij is not an accident
+
+    a = _listing(db, "r1", "Unfallfrei, Steuerkette neu. Klimaanlage defekt.")
+    ins = apply_rules(a, NOW)
+    db.commit()
+    assert (
+        ins is not None
+        and ins.status == "rules"
+        and ins.accident == "no"
+        and ins.timing_chain == "replaced"
+    )
+    assert ins.defects == ["air conditioning broken"] and [t["key"] for t in ins.tags] == [
+        "ac_broken",
+        "chain_replaced",
+        "accident_free",
+    ]
+    # Claude result replaces the rule layer but keeps rule evidence and neutral notes
+    analyze_pending(db, _fake, NOW, limit=5)
+    db.commit()
+    db.refresh(a)
+    assert (
+        a.insight.status == "ok"
+        and a.insight.tags[0]["key"] == "accident_free"
+        and a.insight.tags[0]["evidence"] == "unfallfrei"
+    )
+    assert {t["key"] for t in a.insight.tags} >= {"chain_replaced", "full_history"}
+    # unchanged text: rules do not overwrite a current Claude result
+    assert apply_rules(a, NOW).status == "ok"
+    assert apply_rules(_listing(db, "r2", "   "), NOW) is None
+
+
+def test_kleinanzeigen_ad_page_detail() -> None:
+    from datetime import date
+
+    from app.normalize import RawListing
+    from app.scrapers import get_scraper
+    from app.scrapers.kleinanzeigen import parse_ad_page, parse_articles
+
+    det = parse_ad_page((FIX / "kleinanzeigen" / "ad_page.html").read_text())
+    assert (
+        det["description"].startswith("Das Auto befindet sich technisch")
+        and len(det["description"]) > 200
+    )
+    assert det["details"]["Getriebe"] == "Manuell" and det["details"]["Leistung"].endswith("PS")
+    items = parse_articles((FIX / "kleinanzeigen" / "search_page1.html").read_text())
+    item = next(i for i in items if i["id"] == "3537159648")
+    raw = RawListing(
+        source="kleinanzeigen",
+        source_listing_id=item["id"],
+        url="https://www.kleinanzeigen.de" + item["href"],
+        data=item,
+        fetched_at=NOW,
+        detail=det,
+    )
+    n = get_scraper("kleinanzeigen").parse(raw)
+    assert (
+        n.gearbox == "manual"
+        and n.power_kw == 135
+        and n.first_registration == date(2012, 7, 1)
+        and "Unfall" in (n.description or "")
+    )
+    assert n.raw["detail"]["details"]["Fahrzeugzustand"]

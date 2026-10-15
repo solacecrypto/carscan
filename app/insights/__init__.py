@@ -1,6 +1,7 @@
 from app.insights.analyzer import AnalysisResult, Analyzer, ClaudeAnalyzer
+from app.insights.rules import extract_tags
 from app.insights.schema import DescriptionInsight
-from app.insights.service import analyze_pending, pending_listings, store_result
+from app.insights.service import analyze_pending, apply_rules, pending_listings, store_result
 
 __all__ = [
     "AnalysisResult",
@@ -8,6 +9,8 @@ __all__ = [
     "ClaudeAnalyzer",
     "DescriptionInsight",
     "analyze_pending",
+    "apply_rules",
+    "extract_tags",
     "pending_listings",
     "store_result",
 ]

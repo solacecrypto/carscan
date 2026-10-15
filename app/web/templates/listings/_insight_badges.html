@@ -1,10 +1,8 @@
 {% set i = l.insight %}
-{% if i and i.status == 'ok' %}
+{% if i and i.tags %}
+{% set colors = {'bad': 'bg-bad-100 text-bad-700', 'good': 'bg-good-100 text-good-700', 'note': 'bg-ink-100 text-ink-600'} %}
 <div class="mt-1 flex flex-wrap gap-1">
-  {% if i.accident == 'yes' %}<span class="pill bg-bad-100 text-bad-700">accident</span>{% elif i.accident == 'no' %}<span class="pill bg-good-100 text-good-700">accident-free</span>{% endif %}
-  {% if i.defects %}<span class="pill bg-bad-100 text-bad-700">{{ i.defects|length }} defect{{ '' if i.defects|length == 1 else 's' }}</span>{% endif %}
-  {% if i.export_only %}<span class="pill bg-brand-100 text-brand-800">export only</span>{% endif %}
-  {% if i.timing_chain == 'replaced' %}<span class="pill bg-good-100 text-good-700">chain replaced</span>{% elif i.timing_chain == 'due' %}<span class="pill bg-brand-100 text-brand-800">chain due</span>{% endif %}
-  {% if i.service_history == 'full' %}<span class="pill bg-good-100 text-good-700">full history</span>{% elif i.service_history == 'none' %}<span class="pill bg-brand-100 text-brand-800">no history</span>{% endif %}
+  {% for t in i.tags[:3] %}<span class="pill {{ colors[t.polarity] }}" title="{{ t.evidence }}">{{ t.label }}</span>{% endfor %}
+  {% if i.tags|length > 3 %}<span class="pill bg-ink-100 text-ink-500">+{{ i.tags|length - 3 }}</span>{% endif %}
 </div>
 {% endif %}

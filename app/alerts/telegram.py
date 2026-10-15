@@ -107,7 +107,7 @@ def format_alert(alert: Alert, site_url: str, old_price: int | None = None) -> s
 
 def _flags_line(listing: Listing) -> str:
     ins = listing.insight
-    if ins is None or ins.status != "ok":
+    if ins is None or ins.status not in ("ok", "rules"):
         return ""
     parts: list[str] = []
     if ins.accident == "yes":

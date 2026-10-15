@@ -384,6 +384,8 @@ class ListingInsight(Base):
     )  # full | partial | none | unknown
     export_only: Mapped[bool | None] = mapped_column(Boolean)
     defects: Mapped[list[str] | None] = mapped_column(JSONB)
+    # condition tags [{key, label, polarity, evidence}] from the rule layer (+ Claude fields)
+    tags: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)
     raw: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     error: Mapped[str | None] = mapped_column(Text)
 

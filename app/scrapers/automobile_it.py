@@ -118,7 +118,23 @@ class AutomobileIt:
         return list(seen.values())
 
     def fetch_detail(self, raw: RawListing, client: PoliteClient) -> dict[str, Any] | None:
-        return None
+        resp = client.get(raw.url, headers=self.headers)
+        if resp.status_code in (301, 302, 404, 410):
+            return None
+        if resp.status_code != 200:
+            raise ParseError(f"HTTP {resp.status_code} on automobile.it ad page")
+        pp = extract_next_data(resp.text)
+        res = pp.get("result")
+        if not res:
+            raise ParseError("ad page without result block")
+        info = {
+            item.get("title"): ", ".join(item.get("values") or [])
+            for group in (pp.get("vehicleInformation") or {}).values()
+            if isinstance(group, list)
+            for item in group
+            if item.get("title")
+        }
+        return {"description": scrub_text(res.get("description")), "info": info}
 
     def parse(self, raw: RawListing) -> NormalizedListing:
         d = raw.data
@@ -171,8 +187,10 @@ class AutomobileIt:
             country="IT",
             city=loc.group(1) if loc else d.get("location"),
             photos=[u for u in images if u][:20],
-            description=d.get("shortDescription") or None,
-            raw={"search": d, "year_only": month is None},
+            description=(raw.detail or {}).get("description") or d.get("shortDescription") or None,
+            raw={"search": d, "detail": raw.detail, "year_only": month is None}
+            if raw.detail
+            else {"search": d, "year_only": month is None},
         )
 
 

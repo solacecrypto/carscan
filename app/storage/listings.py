@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.costs import get_cost_config, landed_cost
 from app.db.models import Listing, PriceHistory, SavedSearch
+from app.insights.service import apply_rules
 from app.normalize.schema import NormalizedListing
 
 
@@ -104,6 +105,7 @@ def upsert_listings(
             row.price_history.append(PriceHistory(price_eur=item.price_eur, seen_at=now))
             row.saved_searches.append(saved_search)
             apply_costs(row, now)
+            apply_rules(row, now)
             session.add(row)
             result.new.append(row)
             continue
@@ -139,6 +141,7 @@ def upsert_listings(
         else:
             result.unchanged += 1
         apply_costs(row, now)
+        apply_rules(row, now)
     session.flush()
     return result
 

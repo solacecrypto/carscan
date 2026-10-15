@@ -91,6 +91,32 @@ def _large(url: str) -> str:
     return re.sub(r"rule=\$_\d+\.AUTO", "rule=$_59.AUTO", url)
 
 
+def parse_ad_page(html: str) -> dict[str, Any]:
+    """Full description and the details list of an ad page."""
+    tree = LexborHTMLParser(html)
+    node = tree.css_first("#viewad-description-text")
+    if node is None:
+        raise ParseError("ad page without description block (markup changed)")
+    for br in node.css("br"):
+        br.replace_with("\n")  # type: ignore[arg-type]
+    details: dict[str, str] = {}
+    for li in tree.css("#viewad-details li"):
+        parts = [x.strip() for x in re.split(r"\s{2,}|\n", li.text().strip()) if x.strip()]
+        if len(parts) >= 2:
+            details[parts[0]] = " ".join(parts[1:])
+    images = [
+        i.attributes.get("src") or i.attributes.get("data-src")
+        for i in tree.css("#viewad-image, .galleryimage-element img")
+    ]
+    seller = tree.css_first("#viewad-contact")
+    return {
+        "description": scrub_text(node.text().strip()),
+        "details": details,
+        "images": [_large(u) for u in images if u],
+        "dealer": bool(seller and re.search(r"gewerblich|händler", seller.text(), re.I)),
+    }
+
+
 def _parse_price(text: str | None) -> tuple[int | None, bool]:
     if not text:
         return None, False
@@ -140,10 +166,17 @@ class Kleinanzeigen:
         return list(seen.values())
 
     def fetch_detail(self, raw: RawListing, client: PoliteClient) -> dict[str, Any] | None:
-        return None
+        resp = client.get(raw.url, headers=self.headers)
+        if resp.status_code in (301, 302, 404, 410):
+            return None
+        if resp.status_code != 200:
+            raise ParseError(f"HTTP {resp.status_code} on Kleinanzeigen ad page")
+        return parse_ad_page(resp.text)
 
     def parse(self, raw: RawListing) -> NormalizedListing:
         d = raw.data
+        det = raw.detail or {}
+        info = det.get("details") or {}
         price, negotiable = _parse_price(d.get("price_text"))
         if price is None:
             raise ParseError(f"listing {raw.source_listing_id} has no price")
@@ -155,7 +188,13 @@ class Kleinanzeigen:
         loc = _LOC_RE.match(d.get("location") or "")
         lower = title.lower()
         body = next((b for hint, b in BODY_HINTS if hint in lower), None)
-        gearbox = "automatic" if "automatik" in lower else ("manual" if "schalt" in lower else None)
+        gear_txt = (info.get("Getriebe") or "").lower()
+        gearbox = (
+            "automatic"
+            if "automatik" in gear_txt or "automatik" in lower
+            else ("manual" if "manuell" in gear_txt or "schalt" in lower else None)
+        )
+        kw = re.search(r"(\d+)\s*PS", info.get("Leistung") or "")
         return NormalizedListing(
             source=self.name,
             source_listing_id=raw.source_listing_id,
@@ -166,16 +205,19 @@ class Kleinanzeigen:
             body_type=body,
             fuel="petrol" if m and m.group(1).lower().endswith("i") else None,
             gearbox=gearbox,
+            power_kw=round(int(kw.group(1)) * 0.7355) if kw else None,
             first_registration=date(int(ez.group(2)), int(ez.group(1)), 1) if ez else None,
             mileage_km=int(km.group(1).replace(".", "")) if km else None,
             price_eur=to_eur(price, "EUR"),
-            seller_type=SellerType.private,  # not exposed on the list page; most ads are private
+            seller_type=SellerType.dealer if det.get("dealer") else SellerType.private,
             country="DE",
             city=loc.group(2) if loc else None,
             postcode=loc.group(1) if loc else None,
-            photos=[_large(d["image"])] if d.get("image") else [],
-            description=None,
-            raw={"search": d, "negotiable": negotiable},
+            photos=det.get("images") or ([_large(d["image"])] if d.get("image") else []),
+            description=det.get("description"),
+            raw={"search": d, "detail": det, "negotiable": negotiable}
+            if det
+            else {"search": d, "negotiable": negotiable},
         )
 
 

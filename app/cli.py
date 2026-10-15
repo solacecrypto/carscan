@@ -513,6 +513,25 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+@insights.command("rules")
+def insights_rules() -> None:
+    """Re-run the keyword rules over every listing that has a description (no API calls)."""
+    from datetime import UTC, datetime
+
+    from sqlalchemy import select as _select
+
+    from app.db import Listing, db_session
+    from app.insights import apply_rules
+
+    now = datetime.now(UTC)
+    n = 0
+    with db_session() as s:
+        for row in s.scalars(_select(Listing).where(Listing.description.isnot(None))):
+            if apply_rules(row, now) is not None:
+                n += 1
+    typer.echo(f"tagged {n} listings")
+
+
 @app.command("calibrate")
 def calibrate_cmd(as_json: bool = typer.Option(False, "--json")) -> None:
     """Compare estimates with logged actuals and print suggested costs.yaml values."""

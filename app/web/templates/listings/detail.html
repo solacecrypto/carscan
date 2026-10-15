@@ -11,22 +11,19 @@
     </div>
     {% endif %}
     {% set i = l.insight %}
-    {% if i %}
-    <div class="mt-4 card p-4">
-      <h2 class="font-semibold">What the description says <span class="text-xs font-normal text-ink-300">(Claude, {{ i.language or '?' }})</span></h2>
-      {% if i.status == 'ok' %}
-      <p class="mt-1 text-sm text-ink-700">{{ i.summary }}</p>
-      {% include "listings/_insight_badges.html" %}
-      <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
-        <dt class="text-ink-400">Accident</dt><dd>{{ i.accident }}{% if i.accident_evidence %} <span class="text-xs text-ink-400">“{{ i.accident_evidence }}”</span>{% endif %}</dd>
-        <dt class="text-ink-400">Timing chain</dt><dd>{{ i.timing_chain.replace('_', ' ') }}</dd>
-        <dt class="text-ink-400">Service history</dt><dd>{{ i.service_history }}</dd>
-        <dt class="text-ink-400">Export only</dt><dd>{{ 'yes' if i.export_only else 'no' }}</dd>
-      </dl>
-      {% if i.defects %}<ul class="mt-2 list-disc pl-5 text-sm text-bad-700">{% for d in i.defects %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
-      {% else %}
-      <p class="mt-1 text-sm text-ink-400">Not analysed: {{ i.status }}{% if i.error %} · {{ i.error }}{% endif %}</p>
-      {% endif %}
+    {% if i and (i.tags or i.status == 'ok') %}
+    <div class="card mt-4 p-4">
+      <h2>Condition <span class="text-xs font-normal text-ink-300">{{ 'read by Claude' if i.status == 'ok' else 'keywords in the description' }}{% if i.language %} · {{ i.language }}{% endif %}</span></h2>
+      {% if i.summary %}<p class="mt-1 text-sm text-ink-700">{{ i.summary }}</p>{% endif %}
+      {% set colors = {'bad': 'bg-bad-100 text-bad-700', 'good': 'bg-good-100 text-good-700', 'note': 'bg-ink-100 text-ink-600'} %}
+      {% if i.tags %}
+      <ul class="mt-2 space-y-1.5 text-sm">
+        {% for t in i.tags %}
+        <li class="flex items-start gap-2"><span class="pill mt-0.5 shrink-0 {{ colors[t.polarity] }}">{{ t.label }}</span>
+          {% if t.evidence %}<span class="text-ink-600">“{{ t.evidence }}”</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="mt-1 text-sm text-ink-400">Nothing notable found in the text.</p>{% endif %}
     </div>
     {% endif %}
     {% if l.description %}
