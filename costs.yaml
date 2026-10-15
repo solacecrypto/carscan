@@ -101,7 +101,7 @@ repairs:
   suspension: [300, 900]  # suspension / steering parts
   steering: [400, 1000]  # power steering
   rust: [300, 1500]  # rust
-  body_damage: [300, 2000]  # bodywork damage
+  body_damage: [200, 1500]  # bodywork damage
   airbag: [300, 800]  # airbag fault
   exhaust: [200, 600]  # exhaust
   electrical: [150, 600]  # electrical fault

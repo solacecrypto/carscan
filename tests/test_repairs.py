@@ -72,7 +72,7 @@ def test_apply_costs_adds_repairs_to_landed_cost(db: Session) -> None:
     keys = {i["key"] for i in r1.repair_breakdown["items"]}
     assert keys == {"engine_damage", "not_drivable"}
     # the English text can add what the original pattern list missed
-    r2.description_en = "Needs a new clutch, it is slipping."
+    r2.description_en = "The clutch is slipping and needs replacing."
     apply_costs(r2, NOW)
     assert r2.repair_cost_eur and "clutch" in {i["key"] for i in r2.repair_breakdown["items"]}
 
@@ -90,3 +90,10 @@ def test_equipment_lists_do_not_trigger_repairs() -> None:
     assert "dpf_egr" in find_items("Partikelfilter ist voll, Warnleuchte an")
     assert "battery" in find_items("Batterie ist leer und muss erneuert werden")
     assert "exhaust" in find_items("Auspuff ist undicht")
+
+
+def test_renewed_parts_are_not_defects() -> None:
+    assert find_items("Neue Stoßdämpfer und Federn hinten, neue Kupplung bei 180.000 km") == {}
+    assert find_items("New clutch fitted, shock absorbers replaced last year") == {}
+    assert "suspension" in find_items("Stoßdämpfer hinten undicht, Querlenker ausgeschlagen")
+    assert "suspension" in find_items("Rear shock absorbers leak and the suspension knocks")

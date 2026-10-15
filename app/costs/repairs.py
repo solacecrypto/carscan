@@ -57,12 +57,12 @@ ITEMS: tuple[RepairItem, ...] = (
     RepairItem("brakes", "brakes", 300, 700,
         _near("bremsen|bremsscheiben|remmen|remschijven|freni|bromsar|brakes|brake discs", _DEFECT + r"|neu machen|aan vervanging|da fare")),
     RepairItem("suspension", "suspension / steering parts", 300, 900,
-        r"sto[ßs]d[äa]mpfer|querlenker|spurstange|traggelenk|schokdemper|draagarm|fuseekogel|ammortizzator|st[öo]td[äa]mpare|shock absorber|control arm|ball joint|" + _near("fahrwerk|suspension|ophanging")),
+        _near("sto[ßs]d[äa]mpfer|querlenker|spurstange|traggelenk|schokdemper|draagarm|fuseekogel|ammortizzator|st[öo]td[äa]mpare|shock absorber|control arm|ball joint|fahrwerk|suspension|ophanging", _DEFECT + r"|klappert|poltert|ausgeschlagen|rammelt|knocks?|clunk\w*")),
     RepairItem("steering", "power steering", 400, 1000,
         _near("servolenkung|lenkung|stuurbekrachtiging|servosterzo|servostyrning|power steering|steering", _DEFECT + r"|schwerg[äa]ngig|heavy|non funziona")),
     RepairItem("rust", "rust", 300, 1500,
         r"\brost\b|rostig|durchrostung|rostl[öo]cher|\broest\b|roestplekken|doorgeroest|ruggine|rostskador|rostangrepp|\brust(?:y|ed)?\b|corrosion"),
-    RepairItem("body_damage", "bodywork damage", 300, 2000,
+    RepairItem("body_damage", "bodywork damage", 200, 1500,
         r"unfallschaden|hagelschaden|blechschaden|karosserieschaden|beulen?\b|kratzer|schade aan|deuk|krassen|plaatschade|carrozzeria danneggiata|ammaccat|bucklor|pl[åa]tskador|\bdents?\b|scratches|body damage|bumper damage|accident damage"),
     RepairItem("airbag", "airbag fault", 300, 800,
         r"airbag\w* (?:leuchtet|defekt|lampe|leuchte)|airbaglamp|spia airbag|airbag(?:lampa| ?varning)|airbag (?:light|warning|fault)"),
@@ -84,8 +84,11 @@ ITEMS: tuple[RepairItem, ...] = (
         r"bastler|reparaturbed[üu]rftig|reparatie nodig|opknapper|da riparare|da sistemare|renoveringsobjekt|reparationsobjekt|needs (?:repair|work|repairs)|project car|spares or repair|spare parts donor|hobbyist", negatable=False),
 )  # fmt: skip
 
+# "kein Rost", "no rust" … and parts that were just renewed: "neue Stoßdämpfer", "new clutch"
 _NEGATION = re.compile(
-    r"(?:\bkein\w*|\bohne|\bgeen|\bzonder|\bno\b|\bsenza|\binga\b|\bingen\b|\bnot\b|\bwithout|\bnicht|\bniet)\W+(?:\w+\W+){0,2}$"
+    r"(?:\bkein\w*|\bohne|\bgeen|\bzonder|\bno\b|\bsenza|\binga\b|\bingen\b|\bnot\b|\bwithout|\bnicht|\bniet"
+    r"|\bneue?[rnsm]?\b|\bnieuwe?\b|\bnuov[oaie]\b|\bny[a]?\b|\bnew\b|\berneuert\w*|\bvervangen|\bsostituit\w*|\breplaced)"
+    r"\W+(?:\w+\W+){0,2}$"
 )
 
 

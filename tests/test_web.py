@@ -417,3 +417,19 @@ def test_new_cars_poller(client: TestClient, seeded: dict, db: Session) -> None:
     early = (datetime.now(UTC) - timedelta(hours=3)).isoformat()
     assert "new car" not in client.get(f"/listings/new-count?since={early}&make=Audi").text
     assert client.get("/listings/new-count?since=garbage").status_code == 400
+
+
+def test_detail_page_shows_the_repair_box(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.storage.listings import apply_costs
+
+    row = seeded["a"]
+    row.description = "Motorschaden, muss abgeschleppt werden."
+    apply_costs(row, NOW)
+    db.commit()
+    page = client.get(f"/listings/{row.id}").text
+    assert "Repair costs: what the ad admits is wrong" in page
+    assert "engine damage" in page and "needs a trailer or tow" in page
+    assert "Very rough indication only" in page
+    from app.web.templating import eur
+
+    assert f"incl. ≈ {eur(row.repair_cost_eur)} repairs" in page
