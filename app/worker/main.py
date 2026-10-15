@@ -15,7 +15,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import Settings, get_settings
 from app.logging import configure_logging
-from app.worker.jobs import analyze_backlog, enrich_backlog, run_due_searches
+from app.worker.jobs import analyze_backlog, enrich_backlog, run_due_searches, translate_backlog
 
 log = structlog.get_logger()
 
@@ -38,6 +38,13 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         analyze_backlog,
         IntervalTrigger(minutes=10, jitter=60),
         id="insights_backlog",
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        translate_backlog,
+        IntervalTrigger(minutes=5, jitter=30),
+        id="translate_backlog",
         max_instances=1,
         coalesce=True,
     )

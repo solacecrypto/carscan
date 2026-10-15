@@ -368,6 +368,23 @@ def enrich_backlog(
     return counts
 
 
+def translate_backlog(limit: int | None = None) -> dict[str, int]:
+    """Catch-up pass: English text for descriptions that have none yet."""
+    from app.config import get_settings
+    from app.translate import default_translator, translate_pending
+
+    translator = default_translator()
+    if translator is None:
+        return {}
+    with db_session() as s:
+        counts = translate_pending(
+            s, translator, datetime.now(UTC), limit or get_settings().translate_per_run
+        )
+    if any(counts.values()):
+        log.info("translate.backlog", **counts)
+    return counts
+
+
 def analyze_backlog(limit: int | None = None) -> dict[str, int]:
     """Catch-up pass: listings that still lack a current insight (older ones, budget overflow)."""
     from app.config import get_settings

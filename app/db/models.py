@@ -116,6 +116,7 @@ class Listing(Base):
     postcode: Mapped[str | None] = mapped_column(String(16))
     photos: Mapped[list[str]] = mapped_column(JSONB, default=list)
     description: Mapped[str | None] = mapped_column(Text)
+    description_en: Mapped[str | None] = mapped_column(Text)  # machine translation
     raw: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
 
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))

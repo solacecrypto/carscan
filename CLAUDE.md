@@ -136,6 +136,12 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Translations (2026-10-15)
+
+Descriptions are machine-translated to English (`listings.description_en`, worker job every
+5 min, `carscan translate run`); provider `TRANSLATE_PROVIDER` google (keyless, default) |
+deepl | off. See `docs/translate.md`.
+
 ## Phase 6 status (2026-10-13)
 
 Claude pass over descriptions done: `app/insights/` (schema, `ClaudeAnalyzer` via the

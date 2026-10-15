@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # (cars without an NL value yet always qualify). Empty = no gating.
     detail_min_spread_eur: int | None = 0
     insights_min_spread_eur: int | None = 0
+    # machine translation of descriptions: google (keyless, default) | deepl | off
+    translate_provider: str = "google"
+    deepl_api_key: SecretStr = SecretStr("")
+    translate_per_run: int = 50
 
     @field_validator("database_url")
     @classmethod

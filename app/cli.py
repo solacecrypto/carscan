@@ -16,6 +16,18 @@ app.add_typer(values, name="values")
 app.add_typer(users, name="users")
 app.add_typer(searches, name="searches")
 app.add_typer(scrape, name="scrape")
+translate = typer.Typer(help="English translations of descriptions")
+app.add_typer(translate, name="translate")
+
+
+@translate.command("run")
+def translate_run(limit: int = typer.Option(50, help="max descriptions to translate")) -> None:
+    """Translate descriptions that have no English text yet (best spread first)."""
+    from app.worker.jobs import translate_backlog
+
+    counts = translate_backlog(limit=limit)
+    typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()) or "translation is off")
+
 
 # The first saved search of phase 1 (see docs/sources/autoscout24_de.md for the codes)
 E90_PARAMS = {

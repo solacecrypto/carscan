@@ -126,6 +126,8 @@ def upsert_listings(
             if f == "photos" and len(val) < len(row.photos or []):
                 continue  # keep the richer full-size set
             if getattr(row, f) != val:
+                if f == "description":
+                    row.description_en = None  # translated again by the worker
                 setattr(row, f, val)
 
         if item.price_eur != row.price_eur:
