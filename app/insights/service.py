@@ -59,7 +59,8 @@ def apply_rules(listing: Listing, now: datetime) -> ListingInsight | None:
     if ins is None:
         ins = ListingInsight(analyzed_at=now, description_hash=digest, status="rules")
         listing.insight = ins
-    tags = extract_tags(text)
+    # the title often carries the headline remark ("… / ÖLVERBRAUCH")
+    tags = extract_tags(f"{listing.variant or ''}.\n{text}" if listing.variant else text)
     fields = summarize(tags)
     ins.analyzed_at = now
     ins.description_hash = digest

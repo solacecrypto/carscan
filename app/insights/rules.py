@@ -59,7 +59,7 @@ PATTERNS: list[tuple[str, str, str, str]] = [
         "oil_consumption",
         "burns oil",
         "bad",
-        r"ölverbrauch|verbraucht öl|braucht öl|olieverbruik|verbruikt olie|consumo (di )?olio|oljeförbrukning|drar olja|consomme de l.huile",
+        r"öl\s?verbrauch|verbraucht öl|braucht öl|olie\s?verbruik|verbruikt olie|consumo (di )?olio|oljeförbrukning|drar olja|consomme de l.huile",
     ),
     (
         "warning_light",

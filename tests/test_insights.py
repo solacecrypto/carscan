@@ -395,3 +395,12 @@ def test_enrich_backlog_fetches_missing_ad_pages(db: Session) -> None:
     )
     assert row.insight is not None and any(t["key"] == "accident" for t in row.insight.tags)
     assert enrich_backlog(limit=10, client=client)["fetched"] == 0  # nothing left to fetch
+
+
+def test_oil_consumption_tag_from_title_and_spaced_wording(db: Session) -> None:
+    from app.insights.service import apply_rules
+
+    row = _listing(db, "oil1", "Fahrzeug hat starken Öl Verbrauch, 1 Liter auf 300km!")
+    row.variant = "318i Touring / ÖLVERBRAUCH"
+    apply_rules(row, NOW)
+    assert [t["key"] for t in row.insight.tags] == ["oil_consumption"]
