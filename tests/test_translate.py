@@ -17,7 +17,7 @@ class FakeTranslator:
         self.calls += 1
         if self.fail_on and self.fail_on in text:
             raise TranslateError("boom")
-        return f"EN: {text}"
+        return "\n".join(f"EN: {line}" for line in text.split("\n"))
 
 
 def test_chunks_respect_limit_and_keep_text() -> None:
@@ -46,7 +46,7 @@ def test_translate_pending_best_spread_first_and_stops_on_error(db: Session) -> 
     db.commit()
     t = FakeTranslator(fail_on="Motorschaden")
     counts = translate_pending(db, t, NOW, limit=10, sleep=lambda _: None)
-    assert counts == {"translated": 2, "failed": 1}
+    assert counts == {"translated": 2, "evidence": 0, "failed": 1}
     assert b.description_en == "EN: Unfallfrei" and a.description_en == "EN: Guter Zustand"
     assert d.description_en is None  # retried next run
     assert (
@@ -68,3 +68,29 @@ def test_new_description_clears_stale_translation(db: Session) -> None:
     db.flush()
     upsert_listings(db, [_item("x", 5000, description="Neu")], search, NOW)
     assert row.description == "Neu" and row.description_en is None
+
+
+def test_evidence_is_translated_and_survives_retagging(db: Session) -> None:
+    from app.insights.service import apply_rules
+    from app.translate import translate_evidence
+
+    row = _listing(db, "ev", "Unfallfrei. Steuerkette wurde erneuert.")
+    apply_rules(row, NOW)
+    db.flush()
+    assert translate_evidence(row, FakeTranslator()) == 2
+    ens = {t["key"]: t["evidence_en"] for t in row.insight.tags}
+    assert ens["accident_free"].startswith("EN: ") and ens["chain_replaced"].startswith("EN: ")
+    apply_rules(row, NOW)  # same text re-tagged on the next scrape: keep the translations
+    assert {t["key"]: t.get("evidence_en") for t in row.insight.tags} == ens
+    assert translate_evidence(row, FakeTranslator()) == 0
+
+
+def test_translate_pending_also_fills_evidence_on_older_cars(db: Session) -> None:
+    from app.insights.service import apply_rules
+
+    row = _listing(db, "old", "Motorschaden.", description_en="Engine damage.")
+    apply_rules(row, NOW)
+    db.commit()
+    counts = translate_pending(db, FakeTranslator(), NOW, limit=5, sleep=lambda _: None)
+    assert counts == {"translated": 0, "evidence": 1, "failed": 0}
+    assert row.insight.tags[0]["evidence_en"] == "EN: Motorschaden."

@@ -40,6 +40,11 @@
       .btn-ghost { @apply btn bg-ink-100 text-ink-700 hover:bg-ink-200; }
       .btn-outline { @apply btn border border-ink-300 text-ink-700 hover:border-ink-500; }
       .pill { @apply rounded-full px-2 py-0.5 text-[11px] font-semibold; }
+      .tip { @apply relative cursor-help; }
+      .tip[data-tip]:hover::after, .tip[data-tip]:focus::after {
+        content: attr(data-tip);
+        @apply absolute bottom-full left-0 z-20 mb-1.5 w-64 whitespace-normal rounded-lg bg-ink-900 px-3 py-2 text-xs font-normal leading-snug text-white shadow-lg;
+      }
       .kv dt { @apply text-ink-400; }
       h1 { @apply text-2xl font-bold tracking-tight text-ink-900; }
       h2 { @apply font-semibold text-ink-900; }

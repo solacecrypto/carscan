@@ -67,7 +67,13 @@ def apply_rules(listing: Listing, now: datetime) -> ListingInsight | None:
     ins.status = "rules"
     ins.model = "rules"
     ins.error = None
-    ins.tags = [t.as_dict() for t in tags]
+    # keep English evidence already translated for unchanged tags
+    had = {(t.get("key"), t.get("evidence")): t.get("evidence_en") for t in (ins.tags or [])}
+    new_tags = [t.as_dict() for t in tags]
+    for t in new_tags:
+        if en := had.get((t["key"], t.get("evidence"))):
+            t["evidence_en"] = en
+    ins.tags = new_tags
     ins.accident = fields["accident"]
     ins.accident_evidence = fields["accident_evidence"]
     ins.timing_chain = fields["timing_chain"]

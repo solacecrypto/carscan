@@ -20,7 +20,7 @@
       <ul class="mt-2 space-y-1.5 text-sm">
         {% for t in i.tags %}
         <li class="flex items-start gap-2"><span class="pill mt-0.5 shrink-0 {{ colors[t.polarity] }}">{{ t.label }}</span>
-          {% if t.evidence %}<span class="text-ink-600">“{{ t.evidence }}”</span>{% endif %}</li>
+          {% if t.evidence %}<span class="text-ink-600">“{{ t.evidence_en or t.evidence }}”{% if t.evidence_en %} <span class="text-ink-400">— {{ t.evidence }}</span>{% endif %}</span>{% endif %}</li>
         {% endfor %}
       </ul>
       {% else %}<p class="mt-1 text-sm text-ink-400">Nothing notable found in the text.</p>{% endif %}

@@ -2,7 +2,7 @@
 {% if i and i.tags %}
 {% set colors = {'bad': 'bg-bad-100 text-bad-700', 'good': 'bg-good-100 text-good-700', 'note': 'bg-ink-100 text-ink-600'} %}
 <div class="mt-1 flex flex-wrap gap-1">
-  {% for t in i.tags[:3] %}<span class="pill {{ colors[t.polarity] }}" title="{{ t.evidence }}">{{ t.label }}</span>{% endfor %}
+  {% for t in i.tags[:3] %}<span class="pill tip {{ colors[t.polarity] }}" tabindex="0" {% if t.evidence %}data-tip="“{{ t.evidence_en or t.evidence }}”{% if t.evidence_en %} — {{ t.evidence }}{% endif %}"{% endif %}>{{ t.label }}</span>{% endfor %}
   {% if i.tags|length > 3 %}<span class="pill bg-ink-100 text-ink-500">+{{ i.tags|length - 3 }}</span>{% endif %}
 </div>
 {% endif %}

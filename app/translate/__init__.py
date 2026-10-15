@@ -18,8 +18,9 @@ import httpx
 import structlog
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
-from app.db.models import Listing
+from app.db.models import Listing, ListingInsight
 
 log = structlog.get_logger()
 
@@ -145,6 +146,50 @@ def pending_listings(session: Session, limit: int) -> list[Listing]:
     return list(session.scalars(stmt))
 
 
+def tags_needing_evidence(tags: list[dict] | None) -> list[dict]:
+    return [t for t in (tags or []) if t.get("evidence") and not t.get("evidence_en")]
+
+
+def pending_evidence(session: Session, limit: int) -> list[Listing]:
+    """Active cars whose condition tags still have untranslated evidence sentences."""
+    stmt = (
+        select(Listing)
+        .join(ListingInsight)
+        .where(Listing.is_active.is_(True), Listing.duplicate_of_id.is_(None))
+        .where(ListingInsight.tags.isnot(None))
+        .order_by(Listing.spread_eur.desc().nulls_last(), Listing.first_seen.desc())
+        .limit(limit * 20)
+    )
+    out = []
+    for row in session.scalars(stmt):
+        if row.insight is not None and tags_needing_evidence(row.insight.tags):
+            out.append(row)
+            if len(out) >= limit:
+                break
+    return out
+
+
+def translate_evidence(row: Listing, translator: Translator) -> int:
+    """One request per car: the evidence sentences joined by newlines, split back after."""
+    ins = row.insight
+    if ins is None:
+        return 0
+    todo = tags_needing_evidence(ins.tags)
+    if not todo:
+        return 0
+    lines = translator.translate("\n".join(t["evidence"] for t in todo)).split("\n")
+    if len(lines) != len(todo):  # the provider merged or split lines; translate one by one
+        lines = [translator.translate(t["evidence"]) for t in todo]
+    tags = [dict(t) for t in ins.tags]
+    by_ev = dict(zip((t["evidence"] for t in todo), lines, strict=True))
+    for t in tags:
+        if t.get("evidence") in by_ev and not t.get("evidence_en"):
+            t["evidence_en"] = by_ev[t["evidence"]].strip()
+    ins.tags = tags
+    flag_modified(ins, "tags")
+    return len(todo)
+
+
 def translate_pending(
     session: Session,
     translator: Translator,
@@ -154,16 +199,28 @@ def translate_pending(
 ) -> dict[str, int]:
     """Translate up to ``limit`` descriptions with polite pauses; stop at the first provider
     error (usually rate limiting) and try again on the next run."""
-    counts = {"translated": 0, "failed": 0}
+    counts = {"translated": 0, "evidence": 0, "failed": 0}
     for row in pending_listings(session, limit):
         try:
             text = translator.translate(row.description or "")
+            row.description_en = text.strip() or None
+            counts["translated"] += 1
+            session.flush()
+            sleep(random.uniform(1.5, 4.0))
+            counts["evidence"] += translate_evidence(row, translator)
         except (TranslateError, httpx.HTTPError) as e:
             log.warning("translate.failed", listing=row.id, provider=translator.name, error=str(e))
             counts["failed"] += 1
-            break
-        row.description_en = text.strip() or None
-        counts["translated"] += 1
+            return counts
+        session.flush()
+    # cars translated earlier whose tags gained evidence since (re-tagging, rule updates)
+    for row in pending_evidence(session, max(0, limit - counts["translated"])):
+        try:
+            counts["evidence"] += translate_evidence(row, translator)
+        except (TranslateError, httpx.HTTPError) as e:
+            log.warning("translate.failed", listing=row.id, provider=translator.name, error=str(e))
+            counts["failed"] += 1
+            return counts
         session.flush()
         sleep(random.uniform(1.5, 4.0))
     return counts
