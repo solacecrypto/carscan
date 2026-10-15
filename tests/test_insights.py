@@ -356,3 +356,42 @@ def test_kleinanzeigen_ad_page_detail() -> None:
         and "Unfall" in (n.description or "")
     )
     assert n.raw["detail"]["details"]["Fahrzeugzustand"]
+
+
+def test_enrich_backlog_fetches_missing_ad_pages(db: Session) -> None:
+    from app.db import SavedSearch, User
+    from app.scrapers.kleinanzeigen import parse_articles
+    from app.worker.jobs import enrich_backlog
+
+    u = User(username="u", password_hash="x")
+    search = SavedSearch(
+        name="ka",
+        owner=u,
+        source="kleinanzeigen",
+        source_params={"make": "bmw", "make_label": "BMW", "model_key": "bmw-3er-e90"},
+    )
+    db.add_all([u, search])
+    db.flush()
+    items = parse_articles((FIX / "kleinanzeigen" / "search_page1.html").read_text())
+    item = next(i for i in items if i["id"] == "3537159648")
+    old = _listing(db, item["id"], None, raw={"search": item}, saved_searches=[search])
+    old.source = "kleinanzeigen"
+    old.url = "https://www.kleinanzeigen.de" + item["href"]
+    db.commit()
+    page = (FIX / "kleinanzeigen" / "ad_page.html").read_text()
+    client = PoliteClient(
+        transport=httpx.MockTransport(lambda r: httpx.Response(200, text=page)),
+        sleep=lambda _: None,
+    )
+    counts = enrich_backlog(limit=10, client=client)
+    assert counts["fetched"] == 1
+    db.expire_all()
+    row = db.get(Listing, old.id)
+    assert (
+        row is not None
+        and row.description
+        and "Unfall" in row.description
+        and row.gearbox == "manual"
+    )
+    assert row.insight is not None and any(t["key"] == "accident" for t in row.insight.tags)
+    assert enrich_backlog(limit=10, client=client)["fetched"] == 0  # nothing left to fetch

@@ -513,6 +513,20 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+@scrape.command("details")
+def scrape_details(
+    limit: int = typer.Option(40, help="max ad pages to fetch"),
+    listing_id: list[int] | None = typer.Option(  # noqa: B008
+        None, "--listing", help="specific listing ids (ignores the spread gate)"
+    ),
+) -> None:
+    """Fetch missing ad pages (description, photos, specs) for stored cars."""
+    from app.worker.jobs import enrich_backlog
+
+    counts = enrich_backlog(limit=limit, listing_ids=listing_id or None)
+    typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
+
+
 @insights.command("rules")
 def insights_rules() -> None:
     """Re-run the keyword rules over every listing that has a description (no API calls)."""

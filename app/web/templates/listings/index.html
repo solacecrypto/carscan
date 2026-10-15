@@ -7,7 +7,9 @@
 <details class="panel mb-5 p-4" {{ 'open' if active }}>
   <summary class="flex cursor-pointer items-center justify-between font-semibold text-white">
     <span>Filters &amp; sort</span>
-    <span class="text-xs font-normal text-ink-300">{{ 'active' if active else 'tap to refine' }}</span>
+    <span class="flex items-center gap-3 text-xs font-normal text-ink-300">
+      {% if active %}<a href="/listings" class="rounded-full border border-white/20 px-3 py-1 text-white hover:bg-white/10">Reset filters</a>{% else %}tap to refine{% endif %}
+    </span>
   </summary>
   <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true" class="mt-4 space-y-4">
     <div class="grid gap-3 sm:grid-cols-2">
@@ -69,7 +71,10 @@
       <label class="check"><input type="checkbox" name="{{ name }}" value="true" {{ 'checked' if f[name] }}> {{ text }}</label>
       {% endfor %}
     </div>
-    <noscript><button class="btn-primary">Apply</button></noscript>
+    <div class="flex items-center justify-between">
+      <a href="/listings" class="btn-ghost !bg-white/10 !text-ink-100 hover:!bg-white/20">Reset filters</a>
+      <noscript><button class="btn-primary">Apply</button></noscript>
+    </div>
   </form>
 </details>
 <script>

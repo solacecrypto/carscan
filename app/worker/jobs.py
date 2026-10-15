@@ -296,6 +296,77 @@ def run_due_searches() -> list[RunSummary]:
     return run_all_active_searches(due_only=True)
 
 
+def enrich_backlog(
+    limit: int = DETAIL_FETCH_BUDGET,
+    listing_ids: list[int] | None = None,
+    client: PoliteClient | None = None,
+) -> dict[str, int]:
+    """Fetch the ad page for stored cars that never got one (added before a fetcher existed,
+    or outside the per-run budget). Same spread gate as new cars unless ids are given."""
+    from sqlalchemy.orm import selectinload
+
+    from app.config import get_settings
+
+    settings = get_settings()
+    floor = settings.detail_min_spread_eur
+    counts = {"fetched": 0, "gone": 0, "skipped": 0}
+    with db_session() as s:
+        stmt = (
+            select(Listing)
+            .options(selectinload(Listing.saved_searches))
+            .where(Listing.is_active.is_(True), Listing.duplicate_of_id.is_(None))
+            .where((Listing.description.is_(None)) | (Listing.description == ""))
+            .where(~Listing.raw.has_key("detail"))
+            .order_by(Listing.spread_eur.desc().nulls_first(), Listing.first_seen.desc())
+        )
+        if listing_ids:
+            stmt = stmt.where(Listing.id.in_(listing_ids))
+        elif floor is not None:
+            stmt = stmt.where((Listing.spread_eur.is_(None)) | (Listing.spread_eur >= floor))
+        rows = list(s.scalars(stmt.limit(limit)))
+        if not rows:
+            return counts
+        own = client is None
+        client = client or PoliteClient()
+        now = datetime.now(UTC)
+        try:
+            for row in rows:
+                scraper = get_scraper(row.source)
+                search_data = (row.raw or {}).get("search")
+                if not search_data or not row.saved_searches:
+                    counts["skipped"] += 1
+                    continue
+                raw = RawListing(
+                    source=row.source,
+                    source_listing_id=row.source_listing_id,
+                    url=row.url,
+                    data=search_data,
+                    fetched_at=now,
+                )
+                try:
+                    detail = scraper.fetch_detail(raw, client)
+                except ParseError as e:
+                    log.warning("enrich.backlog.failed", listing=row.id, error=str(e))
+                    counts["skipped"] += 1
+                    continue
+                if detail is None:
+                    row.is_active = False
+                    counts["gone"] += 1
+                    continue
+                raw.detail = detail
+                search = row.saved_searches[0]
+                items = _apply_watchlist(dict(search.source_params), [scraper.parse(raw)])
+                upsert_listings(s, items, search, now)
+                counts["fetched"] += 1
+        finally:
+            if own:
+                client.close()
+        recompute_values(s, now)
+    if any(counts.values()):
+        log.info("enrich.backlog", **counts)
+    return counts
+
+
 def analyze_backlog(limit: int | None = None) -> dict[str, int]:
     """Catch-up pass: listings that still lack a current insight (older ones, budget overflow)."""
     from app.config import get_settings

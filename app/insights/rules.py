@@ -56,6 +56,12 @@ PATTERNS: list[tuple[str, str, str, str]] = [
         r"\brost\b|\brostig|\broest\b|\bruggine\b|\brost(ig|angrepp)|\brouille",
     ),
     (
+        "oil_consumption",
+        "burns oil",
+        "bad",
+        r"ölverbrauch|verbraucht öl|braucht öl|olieverbruik|verbruikt olie|consumo (di )?olio|oljeförbrukning|drar olja|consomme de l.huile",
+    ),
+    (
         "warning_light",
         "warning light",
         "bad",
