@@ -15,7 +15,7 @@ from datetime import date, datetime
 from statistics import median
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.models import Comparable, Listing
@@ -74,44 +74,31 @@ def compute(
     ]
     signals: list[Signal] = []
 
-    n_close = len(close) if engine else len(active)
+    # supply: the whole model, blended with the same-engine subset when we know the engine
+    model_score = _interp(len(active), [(50, 100), (150, 70), (400, 45), (800, 25), (1200, 10)])
+    if engine:
+        close_score = _interp(len(close), [(5, 100), (15, 75), (40, 50), (100, 25), (300, 10)])
+        supply_score = round((model_score + close_score) / 2)
+        supply_value = f"{len(active)} for sale in NL, {len(close)} with the same engine"
+    else:
+        supply_score, supply_value = model_score, f"{len(active)} for sale in NL"
     signals.append(
-        Signal(
-            "supply",
-            "Supply",
-            f"{len(active)} for sale in NL" + (f", {len(close)} same engine" if engine else ""),
-            _interp(n_close, [(5, 100), (20, 60), (60, 30), (150, 10)]),
-            "fewer rivals = easier sale",
-        )
+        Signal("supply", "Supply", supply_value, supply_score, "fewer rivals = easier sale")
     )
 
     pool = close if len(close) >= 8 else active
-    ages = [(today - c.listed_at).days for c in pool if c.listed_at]
-    if len(ages) >= 5:
-        med_age = median(ages)
-        stale = sum(a > 60 for a in ages) / len(ages)
-        signals.append(
-            Signal(
-                "age",
-                "Age of ads on sale",
-                f"median {med_age:.0f} days, {stale:.0%} older than 60 days",
-                _interp(med_age, [(14, 100), (30, 70), (60, 40), (120, 10)]),
-                f"Marktplaats dates, {len(ages)} ads",
-            )
-        )
-    else:
-        signals.append(Signal("age", "Age of ads on sale", "not enough dated ads", None))
-
     levels = [DEMAND_LEVEL[c.demand] for c in pool if c.demand in DEMAND_LEVEL]
     if len(levels) >= 5:
         some = sum(v >= 1 for v in levels) / len(levels)
         many = sum(v >= 2 for v in levels) / len(levels)
+        score = _interp(some, [(0.2, 10), (0.35, 35), (0.5, 60), (0.6, 80), (0.75, 100)])
+        score = min(100, score + round(many * 100))
         signals.append(
             Signal(
                 "demand",
                 "Buyer enquiries",
                 f"{some:.0%} of ads get enquiries, {many:.0%} get many",
-                min(100, round(100 * (some * 0.7 + many * 1.5))),
+                score,
                 f"AutoScout24.nl, {len(levels)} ads",
             )
         )
@@ -144,37 +131,47 @@ def compute(
             )
         )
 
-    weights = {"supply": 0.3, "age": 0.35, "demand": 0.35, "sell_through": 0.3}
+    # ad age is shown but not scored: we only fetch the newest pages, so it is biased young
+    ages = [(today - c.listed_at).days for c in pool if c.listed_at]
+    if len(ages) >= 5:
+        signals.append(
+            Signal(
+                "age",
+                "Age of the newest ads",
+                f"median {median(ages):.0f} days ({len(ages)} Marktplaats ads)",
+                None,
+                "not scored: only the newest pages are fetched",
+            )
+        )
+
+    weights = {"supply": 0.4, "demand": 0.6, "sell_through": 0.5}
     known = [(s, weights[s.key]) for s in signals if s.score is not None]
     if not known:
         return None
     total_w = sum(w for _, w in known)
     score = round(sum(s.score * w for s, w in known) / total_w)  # type: ignore[operator]
-    days = next(
-        (median(gone) for s in signals if s.key == "sell_through" and s.score is not None), None
-    )
-    if days is None:
-        days = median(ages) if len(ages) >= 5 else None
+    days = round(median(gone)) if len(gone) >= MIN_GONE_SAMPLES else None
     return {
         "grade": _grade(score),
         "score": score,
-        "expected_days": round(days) if days is not None else None,
-        "expected_basis": "sell-through" if len(gone) >= MIN_GONE_SAMPLES else "ad age",
+        "expected_days": days,
         "signals": [s.__dict__ for s in signals],
         "n_active": len(active),
         "n_close": len(close) if engine else None,
+        "gone_samples": len(gone),
         "reserved": sum(1 for c in active if c.reserved),
     }
 
 
 def market_for_listing(session: Session, listing: Listing, now: datetime) -> dict[str, Any] | None:
-    key = listing.model_key or listing.model
-    if not key:
+    # comparables carry the watchlist key once their search has re-run after a sync; older
+    # rows only have the site's model name, so match on either
+    conds = []
+    if listing.model_key:
+        conds.append(Comparable.model_key == listing.model_key)
+    if listing.model:
+        conds.append(func.lower(Comparable.model) == listing.model.lower())
+    if not conds:
         return None
-    stmt = select(Comparable).where(
-        or_(Comparable.model_key == key, Comparable.model == key)
-        if listing.model_key
-        else Comparable.model == key
-    )
-    comps = list(session.scalars(stmt))
+    comps = list(session.scalars(select(Comparable).where(or_(*conds))))
     return compute(comps, engine_token(listing.variant, listing.model), listing.gearbox, now.date())

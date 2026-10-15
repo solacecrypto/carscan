@@ -1,5 +1,6 @@
 """Apply the valuation engine to stored listings."""
 
+from dataclasses import replace
 from datetime import datetime
 
 from sqlalchemy import select
@@ -62,6 +63,9 @@ def apply_value(row: Listing, comps: list[Comp], cfg: ValuationConfig) -> ValueE
         power_kw=row.power_kw,
     )
     est = estimate_value(target, comps, cfg)
+    if est is None and row.model_key and row.model:
+        # comparables stored before the watchlist key existed only carry the site's model name
+        est = estimate_value(replace(target, model=row.model), comps, cfg)
     if est is None:
         row.nl_value_eur = row.nl_value_n = None
         row.nl_value_breakdown = None

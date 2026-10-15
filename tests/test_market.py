@@ -41,13 +41,14 @@ def _comp(i: int, **kw: object) -> Comparable:
 def test_fast_market_gets_a_good_grade_and_slow_market_a_bad_one() -> None:
     fast = [_comp(i, listed_at=TODAY - timedelta(days=5), demand="Many") for i in range(6)]
     m = compute(fast, "320i", "manual", TODAY)
-    assert m is not None and m["grade"] == "A" and m["expected_days"] == 5
-    assert m["expected_basis"] == "ad age" and m["n_close"] == 6
+    assert m is not None and m["grade"] == "A" and m["expected_days"] is None
+    assert m["n_close"] == 6
     keys = {s["key"]: s for s in m["signals"]}
     assert keys["sell_through"]["score"] is None  # not enough disappeared ads yet
-    assert "6 for sale in NL, 6 same engine" in keys["supply"]["value"]
+    assert keys["age"]["score"] is None  # shown, never scored
+    assert "6 for sale in NL, 6 with the same engine" in keys["supply"]["value"]
 
-    slow = [_comp(i, listed_at=TODAY - timedelta(days=150), demand="Zero") for i in range(120)]
+    slow = [_comp(i, listed_at=TODAY - timedelta(days=150), demand="Zero") for i in range(900)]
     m2 = compute(slow, "320i", "manual", TODAY)
     assert m2 is not None and m2["grade"] == "E"
 
@@ -64,7 +65,7 @@ def test_sell_through_switches_on_with_enough_gone_ads() -> None:
         for i in range(25)
     ]
     m = compute(comps, "320i", "manual", TODAY)
-    assert m is not None and m["expected_basis"] == "sell-through" and m["expected_days"] == 12
+    assert m is not None and m["expected_days"] == 12 and m["gone_samples"] == 25
     assert next(s for s in m["signals"] if s["key"] == "sell_through")["score"] is not None
 
 

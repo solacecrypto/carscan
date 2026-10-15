@@ -164,7 +164,7 @@
         <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl font-bold {{ gc[market.grade] }}">{{ market.grade }}</span>
         <div class="text-sm">
           <div class="font-semibold">{{ {'A': 'Sells fast', 'B': 'Sells well', 'C': 'Average', 'D': 'Slow', 'E': 'Hard to sell'}[market.grade] }} <span class="font-normal text-ink-400">· score {{ market.score }}/100</span></div>
-          {% if market.expected_days is not none %}<div class="text-ink-600">Similar ads stay up about <b>{{ market.expected_days }} days</b> <span class="text-xs text-ink-400">({{ 'how long ads lasted before disappearing' if market.expected_basis == 'sell-through' else 'age of the ads on sale today' }})</span></div>{% endif %}
+          {% if market.expected_days is not none %}<div class="text-ink-600">Similar ads disappear after about <b>{{ market.expected_days }} days</b></div>{% else %}<div class="text-xs text-ink-400">Days-to-sell: still collecting ({{ market.gone_samples }} tracked ads have disappeared so far)</div>{% endif %}
         </div>
       </div>
       <ul class="mt-3 divide-y divide-ink-100 text-sm">

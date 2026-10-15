@@ -231,3 +231,47 @@ def test_outlier_match_is_not_used_as_benchmark() -> None:
     # unknown engine on the target: never a close match
     est = estimate_value(Target("320i", "sedan", 2012, 160_000), comps, CFG)
     assert est is not None and est.method == "median"
+
+
+def test_value_falls_back_to_the_model_name_when_comps_lack_the_key(db: Session) -> None:
+    from app.valuation import apply_value, load_comps
+
+    for i in range(3):
+        db.add(
+            Comparable(
+                source="autoscout24_nl",
+                source_listing_id=f"k{i}",
+                url="",
+                make="BMW",
+                model="318i",
+                model_key=None,
+                first_registration=datetime(2011, 1, 1).date(),
+                mileage_km=150_000 + i * 5000,
+                price_eur=6000 + i * 100,
+                seller_type=SellerType.dealer,
+                first_seen=datetime.now(UTC),
+                last_seen=datetime.now(UTC),
+                is_active=True,
+            )
+        )
+    u = User(username="v", password_hash="x")
+    row = Listing(
+        source="autoscout24_de",
+        source_listing_id="t",
+        url="",
+        make="BMW",
+        model="318i",
+        model_key="bmw-3er-e90",
+        first_registration=datetime(2011, 6, 1).date(),
+        mileage_km=150_000,
+        price_eur=4000,
+        seller_type=SellerType.dealer,
+        country="DE",
+        first_seen=datetime.now(UTC),
+        last_seen=datetime.now(UTC),
+        is_active=True,
+    )
+    db.add_all([u, row])
+    db.flush()
+    assert apply_value(row, load_comps(db), ValuationConfig(min_comps=3)) is not None
+    assert row.nl_value_eur
