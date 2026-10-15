@@ -17,7 +17,7 @@ _DEFECT = r"(?:defekt|kaputt|schaden|undicht|fällig|verschlissen|muss|defect|ka
 
 def _near(subject: str, words: str = _DEFECT) -> str:
     """subject followed within three words by a defect word."""
-    return rf"\b(?:{subject})\w*\W+(?:\w+\W+){{0,3}}{words}"
+    return rf"\b(?:{subject})\w*\W+(?:\w+\W+){{0,3}}(?:{words})"
 
 
 @dataclass(frozen=True)
@@ -63,13 +63,13 @@ ITEMS: tuple[RepairItem, ...] = (
     RepairItem("rust", "rust", 300, 1500,
         r"\brost\b|rostig|durchrostung|rostl[öo]cher|\broest\b|roestplekken|doorgeroest|ruggine|rostskador|rostangrepp|\brust(?:y|ed)?\b|corrosion"),
     RepairItem("body_damage", "bodywork damage", 300, 2000,
-        r"unfallschaden|hagelschaden|blechschaden|karosserieschaden|beule|delle\b|kratzer|schade aan|deuk|krassen|plaatschade|carrozzeria danneggiata|ammaccat|bucklor|pl[åa]tskador|\bdents?\b|scratches|body damage|bumper damage|accident damage"),
+        r"unfallschaden|hagelschaden|blechschaden|karosserieschaden|beulen?\b|kratzer|schade aan|deuk|krassen|plaatschade|carrozzeria danneggiata|ammaccat|bucklor|pl[åa]tskador|\bdents?\b|scratches|body damage|bumper damage|accident damage"),
     RepairItem("airbag", "airbag fault", 300, 800,
         r"airbag\w* (?:leuchtet|defekt|lampe|leuchte)|airbaglamp|spia airbag|airbag(?:lampa| ?varning)|airbag (?:light|warning|fault)"),
     RepairItem("exhaust", "exhaust", 200, 600,
-        _near("auspuff|uitlaat|scarico|avgassystem|exhaust", _DEFECT + r"|laut|rusted")),
+        _near("auspuff|uitlaat|scarico|avgassystem|exhaust", _DEFECT + r"|rusted")),
     RepairItem("electrical", "electrical fault", 150, 600,
-        r"elektrik(?:problem|fehler)|elektrische? (?:storing|probleem)|problema elettrico|\belfel\b|electrical (?:fault|issue|problem)|fensterheber defekt|raammechanisme defect|window regulator"),
+        r"elektrik(?:problem|fehler)|elektrische? (?:storing|probleem)|problema elettrico|\belfel\b|electrical (?:fault|issue|problem)|fensterheber defekt|raammechanisme defect|window regulator (?:broken|faulty|not working|defect)"),
     RepairItem("battery", "battery", 100, 250,
         _near("batterie|accu|batteria|batteri|battery", _DEFECT + r"|leer|schwach|leeg|scarica|d[åa]ligt|dead|flat")),
     RepairItem("tyres_due", "tyres", 300, 600,

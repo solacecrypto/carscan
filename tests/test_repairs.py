@@ -75,3 +75,18 @@ def test_apply_costs_adds_repairs_to_landed_cost(db: Session) -> None:
     r2.description_en = "Needs a new clutch, it is slipping."
     apply_costs(r2, NOW)
     assert r2.repair_cost_eur and "clutch" in {i["key"] for i in r2.repair_breakdown["items"]}
+
+
+def test_equipment_lists_do_not_trigger_repairs() -> None:
+    clean = [
+        "Volkswagen passat automaat van eerste eigenaar met volledige historie",
+        "Aktiv-Lautsprecher, Auspuffblende, Anhängerbetrieb laut Fahrzeugpapieren",
+        "Pro Line Business Leer Xenon, Partikelfilter: ja, Elektrische Fensterheber",
+        "Via delle Rose 12, carrozzeria perfetta, electric window regulator front and rear",
+        "Ablage-Paket, Audio-Navigationssystem mit integrierter Handyvorrüstung",
+    ]
+    for text in clean:
+        assert find_items(text) == {}, text
+    assert "dpf_egr" in find_items("Partikelfilter ist voll, Warnleuchte an")
+    assert "battery" in find_items("Batterie ist leer und muss erneuert werden")
+    assert "exhaust" in find_items("Auspuff ist undicht")
