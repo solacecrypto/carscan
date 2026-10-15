@@ -102,7 +102,7 @@ def test_new_watchlist_entries_build() -> None:
     from app.watchlist import _motor_regex
 
     entries = {m["key"]: m for m in load_models()}
-    assert len(entries) == 11
+    assert len(entries) == 15
     golf = {s.source: s for s in build_specs(entries["vw-golf-6"])}
     assert golf["autoscout24_de"].params["cat"].startswith("ma74gr100101ge6")
     assert (
@@ -136,3 +136,21 @@ def test_new_watchlist_entries_build() -> None:
     assert _motor_regex(["E200"]) == r"\bE\s?200\b"
     total = sum(len(build_specs(m)) for m in entries.values())
     assert total > 90
+
+
+def test_volvo_entries_patterns() -> None:
+    import re
+
+    entries = {m["key"]: m for m in load_models()}
+    v70 = {s.source: s for s in build_specs(entries["volvo-v70-iii"])}
+    rx = re.compile(v70["kleinanzeigen"].params["motor_regex"], re.I)
+    assert rx.search("Volvo V70 2.0F Summum") is None  # 2.0F is a different engine name than 2.0
+    assert (
+        rx.search("Volvo V70 2.0 Momentum")
+        and rx.search("V70 T4 Kinetic")
+        and rx.search("V70 2.5T")
+    )
+    assert not rx.search("Volvo V70 D4 Summum")
+    v50 = {s.source: s for s in build_specs(entries["volvo-v50"])}
+    rx = re.compile(v50["kleinanzeigen"].params["motor_regex"], re.I)
+    assert rx.search("Volvo V50 1.8 Momentum") and not rx.search("Volvo V50 1.6D DRIVe")

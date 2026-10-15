@@ -233,3 +233,87 @@ models:
     sources:
       deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
       comparables: [autoscout24_nl, marktplaats]
+
+  - key: volvo-v50
+    label: "Volvo V50 1.6/1.8/2.0"
+    make: Volvo
+    years: [2008, 2012]
+    fuel: petrol
+    motors: ["1.6", "1.8", "2.0"]
+    bodies: []
+    autoscout24:
+      path: /lst/volvo/v50
+      cat: "ma73gr202646ge10924mt11817,ma73gr202646ge10924mt11818,ma73gr202646ge10924mt11819"
+      it_path: /lst/volvo/v50
+      it_models: ["V50"]
+      it_motor_regex: true
+    marktplaats: {make_id: 158, model: "V50", query: "v50"}
+    kleinanzeigen: {make: volvo, model: v50}
+    automobile_it: {path: /volvo-v50}
+    bytbil: {make: Volvo, model: V50}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: volvo-v60
+    label: "Volvo V60 T3/T4"
+    make: Volvo
+    years: [2010, 2015]
+    fuel: petrol
+    motors: ["T3", "T4"]
+    bodies: []
+    autoscout24:
+      path: /lst/volvo/v60
+      cat: "ma73gr201521ge1335mt5198,ma73gr201521ge1335mt5199"
+      it_path: /lst/volvo/v60
+      it_models: ["V60"]
+      it_motor_regex: true
+    marktplaats: {make_id: 158, model: "V60", query: "v60"}
+    kleinanzeigen: {make: volvo, model: v60}
+    automobile_it: {path: /volvo-v60}
+    bytbil: {make: Volvo, model: V60}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: volvo-s60
+    label: "Volvo S60 T3/T4"
+    make: Volvo
+    years: [2010, 2015]
+    fuel: petrol
+    motors: ["T3", "T4"]
+    bodies: []
+    autoscout24:
+      path: /lst/volvo/s60
+      cat: "ma73gr202648ge10919mt11793,ma73gr202648ge10919mt11794"
+      it_path: /lst/volvo/s60
+      it_models: ["S60"]
+      it_motor_regex: true
+    marktplaats: {make_id: 158, model: "S60", query: "s60"}
+    kleinanzeigen: {make: volvo, model: s60}
+    automobile_it: {path: /volvo-s60}
+    bytbil: {make: Volvo, model: S60}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: volvo-v70-iii
+    label: "Volvo V70 III 2.0/2.0T/T4/2.5T"
+    make: Volvo
+    years: [2008, 2013]
+    fuel: petrol
+    motors: ["2.0", "2.0T", "T4", "2.5T"]
+    bodies: []
+    autoscout24:
+      path: /lst/volvo/v70
+      cat: "ma73gr202649ge10925mt11828,ma73gr202649ge10925mt11829,ma73gr202649ge10925mt11841,ma73gr202649ge10925mt11764"
+      it_path: /lst/volvo/v70
+      it_models: ["V70"]
+      it_motor_regex: true
+    marktplaats: {make_id: 158, model: "V70", query: "v70"}
+    kleinanzeigen: {make: volvo, model: v70}
+    automobile_it: {path: /volvo-v70}
+    bytbil: {make: Volvo, model: V70}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
