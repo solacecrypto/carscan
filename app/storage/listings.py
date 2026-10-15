@@ -53,6 +53,10 @@ _UPDATABLE = (
 )
 
 
+# market signals only stored on comparables (see app/market)
+_COMPARABLE_ONLY = {"listed_at", "demand", "reserved"}
+
+
 def apply_costs(row: Listing, today: datetime) -> None:
     """(Re)compute the landed-cost estimate for one listing from its current fields."""
     lc = landed_cost(
@@ -112,7 +116,12 @@ def upsert_listings(
     for item in items:
         row = existing.get(item.source_listing_id)
         if row is None:
-            row = Listing(**item.model_dump(), first_seen=now, last_seen=now, is_active=True)
+            row = Listing(
+                **item.model_dump(exclude=_COMPARABLE_ONLY),
+                first_seen=now,
+                last_seen=now,
+                is_active=True,
+            )
             row.price_history.append(PriceHistory(price_eur=item.price_eur, seen_at=now))
             row.saved_searches.append(saved_search)
             apply_costs(row, now)

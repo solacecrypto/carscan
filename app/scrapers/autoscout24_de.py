@@ -226,10 +226,12 @@ class AutoScout24DE:
             description = re.sub(r"<br\s*/?>", "\n", description)
             description = re.sub(r"<[^>]+>", "", description).strip()
 
+        leads = (d.get("statistics") or {}).get("leadsRange")
         return NormalizedListing(
             source=self.name,
             source_listing_id=raw.source_listing_id,
             url=raw.url,
+            demand=str(leads) if leads else None,
             make=veh.get("make") or dveh.get("make") or "",
             model=_model_name(veh, dveh),
             variant=veh.get("modelVersionInput") or dveh.get("modelVersionInput"),

@@ -136,6 +136,12 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Market grade (2026-10-15)
+
+`app/market/`: A–E popularity grade on the detail page from comparables (supply, Marktplaats
+ad age `comparables.listed_at`, AutoScout24.nl enquiry band `comparables.demand`, sell-through
+from first/last_seen). Computed on request, no table. See `docs/valuation.md`.
+
 ## Repair estimates (2026-10-15)
 
 `app/costs/repairs.py`: multilingual defect patterns → rough low/high ranges (`repairs:` in

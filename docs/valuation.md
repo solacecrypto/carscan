@@ -53,3 +53,11 @@ The breakdown keeps `method` (`benchmark` | `median`), `benchmark` with the matc
 - Private and dealer asking prices are pooled.
 - Trim level, options, damage and colour are ignored; the nearest comparables list on the
   detail page is there so you can sanity-check an estimate before acting.
+
+## Market grade (popularity)
+
+`app/market/` grades how fast a car is likely to sell in NL, shown on the detail page. Signals
+from the comparables: supply (active ads for the model and for the same engine/gearbox), the
+age of the ads on sale (Marktplaats `listed_at`), buyer enquiries (AutoScout24.nl `demand`
+band), and sell-through (days until a tracked ad disappears, used once 20+ ads have gone).
+Each signal scores 0–100, the weighted average maps to A–E. Indicative only.

@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db import Alert, AlertStatus, Comparable, Listing
 from app.deals import get_deal_for_listing, sync_from_alert_status
+from app.market import market_for_listing
 from app.storage.filters import apply_sql, parse_filters
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -181,6 +182,7 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "listing": listing,
             "nearest": [comps[i] for i in nearest_ids if i in comps],
             "deal": get_deal_for_listing(db, listing.id),
+            "market": market_for_listing(db, listing, datetime.now(UTC)),
         },
     )
 

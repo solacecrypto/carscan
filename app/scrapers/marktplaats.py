@@ -1,7 +1,7 @@
 """Marktplaats.nl via its internal JSON search API. See docs/sources/marktplaats.md."""
 
 import re
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
 
@@ -65,6 +65,33 @@ def build_api_url(params: dict[str, Any], offset: int, origin: str = ORIGIN) -> 
     if params.get("query"):
         q.append(("query", params["query"]))
     return f"{origin}/lrp/api/search?{urlencode(q)}"
+
+
+_NL_MONTHS = {
+    m: i + 1
+    for i, m in enumerate(
+        ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+    )
+}
+_RELATIVE = {"vandaag": 0, "gisteren": 1, "eergisteren": 2}
+
+
+def parse_listed_date(text: str | None, today: date) -> date | None:
+    """Marktplaats' listing date: 'Vandaag', 'Gisteren', 'Eergisteren' or '9 okt 26'."""
+    if not text:
+        return None
+    t = text.strip().lower()
+    if t in _RELATIVE:
+        return today - timedelta(days=_RELATIVE[t])
+    m = re.match(r"(\d{1,2}) ([a-z]{3})\.? ?'?(\d{2,4})$", t)
+    if not m or m.group(2) not in _NL_MONTHS:
+        return None
+    year = int(m.group(3))
+    year = year + 2000 if year < 100 else year
+    try:
+        return date(year, _NL_MONTHS[m.group(2)], int(m.group(1)))
+    except ValueError:
+        return None
 
 
 def _attrs(item: dict[str, Any]) -> dict[str, str]:
@@ -178,6 +205,8 @@ class Marktplaats:
             postcode=None,
             photos=photos,
             description=scrub_text(d.get("description")),
+            listed_at=parse_listed_date(d.get("date"), raw.fetched_at.date()),
+            reserved=bool(d.get("reserved")) if d.get("reserved") is not None else None,
             raw={"search": d, "year_only": True},
         )
 

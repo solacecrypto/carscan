@@ -46,6 +46,10 @@ class NormalizedListing(BaseModel):
     postcode: str | None = None
     photos: list[str] = Field(default_factory=list)
     description: str | None = None
+    # market signals some sites expose: when the ad was posted, enquiry band, reserved flag
+    listed_at: date | None = None
+    demand: str | None = None
+    reserved: bool | None = None
     raw: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")

@@ -266,6 +266,9 @@ class Comparable(Base):
     city: Mapped[str | None] = mapped_column(String(128))
     photos: Mapped[list[str]] = mapped_column(JSONB, default=list)
     raw: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    listed_at: Mapped[date | None] = mapped_column(Date)  # when the ad was posted (Marktplaats)
+    demand: Mapped[str | None] = mapped_column(String(16))  # AutoScout24 enquiry band
+    reserved: Mapped[bool | None] = mapped_column(Boolean)
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
