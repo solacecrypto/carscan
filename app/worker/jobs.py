@@ -5,6 +5,7 @@ from __future__ import annotations
 import traceback
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import structlog
 from sqlalchemy import select
@@ -88,7 +89,7 @@ def run_saved_search(
             assert search is not None
             now = datetime.now(UTC)
             if role == "comparables":
-                items = [scraper.parse(r) for r in raws]
+                items = _apply_watchlist(params, [scraper.parse(r) for r in raws])
                 cres = upsert_comparables(s, items, search, now)
                 gone = deactivate_missing_comparables(s, search, run_started_at=started)
                 summary = RunSummary(
@@ -96,10 +97,10 @@ def run_saved_search(
                 )
                 price_changed = 0
             else:
-                items = [scraper.parse(r) for r in raws]
+                items = _apply_watchlist(params, [scraper.parse(r) for r in raws])
                 chosen = _select_for_enrichment(s, raws, items, settings.detail_min_spread_eur)
                 _enrich_new(s, scraper, client, chosen, detail_budget)
-                items = [scraper.parse(r) for r in raws]
+                items = _apply_watchlist(params, [scraper.parse(r) for r in raws])
                 result = upsert_listings(s, items, search, now)
                 stale = deactivate_missing(s, search, run_started_at=started)
                 dedup = link_duplicates(s, result.new, now)
@@ -163,6 +164,19 @@ def run_saved_search(
             client.close()
 
 
+def _apply_watchlist(
+    params: dict[str, Any], items: list[NormalizedListing]
+) -> list[NormalizedListing]:
+    """Stamp the watchlist's canonical make and model key on every parsed listing."""
+    make, key = params.get("make_label"), params.get("model_key")
+    for it in items:
+        if make:
+            it.make = make
+        if key:
+            it.model_key = key
+    return items
+
+
 def _select_for_enrichment(
     s: Session, raws: list[RawListing], items: list[NormalizedListing], min_spread: int | None
 ) -> list[RawListing]:
@@ -186,7 +200,9 @@ def _select_for_enrichment(
             model=item.model,
         )
         year = item.first_registration.year if item.first_registration else None
-        est = estimate_value(Target(item.model, item.body_type, year, item.mileage_km), comps, vcfg)
+        est = estimate_value(
+            Target(item.model_key or item.model, item.body_type, year, item.mileage_km), comps, vcfg
+        )
         if lc.total_eur is None or est is None or est.value_eur - lc.total_eur >= min_spread:
             chosen.append(raw)
     if len(chosen) < len(raws):
@@ -227,20 +243,41 @@ def _enrich_new(
 
 
 def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]:
-    """Active searches, optionally only those whose interval has elapsed since their last run."""
-    ids: list[int] = []
+    """Active searches whose interval has elapsed, longest-waiting first (never-run before all)."""
+    candidates: list[tuple[datetime | None, int]] = []
     for search in session.scalars(select(SavedSearch).where(SavedSearch.active.is_(True))):
-        if due_only:
-            last = session.scalar(
-                select(ScrapeRun.started_at)
-                .where(ScrapeRun.saved_search_id == search.id)
-                .order_by(ScrapeRun.started_at.desc())
-                .limit(1)
+        last = session.scalar(
+            select(ScrapeRun.started_at)
+            .where(ScrapeRun.saved_search_id == search.id)
+            .order_by(ScrapeRun.started_at.desc())
+            .limit(1)
+        )
+        if (
+            due_only
+            and last is not None
+            and last > now - timedelta(minutes=search.interval_minutes)
+        ):
+            continue
+        candidates.append((last, search.id))
+    candidates.sort(key=lambda t: (t[0] is not None, t[0] or now, t[1]))
+    return [i for _, i in candidates]
+
+
+def cleanup_interrupted_runs(session: Session, now: datetime, max_age_minutes: int = 120) -> int:
+    """Runs still 'running' after a worker restart can never finish: mark them failed."""
+    stale = list(
+        session.scalars(
+            select(ScrapeRun).where(
+                ScrapeRun.status == ScrapeStatus.running,
+                ScrapeRun.started_at < now - timedelta(minutes=max_age_minutes),
             )
-            if last is not None and last > now - timedelta(minutes=search.interval_minutes):
-                continue
-        ids.append(search.id)
-    return ids
+        )
+    )
+    for r in stale:
+        r.status = ScrapeStatus.failed
+        r.finished_at = now
+        r.error = "interrupted (worker restarted)"
+    return len(stale)
 
 
 def run_all_active_searches(
@@ -252,6 +289,10 @@ def run_all_active_searches(
 
 
 def run_due_searches() -> list[RunSummary]:
+    with db_session() as s:
+        n = cleanup_interrupted_runs(s, datetime.now(UTC), max_age_minutes=0)
+    if n:
+        log.warning("scrape.interrupted_runs_closed", count=n)
     return run_all_active_searches(due_only=True)
 
 

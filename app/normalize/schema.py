@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.db.models import SellerType
 
@@ -25,6 +25,8 @@ class NormalizedListing(BaseModel):
     url: str
     make: str
     model: str
+    # watchlist key (e.g. "vw-golf-6"): the grouping used by valuation and dedup across sites
+    model_key: str | None = None
     variant: str | None = None
     body_type: str | None = None
     engine_code: str | None = None
@@ -45,6 +47,18 @@ class NormalizedListing(BaseModel):
     photos: list[str] = Field(default_factory=list)
     description: str | None = None
     raw: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _clean(self) -> "NormalizedListing":
+        from app.normalize.gdpr import clean_json, clean_text
+
+        for f in ("variant", "description", "city", "seller_name", "make", "model"):
+            v = getattr(self, f)
+            if isinstance(v, str):
+                object.__setattr__(self, f, clean_text(v))
+        object.__setattr__(self, "raw", clean_json(self.raw))
+        object.__setattr__(self, "photos", [p for p in (clean_text(x) for x in self.photos) if p])
+        return self
 
     @property
     def title(self) -> str:

@@ -26,7 +26,7 @@ def load_comps(session: Session) -> list[Comp]:
         Comp(
             id=r.id,
             source=r.source,
-            model=r.model,
+            model=r.model_key or r.model,
             body_type=r.body_type,
             year=r.first_registration.year if r.first_registration else None,
             mileage_km=r.mileage_km,
@@ -40,7 +40,7 @@ def load_comps(session: Session) -> list[Comp]:
 
 def apply_value(row: Listing, comps: list[Comp], cfg: ValuationConfig) -> ValueEstimate | None:
     target = Target(
-        model=row.model,
+        model=row.model_key or row.model,
         body_type=row.body_type,
         year=row.first_registration.year if row.first_registration else None,
         mileage_km=row.mileage_km,

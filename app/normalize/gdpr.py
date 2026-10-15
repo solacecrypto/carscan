@@ -21,9 +21,30 @@ ALWAYS_DROP = {"phones", "contactName", "whatsappNumber", "phone", "email", "lic
 PRIVATE_DROP = {"street", "latitude", "longitude", "name", "companyName"}
 
 
+_SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
+
+
+def clean_text(text: str | None) -> str | None:
+    """Drop lone UTF-16 surrogates (broken emoji from some sites); Postgres rejects them."""
+    if not text:
+        return text
+    return _SURROGATE_RE.sub("", text)
+
+
+def clean_json(obj: Any) -> Any:
+    if isinstance(obj, str):
+        return clean_text(obj)
+    if isinstance(obj, dict):
+        return {k: clean_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [clean_json(v) for v in obj]
+    return obj
+
+
 def scrub_text(text: str | None) -> str | None:
     if not text:
         return text
+    text = clean_text(text) or ""
     text = PHONE_RE.sub(_phone_sub, text)
     return EMAIL_RE.sub("[removed]", text)
 

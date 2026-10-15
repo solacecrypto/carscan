@@ -250,6 +250,8 @@ def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
                     },
                 )
     for sp in specs:
+        sp.params["make_label"] = model["make"]
+        sp.params["model_key"] = model["key"]
         for k in [k for k, v in sp.params.items() if v is None]:
             del sp.params[k]
     return specs
@@ -263,7 +265,10 @@ def _canon(params: dict[str, Any]) -> str:
             return sorted(str(x) for x in v)
         return str(v) if isinstance(v, int | float) else v
 
-    return json.dumps({k: norm(v) for k, v in (params or {}).items()}, sort_keys=True)
+    skip = {"make_label", "model_key"}  # stamps, not query parameters
+    return json.dumps(
+        {k: norm(v) for k, v in (params or {}).items() if k not in skip}, sort_keys=True
+    )
 
 
 def sync(

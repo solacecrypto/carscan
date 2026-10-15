@@ -28,6 +28,7 @@ _UPDATABLE = (
     "url",
     "make",
     "model",
+    "model_key",
     "variant",
     "body_type",
     "engine_code",

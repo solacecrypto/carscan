@@ -96,6 +96,7 @@ class Listing(Base):
 
     make: Mapped[str] = mapped_column(String(64))
     model: Mapped[str] = mapped_column(String(64))
+    model_key: Mapped[str | None] = mapped_column(String(64), index=True)
     variant: Mapped[str | None] = mapped_column(String(255))
     body_type: Mapped[str | None] = mapped_column(String(32))
     engine_code: Mapped[str | None] = mapped_column(String(32))
@@ -248,6 +249,7 @@ class Comparable(Base):
     url: Mapped[str] = mapped_column(Text)
     make: Mapped[str] = mapped_column(String(64))
     model: Mapped[str] = mapped_column(String(64))
+    model_key: Mapped[str | None] = mapped_column(String(64), index=True)
     variant: Mapped[str | None] = mapped_column(String(255))
     body_type: Mapped[str | None] = mapped_column(String(32))
     fuel: Mapped[str | None] = mapped_column(String(32))

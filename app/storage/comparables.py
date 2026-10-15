@@ -22,7 +22,7 @@ class CompUpsertResult:
 
 
 _FIELDS = (
-    "url", "make", "model", "variant", "body_type", "fuel", "gearbox", "power_kw",
+    "url", "make", "model", "model_key", "variant", "body_type", "fuel", "gearbox", "power_kw",
     "first_registration", "mileage_km", "price_eur", "seller_type", "seller_name", "city",
     "photos", "raw",
 )  # fmt: skip

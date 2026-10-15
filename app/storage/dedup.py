@@ -30,7 +30,9 @@ def is_same_car(a: Listing, b: Listing) -> bool:
         return False
     if a.vin and b.vin:
         return a.vin == b.vin
-    if a.make.lower() != b.make.lower() or a.model.lower() != b.model.lower():
+    if a.make.lower() != b.make.lower():
+        return False
+    if (a.model_key or a.model).lower() != (b.model_key or b.model).lower():
         return False
     if a.body_type and b.body_type and a.body_type != b.body_type:
         return False
@@ -72,7 +74,6 @@ def link_duplicates(session: Session, candidates: list[Listing], now: datetime) 
                 Listing.source != row.source,
                 Listing.country == row.country,
                 Listing.make.ilike(row.make),
-                Listing.model.ilike(row.model),
             )
         )
         for other in others:
