@@ -35,6 +35,9 @@ GEARBOX = {
     "Semiautomatico": "semi-automatic",
     "Manuelle": "manual",
     "Automatique": "automatic",
+    "Manueel": "manual",
+    "Automatisch": "automatic",
+    "Halfautomaat": "semi-automatic",
 }
 FUEL = {
     "Benzin": "petrol",

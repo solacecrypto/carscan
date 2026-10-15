@@ -55,6 +55,7 @@ def test_autoscout24_be() -> None:
     s = get_scraper("autoscout24_be")
     raws = s.search({"path": "/nl/lst/bmw", "cy": "B"}, _client(handler))
     assert calls[0].startswith("https://www.autoscout24.be/nl/lst/bmw?") and len(raws) == 20
+    assert {s.parse(r).gearbox for r in raws} <= {"manual", "automatic", "semi-automatic", None}
     n = s.parse(raws[0])
     assert (
         n.source == "autoscout24_be"
