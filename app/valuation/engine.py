@@ -12,19 +12,27 @@ from typing import Any
 # "C 180" / "E200", "1.4 TSI" / "2.0T", Volvo "T4" / "D2". Power figures (118 kW) are skipped.
 _ENGINE_PATTERNS = (
     re.compile(r"\b(\d{3})\s?([a-z]{1,2})\b(?<!kw)(?<!pk)(?<!ps)(?<!hp)(?<!cv)(?<!km)"),
-    re.compile(r"\b([abcegs])\s?(\d{3})\b"),
+    re.compile(r"\b([abcegs])\s?(\d{3})(?:\s?(cdi|bluetec|d)\b)?"),
     re.compile(r"\b(\d\.\d)\s?(tsi|tfsi|tdi|fsi|cgi|cdi|t)?\b"),
     re.compile(r"\b([td][2-6])\b"),
 )
+_DIESEL = {"cdi", "bluetec", "d"}
 
 
 def engine_token(*texts: str | None) -> str | None:
-    """Normalised engine designation found in the given texts (model, variant), or None."""
-    blob = " ".join(t for t in texts if t).lower()
-    for pat in _ENGINE_PATTERNS:
-        m = pat.search(blob)
-        if m:
-            return "".join(g for g in m.groups() if g)
+    """Normalised engine designation ("318i", "c200", "c200d", "1.4tsi", "t4") from the first
+    text that contains one. Pass the most specific text first (variant before model)."""
+    for text in texts:
+        if not text:
+            continue
+        blob = text.lower()
+        for pat in _ENGINE_PATTERNS:
+            m = pat.search(blob)
+            if m:
+                groups = [g for g in m.groups() if g]
+                if groups and groups[-1] in _DIESEL:
+                    groups[-1] = "d"
+                return "".join(groups)
     return None
 
 
@@ -250,11 +258,9 @@ def estimate_value(target: Target, comps: list[Comp], cfg: ValuationConfig) -> V
     benchmark: dict[str, Any] | None = None
     value = median_value
     # a mislabelled or absurdly priced "match" must not set the value: the benchmark has to
-    # sit within close_max_deviation_pct of the reference (median of the close matches when
-    # there are at least three, else of the whole pool)
-    reference = median([adjusted(c) for c, _ in close]) if len(close) >= 3 else med
-    tolerance = reference * cfg.close_max_deviation_pct / 100
-    close = [(c, f) for c, f in close if abs(adjusted(c) - reference) <= tolerance]
+    # sit within close_max_deviation_pct of the pool median
+    tolerance = med * cfg.close_max_deviation_pct / 100
+    close = [(c, f) for c, f in close if abs(adjusted(c) - med) <= tolerance]
     if close:
         best, facts = close[0]
         value = adjusted(best) * (1 - cfg.haircut_pct / 100)

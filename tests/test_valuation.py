@@ -167,8 +167,15 @@ def test_engine_token_reads_common_designations() -> None:
     assert engine_token("c-klasse", "Mercedes C 180 CGI BlueEfficiency W204") == "c180"
     assert engine_token("golf", "Volkswagen Golf 1.4 TSI Highline 90kW") == "1.4tsi"
     assert engine_token("v60", "Volvo V60 T4 Summum") == "t4"
-    assert engine_token("1-serie", "118 kW automaat") is None  # power is not an engine
+    assert engine_token("118 kW automaat") is None  # power is not an engine
     assert engine_token(None, None) is None
+    # the first text wins: the variant is more specific than a site's model field
+    assert engine_token("Avant 3.0 TFSI S4 quattro", "2.0 TFSI") == "3.0tfsi"
+    assert engine_token(None, "2.0 TFSI") == "2.0tfsi"
+    # diesel stays distinct from petrol
+    assert engine_token("C 200 CDI T BlueEFFICIENCY") == "c200d"
+    assert engine_token("C 200 BlueEFFICIENCY") == "c200"
+    assert engine_token("Golf 2.0 TDI") == "2.0tdi"
 
 
 def _cx(i: int, year: int, km: int, price: int, **kw: object) -> Comp:
