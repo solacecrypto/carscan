@@ -81,3 +81,33 @@ valuation:
   close_mileage_km: 20000
   close_power_kw: 15
   close_max_deviation_pct: 30   # a match priced further from the median than this is ignored
+
+# Rough repair costs (EUR, low/high) added to the landed cost when the ad admits a defect.
+# Typical NL garage prices for a ~10-year-old car; the midpoint is used. See app/costs/repairs.py
+repairs:
+  not_drivable: [200, 400]  # not drivable: needs a trailer or tow
+  engine_damage: [2500, 5000]  # engine damage
+  injectors: [600, 1500]  # injectors
+  turbo: [1000, 2000]  # turbo
+  gearbox: [1500, 3500]  # gearbox
+  clutch: [700, 1200]  # clutch
+  timing_chain_due: [1200, 2200]  # timing chain due
+  timing_belt_due: [500, 900]  # timing belt due
+  head_gasket: [1200, 2500]  # head gasket
+  dpf_egr: [500, 1500]  # particulate filter / EGR
+  warning_light: [150, 800]  # warning light on
+  ac_broken: [300, 900]  # air conditioning
+  brakes: [300, 700]  # brakes
+  suspension: [300, 900]  # suspension / steering parts
+  steering: [400, 1000]  # power steering
+  rust: [300, 1500]  # rust
+  body_damage: [300, 2000]  # bodywork damage
+  airbag: [300, 800]  # airbag fault
+  exhaust: [200, 600]  # exhaust
+  electrical: [150, 600]  # electrical fault
+  battery: [100, 250]  # battery
+  tyres_due: [300, 600]  # tyres
+  tuv_expired: [150, 400]  # inspection expired
+  oil_consumption: [300, 2000]  # oil consumption
+  oil_leak: [200, 800]  # oil leak
+  unspecified: [500, 1500]  # unspecified defects (seller says it needs work)

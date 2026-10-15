@@ -130,6 +130,8 @@ class Listing(Base):
     landed_cost_eur: Mapped[int | None] = mapped_column(Integer, index=True)
     bpm_eur: Mapped[int | None] = mapped_column(Integer)
     cost_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    repair_cost_eur: Mapped[int | None] = mapped_column(Integer)  # rough, from the ad text
+    repair_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     cost_version: Mapped[int | None] = mapped_column(Integer)
     # phase 4: cross-source dedup; set on the non-canonical copies of the same car
     duplicate_of_id: Mapped[int | None] = mapped_column(

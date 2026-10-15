@@ -136,6 +136,12 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Repair estimates (2026-10-15)
+
+`app/costs/repairs.py`: multilingual defect patterns → rough low/high ranges (`repairs:` in
+costs.yaml); midpoint stored on `listings.repair_cost_eur` and included in `landed_cost_eur`
+(`cost_breakdown.total_with_repairs_eur`). Shown as an expandable box on the detail page.
+
 ## Translations (2026-10-15)
 
 Descriptions are machine-translated to English (`listings.description_en`, worker job every

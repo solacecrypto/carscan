@@ -199,11 +199,14 @@ def translate_pending(
 ) -> dict[str, int]:
     """Translate up to ``limit`` descriptions with polite pauses; stop at the first provider
     error (usually rate limiting) and try again on the next run."""
+    from app.storage.listings import apply_costs
+
     counts = {"translated": 0, "evidence": 0, "failed": 0}
     for row in pending_listings(session, limit):
         try:
             text = translator.translate(row.description or "")
             row.description_en = text.strip() or None
+            apply_costs(row, now)  # repair patterns also read the English text
             counts["translated"] += 1
             session.flush()
             sleep(random.uniform(1.5, 4.0))

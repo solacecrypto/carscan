@@ -32,7 +32,7 @@
           {{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}{% if l.power_kw %} · {{ l.power_kw }} kW{% endif %}
         </div>
         <div class="flex flex-wrap gap-x-2 text-xs text-ink-400">
-          {% if l.landed_cost_eur %}<span title="estimated landed cost">landed ≈ {{ l.landed_cost_eur|eur }}</span>{% endif %}
+          {% if l.landed_cost_eur %}<span title="estimated landed cost{% if l.repair_cost_eur %}, including a rough repair estimate of {{ l.repair_cost_eur|eur }}{% endif %}">landed ≈ {{ l.landed_cost_eur|eur }}{% if l.repair_cost_eur %} <span class="pill bg-brand-100 text-brand-700">+{{ l.repair_cost_eur|eur }} repairs</span>{% endif %}</span>{% endif %}
           {% if l.nl_value_eur %}{% set bm = (l.nl_value_breakdown or {}).get('benchmark') %}<span title="{{ 'NL value from a close match on the NL market' if bm else 'NL value from the median of ' ~ l.nl_value_n ~ ' comparables' }}">NL ≈ {{ l.nl_value_eur|eur }}{% if l.spread_pct is not none %} ({{ l.spread_pct }}%){% endif %}{% if bm %} <span class="pill bg-good-100 text-good-700">{{ 'perfect match' if bm.perfect else 'close match' }}</span>{% endif %}</span>{% endif %}
         </div>
         <div class="text-xs text-ink-400">{{ l.city or '' }} · {{ l.seller_type.value }} · {{ l.source }} · seen {{ l.first_seen|timeago }}</div>

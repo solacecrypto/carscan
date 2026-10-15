@@ -96,3 +96,16 @@ belasting after registration, repairs, APK, and your own time.
 - Kamerstuk 33007 nr. 3 and nr. 9 (bracket boundaries 2011–2015, tariff development)
 - https://nl.wikipedia.org/wiki/Belasting_van_personenauto%27s_en_motorrijwielen (2013 tariff)
 - Staatscourant 2025 nr. 40185 (RDW tariffs 2026)
+
+## Repairs (rough)
+
+When the ad admits a defect, a repair estimate is added to the landed cost
+(`listings.repair_cost_eur`, details in `repair_breakdown`, and
+`cost_breakdown.total_with_repairs_eur`). `app/costs/repairs.py` holds a multilingual pattern
+list (not drivable, engine damage, injectors, turbo, gearbox, clutch, timing chain/belt due,
+head gasket, DPF/EGR, warning light, air conditioning, brakes, suspension, steering, rust,
+bodywork, airbag, exhaust, electrical, battery, tyres, inspection expired, oil consumption,
+oil leak, and "unspecified" when the seller only says it needs work). Each maps to a low/high
+range under `repairs:` in costs.yaml; the midpoint is used. Negated mentions ("kein Rost",
+"no rust") are ignored. Both the original and the English text are scanned, so the estimate
+can change once the translation arrives. Deliberately coarse: a flag, not a quote.

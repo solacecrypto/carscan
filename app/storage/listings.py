@@ -7,6 +7,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.costs import get_cost_config, landed_cost
+from app.costs.repairs import estimate_repairs
 from app.db.models import Listing, PriceHistory, SavedSearch
 from app.insights.service import apply_rules
 from app.normalize.schema import NormalizedListing
@@ -64,9 +65,19 @@ def apply_costs(row: Listing, today: datetime) -> None:
         model=row.model,
         today=today.date(),
     )
-    row.landed_cost_eur = lc.total_eur
+    repairs = estimate_repairs(
+        row.variant, row.description, row.description_en, ranges=get_cost_config().repairs
+    )
+    row.repair_breakdown = repairs
+    row.repair_cost_eur = repairs["estimate"] if repairs else None
+    breakdown = lc.as_dict()
+    breakdown["repair_eur"] = row.repair_cost_eur or 0
+    breakdown["total_with_repairs_eur"] = (
+        (lc.total_eur + (row.repair_cost_eur or 0)) if lc.total_eur is not None else None
+    )
+    row.landed_cost_eur = breakdown["total_with_repairs_eur"]
     row.bpm_eur = lc.bpm_eur
-    row.cost_breakdown = lc.as_dict()
+    row.cost_breakdown = breakdown
     row.cost_version = lc.config_version
 
 
