@@ -4,7 +4,7 @@ from app.storage.comparables import (
     upsert_comparables,
 )
 from app.storage.dedup import DedupResult, is_same_car, link_duplicates, relink_all
-from app.storage.filters import apply_sql, matches
+from app.storage.filters import apply_sql, matches, parse_filters
 from app.storage.listings import (
     UpsertResult,
     apply_costs,
@@ -27,6 +27,7 @@ __all__ = [
     "is_same_car",
     "link_duplicates",
     "matches",
+    "parse_filters",
     "recompute_costs",
     "relink_all",
     "upsert_listings",

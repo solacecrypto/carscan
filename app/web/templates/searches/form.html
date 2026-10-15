@@ -42,7 +42,7 @@
     <p class="text-xs text-ink-400">Only listings passing these get a Telegram alert. All listings are still stored.</p>
     <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
       {% set fv = search.filters if search else {} %}
-      <label class="block text-sm">make<input name="f_make" value="{{ fv.get('make', '') }}" class="input"></label>
+      <label class="block text-sm">brand<input name="f_make" value="{{ fv.get('make', '') }}" class="input"></label>
       <label class="block text-sm">model key<input name="f_model_key" value="{{ fv.get('model_key', '') }}" placeholder="e.g. vw-golf-6" class="input"></label>
       {% for key in ['price_min', 'price_max', 'landed_max', 'spread_min', 'mileage_max', 'year_min', 'year_max'] %}
       <label class="block text-sm">{{ key.replace('_', ' ') }}

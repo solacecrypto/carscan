@@ -117,3 +117,35 @@ def test_costs_computed_on_upsert_and_recompute(db: Session) -> None:
     db.commit()
     db.refresh(c)
     assert c.cost_version == 1 and c.landed_cost_eur == 7698
+
+
+def test_parse_filters_is_tolerant() -> None:
+    from app.storage import parse_filters
+
+    class P(dict):  # type: ignore[type-arg]
+        def getlist(self, k: str) -> list[str]:
+            v = self.get(k)
+            return v if isinstance(v, list) else ([v] if v else [])
+
+    f = parse_filters(
+        P(
+            {
+                "price_min": "",
+                "price_max": "8.000",
+                "year_min": "x",
+                "country": ["de", "BE"],
+                "model": "VW Golf VI 1.2/1.4 TSI",
+                "no_accident": "true",
+                "new_hours": "168",
+            }
+        ),
+        [("vw-golf-6", "VW Golf VI 1.2/1.4 TSI")],
+    )
+    assert f["price_min"] is None and f["price_max"] == 8000 and f["year_min"] is None
+    assert (
+        f["country"] == ["DE", "BE"]
+        and f["model_key"] == "vw-golf-6"
+        and f["no_accident"] is True
+        and f["new_hours"] == 168
+    )
+    assert parse_filters(P({}), [])["country"] is None

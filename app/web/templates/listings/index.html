@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 {% set active = f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.country or f.new_hours or f.price_dropped or f.include_inactive or f.include_duplicates or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full %}
+{% set model_label = dict(models).get(f.model_key, f.model_key) if f.model_key else '' %}
 <div class="mb-4 flex items-end justify-between">
   <div><h1>Listings</h1><p class="text-sm text-ink-400">Foreign cars worth importing, newest first</p></div>
 </div>
@@ -9,36 +10,55 @@
     <span>Filters &amp; sort</span>
     <span class="text-xs font-normal text-ink-300">{{ 'active' if active else 'tap to refine' }}</span>
   </summary>
-  <form hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true"
-        class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-    {% macro num(name, label, val, step=1) -%}
-    <label class="label block">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" min="0" class="input"></label>
-    {%- endmacro %}
-    {% macro sel(name, label, options, current) -%}
-    <label class="label block">{{ label }}
-      <select name="{{ name }}" class="input">
-        {% for v, t in options %}<option value="{{ v }}" {{ 'selected' if (current == v) or (not current and not v) }}>{{ t }}</option>{% endfor %}
-      </select></label>
-    {%- endmacro %}
-    <label class="label block">Make
-      <select name="make" class="input"><option value="">any</option>
-        {% for m in makes %}<option value="{{ m }}" {{ 'selected' if f.make == m }}>{{ m }}</option>{% endfor %}</select></label>
-    <label class="label block">Model
-      <select name="model_key" class="input"><option value="">any</option>
-        {% for key, label in models %}<option value="{{ key }}" {{ 'selected' if f.model_key == key }}>{{ label }}</option>{% endfor %}</select></label>
-    {{ num('price_min', 'Price from €', f.price_min, 100) }}
-    {{ num('price_max', 'Price to €', f.price_max, 100) }}
-    {{ num('landed_max', 'Landed cost to €', f.landed_max, 100) }}
-    <label class="label block">Spread from €<input type="number" name="spread_min" value="{{ f.spread_min if f.spread_min is not none }}" step="100" class="input"></label>
-    {{ num('mileage_max', 'Max km', f.mileage_max, 1000) }}
-    {{ num('year_min', 'Year from', f.year_min) }}
-    {{ num('year_max', 'Year to', f.year_max) }}
-    {{ sel('gearbox', 'Gearbox', [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')], f.gearbox) }}
-    {{ sel('seller_type', 'Seller', [('', 'any'), ('dealer', 'dealer'), ('private', 'private')], f.seller_type) }}
-    {{ sel('country', 'Country', [('', 'any'), ('DE', 'DE'), ('BE', 'BE'), ('IT', 'IT'), ('SE', 'SE'), ('NL', 'NL')], f.country) }}
-    {{ sel('new_hours', 'New in last', [('', 'any time'), (1, '1 hour'), (6, '6 hours'), (24, '24 hours'), (72, '3 days'), (168, '7 days')], f.new_hours) }}
-    {{ sel('sort', 'Sort', [('newest', 'newest first'), ('spread_desc', 'spread ↓'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('landed_asc', 'landed cost ↑'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change')], sort) }}
-    <div class="col-span-2 grid grid-cols-2 gap-1 sm:col-span-3 lg:col-span-4 lg:grid-cols-4">
+  <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit, search" hx-push-url="true" class="mt-4 space-y-4">
+    <div class="grid gap-3 sm:grid-cols-2">
+      <label class="relative block">
+        <span class="label">Brand</span>
+        <input name="make" list="brand-list" value="{{ f.make or '' }}" placeholder="any brand" autocomplete="off"
+               class="input !rounded-full !px-5 !py-3 !text-base font-medium">
+        <datalist id="brand-list">{% for b in brands %}<option value="{{ b }}">{% endfor %}</datalist>
+      </label>
+      <label class="relative block">
+        <span class="label">Model</span>
+        <input name="model" list="model-list" value="{{ model_label }}" placeholder="any model" autocomplete="off"
+               class="input !rounded-full !px-5 !py-3 !text-base font-medium">
+        <datalist id="model-list">{% for key, label in models %}<option value="{{ label }}" data-make="{{ model_makes.get(key, '') }}">{% endfor %}</datalist>
+      </label>
+    </div>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {% macro num(name, label, val, step=1) -%}
+      <label class="label block">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" class="input"></label>
+      {%- endmacro %}
+      {% macro sel(name, label, options, current) -%}
+      <label class="label block">{{ label }}
+        <select name="{{ name }}" class="input">
+          {% for v, t in options %}<option value="{{ v }}" {{ 'selected' if (current|string == v|string) or (not current and not v) }}>{{ t }}</option>{% endfor %}
+        </select></label>
+      {%- endmacro %}
+      {{ num('price_min', 'Price from €', f.price_min, 100) }}
+      {{ num('price_max', 'Price to €', f.price_max, 100) }}
+      {{ num('landed_max', 'Landed cost to €', f.landed_max, 100) }}
+      {{ num('spread_min', 'Spread from €', f.spread_min, 100) }}
+      {{ num('mileage_max', 'Max km', f.mileage_max, 1000) }}
+      {{ num('year_min', 'Year from', f.year_min) }}
+      {{ num('year_max', 'Year to', f.year_max) }}
+      {{ sel('gearbox', 'Gearbox', [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')], f.gearbox) }}
+      {{ sel('seller_type', 'Seller', [('', 'any'), ('dealer', 'dealer'), ('private', 'private')], f.seller_type) }}
+      {{ sel('new_hours', 'New', [('', 'any time'), (24, 'today'), (168, 'this week'), (720, 'this month')], f.new_hours) }}
+      {{ sel('sort', 'Sort', [('newest', 'newest first'), ('spread_desc', 'spread ↓'), ('price_asc', 'price ↑'), ('price_desc', 'price ↓'), ('landed_asc', 'landed cost ↑'), ('mileage', 'mileage ↑'), ('year_desc', 'year ↓'), ('price_change', 'recent price change')], sort) }}
+      <div class="col-span-2 sm:col-span-1">
+        <span class="label block">Country</span>
+        <div class="mt-1 flex flex-wrap gap-1.5">
+          {% for c in ['DE', 'BE', 'IT', 'SE'] %}
+          <label class="cursor-pointer">
+            <input type="checkbox" name="country" value="{{ c }}" class="peer sr-only" {{ 'checked' if f.country and c in f.country }}>
+            <span class="pill border border-white/15 px-3 py-1.5 text-xs text-ink-200 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ c }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-1 lg:grid-cols-4">
       {% for name, text in [('price_dropped', 'price dropped'), ('include_inactive', 'include gone'), ('include_duplicates', 'include duplicates'),
                             ('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'chain replaced'), ('service_full', 'full service history')] %}
       <label class="check"><input type="checkbox" name="{{ name }}" value="true" {{ 'checked' if f[name] }}> {{ text }}</label>
@@ -47,5 +67,21 @@
     <noscript><button class="btn-primary">Apply</button></noscript>
   </form>
 </details>
+<script>
+  // The model suggestions follow the chosen brand; clearing the brand shows every model again.
+  (function () {
+    const form = document.getElementById('filters');
+    const brand = form.querySelector('input[name=make]');
+    const list = document.getElementById('model-list');
+    const all = Array.from(list.options).map(o => ({ value: o.value, make: o.dataset.make }));
+    function refresh() {
+      const b = brand.value.trim().toLowerCase();
+      list.innerHTML = '';
+      all.filter(o => !b || o.make.toLowerCase() === b).forEach(o => { const e = document.createElement('option'); e.value = o.value; e.dataset.make = o.make; list.appendChild(e); });
+    }
+    brand.addEventListener('input', refresh);
+    refresh();
+  })();
+</script>
 {% include "listings/_results.html" %}
 {% endblock %}
