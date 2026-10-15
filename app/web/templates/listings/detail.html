@@ -5,10 +5,78 @@
 <div class="mt-2 grid gap-4 lg:grid-cols-5">
   <div class="min-w-0 lg:col-span-3">
     {% if l.photos %}
-    <img src="{{ l.photos[0] }}" alt="" class="w-full rounded-2xl object-cover shadow-card">
-    <div class="mt-2 flex gap-2 overflow-x-auto">
-      {% for p in l.photos[1:] %}<a href="{{ p }}" target="_blank" rel="noopener" class="flex-none"><img src="{{ p }}" alt="" loading="lazy" class="h-20 w-28 flex-none rounded object-cover"></a>{% endfor %}
+    <div id="gallery" class="select-none" data-count="{{ l.photos|length }}">
+      <div class="relative overflow-hidden rounded-2xl bg-ink-100 shadow-card">
+        <img id="gallery-main" src="{{ l.photos[0] }}" alt="" class="aspect-[4/3] w-full cursor-zoom-in object-cover">
+        {% if l.photos|length > 1 %}
+        <button type="button" data-dir="-1" class="gallery-nav absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-ink-950/60 p-2 text-white hover:bg-ink-950/80" aria-label="previous photo">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button type="button" data-dir="1" class="gallery-nav absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-ink-950/60 p-2 text-white hover:bg-ink-950/80" aria-label="next photo">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <span id="gallery-counter" class="absolute bottom-2 right-2 rounded-full bg-ink-950/60 px-2 py-0.5 text-xs text-white">1 / {{ l.photos|length }}</span>
+        {% endif %}
+      </div>
+      {% if l.photos|length > 1 %}
+      <div id="gallery-thumbs" class="mt-2 flex gap-2 overflow-x-auto pb-1">
+        {% for p in l.photos %}<button type="button" data-index="{{ loop.index0 }}" class="flex-none rounded-lg ring-2 ring-offset-1 {{ 'ring-brand-500' if loop.first else 'ring-transparent' }}"><img src="{{ p }}" alt="" loading="lazy" class="h-16 w-24 rounded-lg object-cover"></button>{% endfor %}
+      </div>
+      {% endif %}
     </div>
+    <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink-950/90 p-4" role="dialog" aria-modal="true" aria-label="photo">
+      <button type="button" id="lightbox-close" class="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20" aria-label="close">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      {% if l.photos|length > 1 %}
+      <button type="button" data-dir="-1" class="gallery-nav absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" aria-label="previous photo">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button type="button" data-dir="1" class="gallery-nav absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" aria-label="next photo">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      {% endif %}
+      <img id="lightbox-img" src="" alt="" class="max-h-full max-w-full rounded-lg object-contain shadow-2xl">
+      <span id="lightbox-counter" class="absolute bottom-4 z-10 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-sm text-white"></span>
+    </div>
+    <script>
+      (function () {
+        const photos = {{ l.photos|tojson }};
+        let i = 0;
+        const main = document.getElementById('gallery-main'), counter = document.getElementById('gallery-counter');
+        const thumbs = document.getElementById('gallery-thumbs');
+        const box = document.getElementById('lightbox'), boxImg = document.getElementById('lightbox-img'), boxCounter = document.getElementById('lightbox-counter');
+        function show(n) {
+          i = (n + photos.length) % photos.length;
+          main.src = photos[i]; boxImg.src = photos[i];
+          const text = (i + 1) + ' / ' + photos.length;
+          if (counter) counter.textContent = text;
+          boxCounter.textContent = text;
+          if (thumbs) {
+            thumbs.querySelectorAll('button').forEach((b, k) => { b.classList.toggle('ring-brand-500', k === i); b.classList.toggle('ring-transparent', k !== i); });
+            const active = thumbs.children[i]; if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          }
+        }
+        function open() { box.classList.remove('hidden'); box.classList.add('flex'); document.body.style.overflow = 'hidden'; }
+        function close() { box.classList.add('hidden'); box.classList.remove('flex'); document.body.style.overflow = ''; }
+        document.querySelectorAll('.gallery-nav').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); show(i + Number(b.dataset.dir)); }));
+        if (thumbs) thumbs.addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(Number(b.dataset.index)); });
+        main.addEventListener('click', () => { show(i); open(); });
+        document.getElementById('lightbox-close').addEventListener('click', close);
+        box.addEventListener('click', e => { if (e.target === box || e.target === boxImg) close(); });
+        document.addEventListener('keydown', e => {
+          if (box.classList.contains('hidden')) return;
+          if (e.key === 'Escape') close();
+          if (e.key === 'ArrowRight') show(i + 1);
+          if (e.key === 'ArrowLeft') show(i - 1);
+        });
+        // swipe on phones, in the gallery and in the enlarged view
+        let x0 = null;
+        for (const el of [main, box]) {
+          el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+          el.addEventListener('touchend', e => {
+            if (x0 === null) return;
+            const dx = e.changedTouches[0].clientX - x0; x0 = null;
+            if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+          });
+        }
+      })();
+    </script>
     {% endif %}
     {% set i = l.insight %}
     {% if i and (i.tags or i.status == 'ok') %}
