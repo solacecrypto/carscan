@@ -43,6 +43,15 @@ def _countries(value: Any) -> list[str]:
     return [str(c).strip().upper() for c in items if str(c).strip()]
 
 
+def _profitable(params: Any) -> bool:
+    getlist = getattr(params, "getlist", None)
+    raw = getlist("profitable") if getlist else params.get("profitable")
+    if raw is None or raw == []:
+        return True
+    values = [str(v).lower() for v in (raw if isinstance(raw, list) else [raw])]
+    return any(v in ("1", "true", "on", "yes") for v in values)
+
+
 def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> dict[str, Any]:
     """Tolerant reading of the filter form / query string: empty strings mean 'not set',
     numbers that fail to parse are ignored, `country` may repeat, and `model` accepts a
@@ -80,7 +89,8 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "price_max": num("price_max"),
         "landed_max": num("landed_max"),
         "spread_min": num("spread_min"),
-        "profitable": flag("profitable") or None,
+        # on by default; the form sends an explicit "false" when the box is unticked
+        "profitable": _profitable(params) or None,
         "mileage_max": num("mileage_max"),
         "year_min": num("year_min"),
         "year_max": num("year_max"),

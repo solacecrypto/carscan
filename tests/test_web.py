@@ -152,7 +152,12 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     cards = r.text.split('id="results"')[1]
     assert r.status_code == 200 and "320i" in cards and "318i" not in cards  # inactive hidden
     assert "was € 7.000" in r.text and "1 listing" in r.text
-    assert "318i" in client.get("/listings?include_inactive=true").text.split('id="results"')[1]
+    assert (
+        "318i"
+        in client.get("/listings?include_inactive=true&profitable=false").text.split(
+            'id="results"'
+        )[1]
+    )
     dup = Listing(
         source="kleinanzeigen",
         source_listing_id="dup",
@@ -170,7 +175,9 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     db.commit()
     page = client.get("/listings").text
     assert "also on kleinanzeigen" in page and page.count("<article") == 1
-    assert client.get("/listings?include_duplicates=true").text.count("<article") == 2
+    assert (
+        client.get("/listings?include_duplicates=true&profitable=false").text.count("<article") == 2
+    )
     assert "Same car on:" in client.get(f"/listings/{dup.id}").text
     assert "No listings match" in client.get("/listings?price_max=5000").text
     assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
@@ -197,6 +204,14 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert "No listings match" in client.get("/listings?spread_min=2000").text
     assert "+€ 1.600" in results("/listings?profitable=true")  # spread 1600 > 0
     assert "Reset filters" in client.get("/listings?profitable=true").text
+    # positive return only is on by default; the form sends profitable=false to switch it off
+    assert "+€ 1.600" in results("/listings")
+    assert 'name="profitable" value="true" checked' in client.get("/listings").text
+    assert (
+        'name="profitable" value="true" checked'
+        not in client.get("/listings?profitable=false").text
+    )
+    assert "+€ 1.600" in results("/listings?profitable=false&profitable=true")
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text
     assert "No listings match" in client.get("/listings?new_hours=1").text
