@@ -2,11 +2,12 @@
 
 from decimal import ROUND_HALF_UP, Decimal
 from functools import lru_cache
-from pathlib import Path
 
 import yaml
 
-_COSTS_YAML = Path(__file__).resolve().parents[2] / "costs.yaml"
+from app.paths import config_file
+
+_COSTS_YAML = config_file("costs.yaml")
 
 
 class UnsupportedCurrency(ValueError):

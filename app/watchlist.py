@@ -12,8 +12,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import SavedSearch, User
+from app.paths import config_file
 
-MODELS_PATH = Path(__file__).resolve().parents[1] / "models.yaml"
+MODELS_PATH = config_file("models.yaml")
 
 AS24_FUEL = {"petrol": "B", "diesel": "D", "electric": "E", "hybrid": "2", "lpg": "L"}
 AS24_BODY = {

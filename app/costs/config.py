@@ -8,7 +8,9 @@ from typing import Any
 
 import yaml
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "costs.yaml"
+from app.paths import config_file
+
+CONFIG_PATH = config_file("costs.yaml")
 
 
 @dataclass(frozen=True)
