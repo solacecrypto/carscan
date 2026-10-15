@@ -169,8 +169,9 @@ def market_for_listing(session: Session, listing: Listing, now: datetime) -> dic
     conds = []
     if listing.model_key:
         conds.append(Comparable.model_key == listing.model_key)
-    if listing.model:
-        conds.append(func.lower(Comparable.model) == listing.model.lower())
+    name = listing.model or engine_token(listing.variant)  # some sites leave the model blank
+    if name:
+        conds.append(func.lower(Comparable.model) == name.lower())
     if not conds:
         return None
     comps = list(session.scalars(select(Comparable).where(or_(*conds))))

@@ -275,3 +275,5 @@ def test_value_falls_back_to_the_model_name_when_comps_lack_the_key(db: Session)
     db.flush()
     assert apply_value(row, load_comps(db), ValuationConfig(min_comps=3)) is not None
     assert row.nl_value_eur
+    row.model, row.variant = "", "BMW 318 i Touring"  # Kleinanzeigen leaves the model blank
+    assert apply_value(row, load_comps(db), ValuationConfig(min_comps=3)) is not None
