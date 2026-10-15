@@ -33,7 +33,7 @@
         </div>
         <div class="flex flex-wrap gap-x-2 text-xs text-ink-400">
           {% if l.landed_cost_eur %}<span title="estimated landed cost">landed ≈ {{ l.landed_cost_eur|eur }}</span>{% endif %}
-          {% if l.nl_value_eur %}<span title="NL value from {{ l.nl_value_n }} comparables">NL ≈ {{ l.nl_value_eur|eur }}{% if l.spread_pct is not none %} ({{ l.spread_pct }}%){% endif %}</span>{% endif %}
+          {% if l.nl_value_eur %}{% set bm = (l.nl_value_breakdown or {}).get('benchmark') %}<span title="{{ 'NL value from a close match on the NL market' if bm else 'NL value from the median of ' ~ l.nl_value_n ~ ' comparables' }}">NL ≈ {{ l.nl_value_eur|eur }}{% if l.spread_pct is not none %} ({{ l.spread_pct }}%){% endif %}{% if bm %} <span class="pill bg-good-100 text-good-700">{{ 'perfect match' if bm.perfect else 'close match' }}</span>{% endif %}</span>{% endif %}
         </div>
         <div class="text-xs text-ink-400">{{ l.city or '' }} · {{ l.seller_type.value }} · {{ l.source }} · seen {{ l.first_seen|timeago }}</div>
         {% if l.description_en or l.description %}

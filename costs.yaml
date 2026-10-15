@@ -74,3 +74,9 @@ valuation:
   mileage_window_km: 40000  # +/- km, first attempt
   mileage_window_max_km: 120000
   nearest_to_show: 8
+  # Close match = same engine and gearbox (when known), and within these windows. When one
+  # exists it becomes the benchmark and sets the NL value instead of the median.
+  close_year_window: 1
+  close_mileage_pct: 15
+  close_mileage_km: 20000
+  close_power_kw: 15

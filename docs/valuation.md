@@ -32,6 +32,17 @@ For each active deal listing (`app/valuation/engine.py`):
 Values are recomputed after every scrape run (deals or comparables) and with
 `carscan values recompute`. Parameters live under `valuation:` in `costs.yaml`.
 
+## Benchmark (close match)
+
+Before falling back to the median, the engine looks for a *close match*: a comparable with the
+same engine designation (parsed from model/variant, e.g. `318i`, `c180`, `1.4tsi`, `t4`) and
+gearbox when both are known, same fuel, power within `close_power_kw`, registration within
+`close_year_window` years and mileage within `close_mileage_pct` % (at least
+`close_mileage_km`). The best one (perfect matches first, then most shared facts, smallest
+gaps) becomes the **benchmark**: NL value = its mileage-adjusted asking price × (1 − haircut).
+The breakdown keeps `method` (`benchmark` | `median`), `benchmark` with the match facts, and
+`median_value_eur` for context. Without a close match the median method applies unchanged.
+
 ## Known limitations
 
 - Asking prices, not sale prices: the haircut is a guess until phase 5 logs real sales.

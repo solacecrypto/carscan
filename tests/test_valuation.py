@@ -8,7 +8,14 @@ from sqlalchemy.orm import Session
 from app.db import Comparable, Listing, SavedSearch, ScrapeStatus, SellerType, User
 from app.scrapers import PoliteClient
 from app.valuation import recompute_values
-from app.valuation.engine import Comp, Target, ValuationConfig, dedup, estimate_value
+from app.valuation.engine import (
+    Comp,
+    Target,
+    ValuationConfig,
+    dedup,
+    engine_token,
+    estimate_value,
+)
 from app.worker.jobs import due_search_ids, run_saved_search
 
 FIX = Path(__file__).parent / "fixtures"
@@ -152,3 +159,53 @@ def test_cli_seed_comparables(db: Session) -> None:
     )
     out = CliRunner().invoke(cli, ["searches", "list"]).output
     assert "comparables" in out and "every 360 min" in out and "gaspedaal" in out
+
+
+def test_engine_token_reads_common_designations() -> None:
+    assert engine_token("318i", "BMW 318 i Touring") == "318i"
+    assert engine_token("3er", "320i xDrive Touring 135 kW") == "320i"
+    assert engine_token("c-klasse", "Mercedes C 180 CGI BlueEfficiency W204") == "c180"
+    assert engine_token("golf", "Volkswagen Golf 1.4 TSI Highline 90kW") == "1.4tsi"
+    assert engine_token("v60", "Volvo V60 T4 Summum") == "t4"
+    assert engine_token("1-serie", "118 kW automaat") is None  # power is not an engine
+    assert engine_token(None, None) is None
+
+
+def _cx(i: int, year: int, km: int, price: int, **kw: object) -> Comp:
+    base = dict(id=i, source="x", model="320i", body_type="sedan", year=year, mileage_km=km)
+    return Comp(price_eur=price, **{**base, **kw})  # type: ignore[arg-type]
+
+
+def test_close_match_becomes_the_benchmark() -> None:
+    target = Target("320i", "sedan", 2012, 160_000, engine="320i", gearbox="manual", power_kw=125)
+    comps = [
+        _cx(1, 2012, 150_000, 8000, engine="320i", gearbox="manual", power_kw=125),  # close
+        _cx(2, 2012, 165_000, 9500, engine="320i", gearbox="automatic"),  # wrong gearbox
+        _cx(3, 2013, 130_000, 8400, engine="318i", gearbox="manual"),  # wrong engine
+        _cx(4, 2011, 200_000, 6000, engine="320i", gearbox="manual"),  # too many km
+        _cx(5, 2012, 158_000, 7000, engine="320i", gearbox="manual", power_kw=125),  # closer
+    ]
+    est = estimate_value(target, comps, CFG)
+    assert est is not None and est.method == "benchmark"
+    assert est.benchmark is not None and est.benchmark["id"] == 5  # 2% km gap beats 6%
+    assert (
+        est.benchmark["perfect"] and est.benchmark["same_engine"] and est.benchmark["same_gearbox"]
+    )
+    assert est.benchmark["close_matches"] == 2
+    # value = adjusted asking of the benchmark (7000 + (158000-160000)*0.02 = 6960) minus 7%
+    assert est.value_eur == round(6960 * 0.93)
+    assert est.median_value_eur is not None and est.median_value_eur != est.value_eur
+    assert [n["id"] for n in est.nearest][:2] == [5, 1]  # close matches listed first
+    assert est.nearest[0]["close"] and not est.nearest[-1]["close"]
+
+
+def test_without_close_match_the_median_method_is_unchanged() -> None:
+    target = Target("320i", "sedan", 2012, 160_000, engine="320i", gearbox="manual")
+    comps = [
+        _cx(1, 2012, 150_000, 8000, engine="320i", gearbox="automatic"),
+        _cx(2, 2012, 170_000, 7600, engine="318i", gearbox="manual"),
+        _cx(3, 2013, 130_000, 8400, engine="320i", gearbox="manual"),  # 30k km off
+    ]
+    est = estimate_value(target, comps, CFG)
+    assert est is not None and est.method == "median" and est.benchmark is None
+    assert est.value_eur == round(7800 * 0.93) and est.median_value_eur == est.value_eur

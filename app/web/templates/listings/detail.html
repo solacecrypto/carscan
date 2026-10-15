@@ -97,16 +97,39 @@
       {% if v %}
       <p class="text-2xl font-bold">{{ l.nl_value_eur|eur }}
         {% if l.spread_eur is not none %}<span class="ml-2 text-lg {{ 'text-good-700' if l.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} · {{ l.spread_pct }}%</span>{% endif %}</p>
-      <p class="mt-1 text-xs text-ink-400">Median asking {{ v.asking_median_eur|eur }} (IQR {{ v.asking_q1_eur|eur }} – {{ v.asking_q3_eur|eur }}) from {{ v.n }} comparables within ±{{ v.year_window }} y / ±{{ v.mileage_window_km|km }}, mileage-adjusted at € {{ v.km_rate_eur }}/km, minus {{ v.haircut_pct }}% haircut.</p>
+      {% set b = v.benchmark %}
+      {% if b %}
+      <div class="mt-3 rounded-xl border-2 border-good-700/40 bg-good-100/60 p-3">
+        <div class="flex items-center justify-between gap-2">
+          <span class="pill bg-good-700 text-white">{{ 'perfect match' if b.perfect else 'close match' }}</span>
+          <span class="text-xs text-ink-500">benchmark{% if b.close_matches > 1 %} · best of {{ b.close_matches }} close matches{% endif %}</span>
+        </div>
+        <a href="{{ b.url }}" target="_blank" rel="noopener" class="mt-2 block truncate font-semibold underline">{{ b.variant or 'comparable' }}</a>
+        <div class="mt-1 text-sm text-ink-700">{{ b.year }} · {{ b.mileage_km|km }} · asking <b>{{ b.price_eur|eur }}</b> <span class="text-xs text-ink-400">{{ b.source }}</span></div>
+        <div class="mt-1.5 flex flex-wrap gap-1 text-xs">
+          {% if b.same_engine %}<span class="pill bg-white text-good-700">same engine{% if b.engine %} ({{ b.engine }}){% endif %}</span>{% endif %}
+          {% if b.same_gearbox %}<span class="pill bg-white text-good-700">same gearbox</span>{% endif %}
+          <span class="pill bg-white text-ink-600">{{ 'same year' if b.same_year else (b.year_diff|abs ~ ' y ' ~ ('newer' if b.year_diff > 0 else 'older')) }}</span>
+          {% if b.km_diff is not none %}<span class="pill bg-white text-ink-600">{{ (b.km_diff|abs)|km }} {{ 'more' if b.km_diff > 0 else 'less' }} on the clock</span>{% endif %}
+          {% if b.power_diff_kw %}<span class="pill bg-white text-ink-600">{{ '+' if b.power_diff_kw > 0 }}{{ b.power_diff_kw }} kW</span>{% endif %}
+        </div>
+        <p class="mt-2 text-xs text-ink-500">NL value = its asking price adjusted for mileage ({{ b.adjusted_eur|eur }}) minus {{ v.haircut_pct }}% haircut. Median of all {{ v.n }} comparables would give {{ v.median_value_eur|eur }}.</p>
+      </div>
+      <p class="mt-2 text-xs text-ink-400">Other comparables: median asking {{ v.asking_median_eur|eur }} (IQR {{ v.asking_q1_eur|eur }} – {{ v.asking_q3_eur|eur }}) from {{ v.n }} cars within ±{{ v.year_window }} y / ±{{ v.mileage_window_km|km }}.</p>
+      {% else %}
+      <p class="mt-1 text-xs text-ink-400">No close match (same engine and gearbox, ±{{ v.year_window }} y, similar mileage) on the NL market right now. Median asking {{ v.asking_median_eur|eur }} (IQR {{ v.asking_q1_eur|eur }} – {{ v.asking_q3_eur|eur }}) from {{ v.n }} comparables within ±{{ v.year_window }} y / ±{{ v.mileage_window_km|km }}, mileage-adjusted at € {{ v.km_rate_eur }}/km, minus {{ v.haircut_pct }}% haircut.</p>
+      {% endif %}
       {% if nearest %}
+      {% set close_ids = v.nearest|selectattr('close')|map(attribute='id')|list %}
       <ul class="mt-2 divide-y divide-ink-100 text-sm">
         {% for c in nearest %}
-        <li class="flex items-center justify-between gap-2 py-1">
-          <a href="{{ c.url }}" target="_blank" rel="noopener" class="truncate underline">{{ c.variant or (c.make ~ ' ' ~ c.model) }}</a>
-          <span class="whitespace-nowrap text-ink-600">{{ c.first_registration.year if c.first_registration }} · {{ c.mileage_km|km }} · <b>{{ c.price_eur|eur }}</b> <span class="text-xs text-ink-300">{{ c.source }}</span></span>
+        <li class="flex items-center justify-between gap-2 py-1 {{ 'font-semibold' if b and c.id == b.id }}">
+          <a href="{{ c.url }}" target="_blank" rel="noopener" class="truncate underline">{% if b and c.id == b.id %}★ {% elif c.id in close_ids %}≈ {% endif %}{{ c.variant or (c.make ~ ' ' ~ c.model) }}</a>
+          <span class="whitespace-nowrap text-ink-600">{{ c.first_registration.year if c.first_registration }} · {{ c.mileage_km|km }}{% if c.gearbox %} · {{ c.gearbox }}{% endif %} · <b>{{ c.price_eur|eur }}</b> <span class="text-xs text-ink-300">{{ c.source }}</span></span>
         </li>
         {% endfor %}
       </ul>
+      <p class="mt-1 text-[11px] text-ink-300">★ benchmark · ≈ close match</p>
       {% endif %}
       {% else %}
       <p class="text-sm text-ink-400">Not enough comparables yet (run the NL comparables searches).</p>

@@ -7,9 +7,17 @@ from sqlalchemy.orm import Session
 
 from app.costs import get_cost_config
 from app.db.models import Comparable, Listing
-from app.valuation.engine import Comp, Target, ValuationConfig, ValueEstimate, estimate_value
+from app.valuation.engine import (
+    Comp,
+    Target,
+    ValuationConfig,
+    ValueEstimate,
+    engine_token,
+    estimate_value,
+)
 
 __all__ = [
+    "engine_token",
     "Comp",
     "Target",
     "ValuationConfig",
@@ -33,6 +41,10 @@ def load_comps(session: Session) -> list[Comp]:
             price_eur=r.price_eur,
             url=r.url,
             variant=r.variant,
+            engine=engine_token(r.model, r.variant),
+            gearbox=r.gearbox,
+            fuel=r.fuel,
+            power_kw=r.power_kw,
         )
         for r in rows
     ]
@@ -44,6 +56,10 @@ def apply_value(row: Listing, comps: list[Comp], cfg: ValuationConfig) -> ValueE
         body_type=row.body_type,
         year=row.first_registration.year if row.first_registration else None,
         mileage_km=row.mileage_km,
+        engine=engine_token(row.model, row.variant),
+        gearbox=row.gearbox,
+        fuel=row.fuel,
+        power_kw=row.power_kw,
     )
     est = estimate_value(target, comps, cfg)
     if est is None:
