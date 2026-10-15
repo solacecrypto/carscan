@@ -1,0 +1,30 @@
+# Watchlist: one entry per model we hunt. `carscan models sync --owner <user>` creates the
+# deal searches (DE/BE/IT/SE sources) and the NL comparables searches for every entry.
+# Site-specific codes come from the investigations in docs/sources/. Existing searches are
+# matched by name and left alone; remove an entry and run `models sync --prune` to pause them.
+models:
+  - key: bmw-3er-e90
+    label: "BMW E90/E91 318i/320i"
+    make: BMW
+    years: [2008, 2014]
+    fuel: petrol
+    motors: ["318i", "320i"]       # matched in titles where the site has no engine filter
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/bmw/3er            # .de and .be (.be gets the /nl prefix automatically)
+      cat: "ma13gr100038ge25mt102,ma13gr100038ge25mt103"
+      it_path: /lst/bmw/serie-3     # .it ignores motor-type ids: filter by model number instead
+      it_models: ["318", "320"]
+    marktplaats:
+      make_id: 96
+      model: "3-Serie"
+    kleinanzeigen:
+      make: bmw
+    automobile_it:
+      path: /bmw-serie_3
+    bytbil:
+      make: BMW
+      model: 3-serien
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]   # gaspedaal blocks datacenter IPs; add it back if that changes

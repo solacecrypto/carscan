@@ -292,7 +292,7 @@ PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
             "ModelYearRange.From": 2008,
             "ModelYearRange.To": 2014,
             "Fuels": "Bensin",
-            "motor_regex": r"\b(318|320)\s?i\b",  # Bytbil titles read "320 i"
+            "motor_regex": r"\b(318\s?i|320\s?i)\b",  # Bytbil titles read "320 i"
         },
         360,
     ),
@@ -343,6 +343,54 @@ def insights_run(limit: int = typer.Option(50, help="max listings to analyse now
         typer.echo("disabled: ANTHROPIC_API_KEY is not set")
         return
     typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
+
+
+models = typer.Typer(no_args_is_help=True, help="Watchlist (models.yaml) -> searches")
+app.add_typer(models, name="models")
+
+
+@models.command("sync")
+def models_sync(
+    owner: str = typer.Option(..., help="username that owns created searches"),
+    prune: bool = typer.Option(
+        False, "--prune", help="pause watchlist searches no longer in models.yaml"
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="only print what would be created"),
+) -> None:
+    """Create the deal and comparables searches for every model in models.yaml."""
+    from app.db import User, db_session
+    from app.watchlist import build_specs, load_models, sync
+
+    entries = load_models()
+    if dry_run:
+        for m in entries:
+            for sp in build_specs(m):
+                typer.echo(
+                    f"{sp.role:12} {sp.source:16} every {sp.interval_minutes:>3} min  {sp.name}"
+                )
+        return
+    with db_session() as s:
+        user = s.scalar(select(User).where(User.username == owner))
+        if not user:
+            raise typer.BadParameter(f"no such user {owner!r}")
+        r = sync(s, user, entries, prune=prune)
+    msg = f"models: {len(entries)}  created {r['created']}  updated {r['updated']}"
+    typer.echo(f"{msg}  paused {r['paused']}")
+    if r["updated"]:
+        typer.echo("(updated includes hand-made searches adopted into the watchlist)")
+
+
+@models.command("list")
+def models_list() -> None:
+    """Show the watchlist."""
+    from app.watchlist import build_specs, load_models
+
+    for m in load_models():
+        y0, y1 = m["years"]
+        typer.echo(
+            f"{m['key']:<20} {m['label']:<32} {y0}-{y1} {m.get('fuel', 'petrol'):<7} "
+            f"{len(build_specs(m))} searches"
+        )
 
 
 alerts = typer.Typer(no_args_is_help=True, help="Telegram alert queue")

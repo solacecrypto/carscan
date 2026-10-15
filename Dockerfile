@@ -7,7 +7,7 @@ COPY pyproject.toml ./
 COPY app ./app
 RUN pip install --upgrade pip && pip install .
 
-COPY alembic.ini costs.yaml ./
+COPY alembic.ini costs.yaml models.yaml ./
 COPY migrations ./migrations
 COPY docker/entrypoint.sh /entrypoint.sh
 

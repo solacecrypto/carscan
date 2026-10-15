@@ -9,6 +9,15 @@ Delivered as a website: everything runs on one Linux VPS, users access it throug
 
 ## Roadmap (all six phases are built; see the status sections at the bottom)
 
+**Deployed on Railway** (2026-10-14): services `carscan` (web, ROLE=web), `worker` (ROLE=worker),
+`Postgres`; one image, `docker/entrypoint.sh` picks the role. Web auto-deploys from GitHub
+`main`; the worker is deployed with `railway up --service worker` from this checkout. Commands
+run inside the container with `railway ssh --service carscan -- carscan <cmd>`.
+
+**Long-term direction** (agreed 2026-10-15, see `docs/watchlist.md`): first a watchlist of
+models (`models.yaml`, `carscan models sync`), then recency sweeps per site/segment with
+attention rules, a model catalogue, and capacity work (proxies, workers, Claude gating).
+
 1. **Phase 1 (current):** one source (AutoScout24.de) → normalizer → Postgres → website with
    listings, filters and saved searches → Telegram group alerts → deployed on a VPS
 2. **Landed-cost calculator:** purchase price + transport + BPM estimate + RDW fees, shown per

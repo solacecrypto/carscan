@@ -105,4 +105,4 @@ def test_cli_seed_phase4(db: Session) -> None:
     ):
         assert src in out
     s = db.scalar(select(SavedSearch).where(SavedSearch.source == "bytbil"))
-    assert s is not None and s.source_params["motor_regex"] == r"\b(318|320)\s?i\b"
+    assert s is not None and s.source_params["motor_regex"] == r"\b(318\s?i|320\s?i)\b"
