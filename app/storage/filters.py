@@ -8,6 +8,8 @@ from sqlalchemy import Select, extract
 from app.db.models import Listing, ListingInsight, SellerType
 
 FILTER_KEYS = (
+    "make",
+    "model_key",
     "price_min",
     "price_max",
     "landed_max",
@@ -27,6 +29,10 @@ FILTER_KEYS = (
 
 def matches(listing: Listing, filters: dict[str, Any]) -> bool:
     f = filters or {}
+    if f.get("make") and listing.make.lower() != str(f["make"]).lower():
+        return False
+    if f.get("model_key") and listing.model_key != f["model_key"]:
+        return False
     if f.get("price_min") and listing.price_eur < int(f["price_min"]):
         return False
     if f.get("price_max") and listing.price_eur > int(f["price_max"]):
@@ -64,6 +70,10 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
 
 def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
     f = filters or {}
+    if f.get("make"):
+        stmt = stmt.where(Listing.make.ilike(str(f["make"])))
+    if f.get("model_key"):
+        stmt = stmt.where(Listing.model_key == f["model_key"])
     if f.get("price_min"):
         stmt = stmt.where(Listing.price_eur >= int(f["price_min"]))
     if f.get("price_max"):

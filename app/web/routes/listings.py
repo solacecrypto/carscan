@@ -43,6 +43,8 @@ def listings_index(
     request: Request,
     db: DB,
     user: CurrentUser,
+    make: str | None = None,
+    model_key: str | None = None,
     price_min: int | None = Query(None, ge=0),
     price_max: int | None = Query(None, ge=0),
     landed_max: int | None = Query(None, ge=0),
@@ -65,6 +67,8 @@ def listings_index(
     page: int = Query(1, ge=1),
 ) -> HTMLResponse:
     filters = {
+        "make": make or None,
+        "model_key": model_key or None,
         "price_min": price_min,
         "price_max": price_max,
         "landed_max": landed_max,
@@ -107,6 +111,9 @@ def listings_index(
     ctx = {
         "title": "Listings",
         "listings": rows,
+        "makes": _makes(db),
+        "models": _models(),
+        "since": datetime.now(UTC).isoformat(),
         "total": total,
         "page": page,
         "pages": max(1, -(-total // PAGE_SIZE)),
@@ -122,6 +129,109 @@ def listings_index(
     }
     name = "listings/_results.html" if request.headers.get("HX-Request") else "listings/index.html"
     return templates.TemplateResponse(request, name, ctx)
+
+
+def _makes(db: DB) -> list[str]:
+    return [
+        m
+        for m in db.scalars(
+            select(Listing.make)
+            .where(Listing.is_active.is_(True))
+            .distinct()
+            .order_by(Listing.make)
+        )
+        if m
+    ]
+
+
+def _models() -> list[tuple[str, str]]:
+    from app.watchlist import load_models
+
+    try:
+        return [(m["key"], m["label"]) for m in load_models()]
+    except FileNotFoundError:
+        return []
+
+
+def _filtered_stmt(
+    filters: dict,
+    include_inactive: bool,
+    include_duplicates: bool,
+    new_hours: int | None,
+    price_dropped: bool,
+):  # type: ignore[no-untyped-def]
+    stmt = apply_sql(select(Listing), filters)
+    if not include_inactive:
+        stmt = stmt.where(Listing.is_active.is_(True))
+    if not include_duplicates:
+        stmt = stmt.where(Listing.duplicate_of_id.is_(None))
+    if new_hours:
+        stmt = stmt.where(Listing.first_seen >= datetime.now(UTC) - timedelta(hours=new_hours))
+    if price_dropped:
+        stmt = stmt.where(
+            Listing.previous_price_eur.isnot(None), Listing.price_eur < Listing.previous_price_eur
+        )
+    return stmt
+
+
+@router.get("/listings/new-count", response_class=HTMLResponse)
+def listings_new_count(
+    request: Request,
+    db: DB,
+    user: CurrentUser,
+    since: str,
+    make: str | None = None,
+    model_key: str | None = None,
+    price_min: int | None = Query(None, ge=0),
+    price_max: int | None = Query(None, ge=0),
+    landed_max: int | None = Query(None, ge=0),
+    spread_min: int | None = Query(None),
+    mileage_max: int | None = Query(None, ge=0),
+    year_min: int | None = Query(None, ge=1990),
+    year_max: int | None = Query(None, ge=1990),
+    gearbox: str | None = None,
+    seller_type: str | None = None,
+    country: str | None = None,
+    no_accident: bool = False,
+    no_export_only: bool = False,
+    chain_replaced: bool = False,
+    service_full: bool = False,
+    include_inactive: bool = False,
+    include_duplicates: bool = False,
+) -> HTMLResponse:
+    """Polled by the listings page: cars matching the current filters that arrived after `since`."""
+    try:
+        since_dt = datetime.fromisoformat(since.replace(" ", "+"))  # '+' arrives as a space
+        if since_dt.tzinfo is None:
+            since_dt = since_dt.replace(tzinfo=UTC)
+    except ValueError:
+        raise HTTPException(400, "bad since") from None
+    filters = {
+        "make": make or None,
+        "model_key": model_key or None,
+        "price_min": price_min,
+        "price_max": price_max,
+        "landed_max": landed_max,
+        "spread_min": spread_min,
+        "mileage_max": mileage_max,
+        "year_min": year_min,
+        "year_max": year_max,
+        "gearbox": gearbox or None,
+        "seller_type": seller_type or None,
+        "country": country or None,
+        "no_accident": no_accident or None,
+        "no_export_only": no_export_only or None,
+        "chain_replaced": chain_replaced or None,
+        "service_full": service_full or None,
+    }
+    stmt = _filtered_stmt(filters, include_inactive, include_duplicates, None, False).where(
+        Listing.first_seen > since_dt
+    )
+    count = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    query = "&".join(p for p in str(request.url.query).split("&") if not p.startswith("since="))
+    return templates.TemplateResponse(
+        request, "listings/_poller.html", {"count": count, "since": since, "query": query}
+    )
 
 
 def _load(db: DB, listing_id: int) -> Listing:

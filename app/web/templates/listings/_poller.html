@@ -1,0 +1,8 @@
+<div id="poller" hx-get="/listings/new-count?since={{ since|urlencode }}{{ ('&' ~ query) if query else '' }}" hx-trigger="every 60s" hx-swap="outerHTML">
+  {% if count %}
+  <button hx-get="/listings{{ ('?' ~ query) if query else '' }}" hx-target="#results" hx-swap="outerHTML" hx-push-url="false"
+          class="mb-3 w-full rounded-lg bg-indigo-600 py-2 text-center text-sm font-semibold text-white shadow sm:w-auto sm:px-4">
+    {{ count }} new car{{ '' if count == 1 else 's' }} since you opened this page · show
+  </button>
+  {% endif %}
+</div>

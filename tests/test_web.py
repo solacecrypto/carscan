@@ -149,9 +149,10 @@ def test_login_requires_csrf(seeded: dict) -> None:
 
 def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session) -> None:
     r = client.get("/listings")
-    assert r.status_code == 200 and "320i" in r.text and "318i" not in r.text  # inactive hidden
+    cards = r.text.split('id="results"')[1]
+    assert r.status_code == 200 and "320i" in cards and "318i" not in cards  # inactive hidden
     assert "was € 7.000" in r.text and "1 listing" in r.text
-    assert "318i" in client.get("/listings?include_inactive=true").text
+    assert "318i" in client.get("/listings?include_inactive=true").text.split('id="results"')[1]
     dup = Listing(
         source="kleinanzeigen",
         source_listing_id="dup",
@@ -175,6 +176,13 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
     assert "No listings match" in client.get("/listings?landed_max=7000").text
     assert "+€ 1.600 (20.8%)" in client.get("/listings?spread_min=1000&sort=spread_desc").text
+    assert "No listings match" in client.get("/listings?make=Audi").text
+    assert "320i" in client.get("/listings?make=bmw").text
+    assert "No listings match" in client.get("/listings?model_key=vw-golf-6").text
+    assert (
+        'name="model_key"' in client.get("/listings").text
+        and "VW Golf VI" in client.get("/listings").text
+    )
     assert "No listings match" in client.get("/listings?spread_min=2000").text
     assert "No listings match" in client.get("/listings?gearbox=automatic").text
     assert "320i" in client.get("/listings?price_dropped=true&new_hours=24&sort=price_asc").text
@@ -354,3 +362,26 @@ def test_logout(client: TestClient) -> None:
     r = client.post("/logout", data={"csrf_token": token}, follow_redirects=False)
     assert r.status_code == 303
     assert client.get("/listings", follow_redirects=False).status_code == 303
+
+
+def test_new_cars_poller(client: TestClient, seeded: dict, db: Session) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    page = client.get("/listings?make=BMW").text
+    assert 'id="poller"' in page and "new car" not in page
+    m = re.search(r'/listings/new-count\?since=([^&"]+)&amp;make=BMW', page)
+    assert m, page[:3000]
+    r = client.get(f"/listings/new-count?since={m.group(1)}&make=BMW")
+    assert r.status_code == 200 and "new car" not in r.text
+    old = datetime.now(UTC) - timedelta(minutes=5)
+    r = client.get(f"/listings/new-count?since={old.isoformat()}&make=BMW")
+    assert "new car" not in r.text  # listing a was first seen 2 hours ago
+    r = client.get(
+        f"/listings/new-count?since={(datetime.now(UTC) - timedelta(hours=3)).isoformat()}&make=BMW"
+    )
+    assert (
+        "1 new car since you opened this page" in r.text and 'hx-get="/listings?make=BMW"' in r.text
+    )
+    early = (datetime.now(UTC) - timedelta(hours=3)).isoformat()
+    assert "new car" not in client.get(f"/listings/new-count?since={early}&make=Audi").text
+    assert client.get("/listings/new-count?since=garbage").status_code == 400

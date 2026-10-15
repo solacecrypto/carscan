@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<details class="mb-4 rounded-xl bg-white p-3 shadow" {{ 'open' if f.price_min or f.price_max or f.landed_max or f.spread_min or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.new_hours or f.price_dropped or f.include_inactive }}>
+<details class="mb-4 rounded-xl bg-white p-3 shadow" {{ 'open' if f.make or f.model_key or f.price_min or f.price_max or f.landed_max or f.spread_min or f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.mileage_max or f.year_min or f.year_max or f.gearbox or f.seller_type or f.new_hours or f.price_dropped or f.include_inactive }}>
   <summary class="cursor-pointer font-semibold">Filters &amp; sort</summary>
   <form hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit" hx-push-url="true"
         class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
@@ -8,6 +8,16 @@
     <label class="block">{{ label }}<input type="number" name="{{ name }}" value="{{ val if val is not none }}" step="{{ step }}" min="0"
       class="mt-1 w-full rounded border border-slate-300 p-1.5"></label>
     {%- endmacro %}
+    <label class="block">Make
+      <select name="make" class="mt-1 w-full rounded border border-slate-300 p-1.5">
+        <option value="">any</option>
+        {% for m in makes %}<option value="{{ m }}" {{ 'selected' if f.make == m }}>{{ m }}</option>{% endfor %}
+      </select></label>
+    <label class="block">Model
+      <select name="model_key" class="mt-1 w-full rounded border border-slate-300 p-1.5">
+        <option value="">any</option>
+        {% for key, label in models %}<option value="{{ key }}" {{ 'selected' if f.model_key == key }}>{{ label }}</option>{% endfor %}
+      </select></label>
     {{ num('price_min', 'Price from €', f.price_min, 100) }}
     {{ num('price_max', 'Price to €', f.price_max, 100) }}
     {{ num('landed_max', 'Landed cost to €', f.landed_max, 100) }}
