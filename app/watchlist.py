@@ -73,10 +73,12 @@ def load_models(path: Path = MODELS_PATH) -> list[dict[str, Any]]:
 
 
 def _motor_regex(motors: list[str], spaced: bool = False) -> str:
-    alts = "|".join(re.escape(m) for m in motors)
     if spaced:  # Bytbil writes "320 i"
-        alts = "|".join(re.escape(m[:-1]) + r"\s?" + re.escape(m[-1:]) for m in motors)
-    return rf"\b({alts})\b"
+        parts = [re.escape(m[:-1]) + r"\s?" + re.escape(m[-1:]) for m in motors]
+    else:
+        parts = [re.escape(m) for m in motors]
+    alts = "|".join(parts)
+    return rf"\b{alts}\b" if len(parts) == 1 else rf"\b({alts})\b"
 
 
 def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
@@ -128,7 +130,13 @@ def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
                     },
                 )
             elif source in ("marktplaats", "tweedehands_be") and mp.get("make_id"):
-                mp_bodies = [x for b in bodies for x in MP_BODY.get(b, [])]
+                # Belgian 2dehands labels bodies in French as well as Dutch
+                labels = (
+                    MP_BODY
+                    if source == "tweedehands_be"
+                    else {k: v[:1] for k, v in MP_BODY.items()}
+                )
+                mp_bodies = [x for b in bodies for x in labels.get(b, [])]
                 for motor in motors or [""]:
                     add(
                         source,
@@ -259,8 +267,8 @@ def sync(
             row.source_params, row.active = spec.params, True
             updated += 1
     if prune:
-        for name, row in existing.items():
-            if " · " in name and name not in wanted and row.active:
+        for row in rows:
+            if " · " in row.name and row.name not in wanted and row.active:
                 row.active = False
                 paused += 1
     session.flush()
