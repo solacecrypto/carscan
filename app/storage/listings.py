@@ -87,7 +87,7 @@ def apply_costs(row: Listing, today: datetime) -> None:
 
 def recompute_costs(session: Session, now: datetime, only_stale: bool = False) -> int:
     """Recompute every listing (or only those computed with an older costs.yaml version)."""
-    stmt = select(Listing)
+    stmt = select(Listing).order_by(Listing.id)
     if only_stale:
         version = get_cost_config().version
         stmt = stmt.where((Listing.cost_version.is_(None)) | (Listing.cost_version != version))

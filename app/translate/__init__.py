@@ -198,7 +198,8 @@ def translate_pending(
     sleep: Callable[[float], None] = time.sleep,
 ) -> dict[str, int]:
     """Translate up to ``limit`` descriptions with polite pauses; stop at the first provider
-    error (usually rate limiting) and try again on the next run."""
+    error (usually rate limiting) and try again on the next run. Commits after every row so
+    the scrape loop (which re-values the same rows) is never blocked for minutes."""
     from app.storage.listings import apply_costs
 
     counts = {"translated": 0, "evidence": 0, "failed": 0}
@@ -208,14 +209,14 @@ def translate_pending(
             row.description_en = text.strip() or None
             apply_costs(row, now)  # repair patterns also read the English text
             counts["translated"] += 1
-            session.flush()
+            session.commit()  # one row per transaction: never hold locks across the pauses
             sleep(random.uniform(1.5, 4.0))
             counts["evidence"] += translate_evidence(row, translator)
         except (TranslateError, httpx.HTTPError) as e:
             log.warning("translate.failed", listing=row.id, provider=translator.name, error=str(e))
             counts["failed"] += 1
             return counts
-        session.flush()
+        session.commit()
     # cars translated earlier whose tags gained evidence since (re-tagging, rule updates)
     for row in pending_evidence(session, max(0, limit - counts["translated"])):
         try:
@@ -224,6 +225,6 @@ def translate_pending(
             log.warning("translate.failed", listing=row.id, provider=translator.name, error=str(e))
             counts["failed"] += 1
             return counts
-        session.flush()
+        session.commit()
         sleep(random.uniform(1.5, 4.0))
     return counts

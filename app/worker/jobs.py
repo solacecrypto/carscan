@@ -106,7 +106,7 @@ def run_saved_search(
                 dedup = link_duplicates(s, result.new, now)
                 if dedup.linked:
                     log.info("scrape.dedup", linked=dedup.linked, checked=dedup.checked)
-                recompute_values(s, now)
+                recompute_values(s, now, model_key=params.get("model_key"))
                 analyzer = default_analyzer() if insights_budget else None
                 if analyzer and result.new:
                     floor = settings.insights_min_spread_eur
@@ -128,7 +128,9 @@ def run_saved_search(
                     alerts_queued=len(alerts),
                 )
                 price_changed = len(result.price_dropped) + len(result.price_raised)
-            recompute_values(s, now)
+            if role == "comparables":
+                # new NL prices only move the values of this model's cars
+                recompute_values(s, now, model_key=params.get("model_key"))
             run = s.get(ScrapeRun, run_id)
             assert run is not None
             run.finished_at = now
@@ -359,6 +361,7 @@ def enrich_backlog(
                 items = _apply_watchlist(dict(search.source_params), [scraper.parse(raw)])
                 upsert_listings(s, items, search, now)
                 counts["fetched"] += 1
+                s.commit()  # release row locks between slow page fetches
         finally:
             if own:
                 client.close()

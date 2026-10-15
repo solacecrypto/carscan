@@ -83,12 +83,19 @@ def apply_value(row: Listing, comps: list[Comp], cfg: ValuationConfig) -> ValueE
     return est
 
 
-def recompute_values(session: Session, now: datetime, active_only: bool = True) -> int:
+def recompute_values(
+    session: Session, now: datetime, active_only: bool = True, model_key: str | None = None
+) -> int:
+    """Re-value listings; ``model_key`` limits it to one watchlist model (a scrape run only
+    changes that model's cars or comparables). Rows are taken in id order so concurrent
+    recomputes never deadlock each other."""
     cfg = ValuationConfig.from_mapping(get_cost_config().valuation)
     comps = load_comps(session)
-    stmt = select(Listing)
+    stmt = select(Listing).order_by(Listing.id)
     if active_only:
         stmt = stmt.where(Listing.is_active.is_(True))
+    if model_key:
+        stmt = stmt.where(Listing.model_key == model_key)
     n = 0
     for row in session.scalars(stmt):
         apply_value(row, comps, cfg)

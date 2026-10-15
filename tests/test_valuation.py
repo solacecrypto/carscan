@@ -277,3 +277,34 @@ def test_value_falls_back_to_the_model_name_when_comps_lack_the_key(db: Session)
     assert row.nl_value_eur
     row.model, row.variant = "", "BMW 318 i Touring"  # Kleinanzeigen leaves the model blank
     assert apply_value(row, load_comps(db), ValuationConfig(min_comps=3)) is not None
+
+
+def test_recompute_can_be_scoped_to_one_model(db: Session) -> None:
+    from app.valuation import recompute_values
+
+    u = User(username="scope", password_hash="x")
+    rows = []
+    for i, key in enumerate(("bmw-3er-e90", "vw-golf-6")):
+        rows.append(
+            Listing(
+                source="autoscout24_de",
+                source_listing_id=f"s{i}",
+                url="",
+                make="X",
+                model="320i",
+                model_key=key,
+                first_registration=datetime(2012, 1, 1).date(),
+                mileage_km=100_000,
+                price_eur=5000,
+                seller_type=SellerType.dealer,
+                country="DE",
+                first_seen=datetime.now(UTC),
+                last_seen=datetime.now(UTC),
+                is_active=True,
+                nl_value_eur=1,  # stale marker
+            )
+        )
+    db.add_all([u, *rows])
+    db.flush()
+    assert recompute_values(db, datetime.now(UTC), model_key="bmw-3er-e90") == 1
+    assert rows[0].nl_value_eur != 1 and rows[1].nl_value_eur == 1
