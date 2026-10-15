@@ -154,7 +154,7 @@ COMPARABLE_SEARCHES: list[tuple[str, str, dict[str, object]]] = [
             "year_from": 2008,
             "year_to": 2014,
             "query": "320i",
-            "motor_regex": r"\b320i\b",
+            "motor_regex": r"\b320\s?i\b",
             "bodies": ["Sedan", "Stationwagon"],
         },
     ),
@@ -168,7 +168,7 @@ COMPARABLE_SEARCHES: list[tuple[str, str, dict[str, object]]] = [
             "year_from": 2008,
             "year_to": 2014,
             "query": "318i",
-            "motor_regex": r"\b318i\b",
+            "motor_regex": r"\b318\s?i\b",
             "bodies": ["Sedan", "Stationwagon"],
         },
     ),
@@ -186,7 +186,7 @@ COMPARABLE_SEARCHES: list[tuple[str, str, dict[str, object]]] = [
 ]
 
 
-E90_MOTOR_RE = r"\b(318i|320i)\b"
+E90_MOTOR_RE = r"\b(318\s?i|320\s?i)\b"
 # Phase 4 deal searches: (name, source, params, interval_minutes)
 PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
     (
@@ -213,7 +213,7 @@ PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
             "year_from": 2008,
             "year_to": 2014,
             "query": "320i",
-            "motor_regex": r"\b320i\b",
+            "motor_regex": r"\b320\s?i\b",
             "bodies": ["Berline", "Break", "Sedan", "Stationwagon"],
         },
         60,
@@ -228,7 +228,7 @@ PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
             "year_from": 2008,
             "year_to": 2014,
             "query": "318i",
-            "motor_regex": r"\b318i\b",
+            "motor_regex": r"\b318\s?i\b",
             "bodies": ["Berline", "Break", "Sedan", "Stationwagon"],
         },
         60,
@@ -267,7 +267,7 @@ PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
             "query": "320i",
             "ez_from": 2008,
             "ez_to": 2014,
-            "motor_regex": r"\b320i\b",
+            "motor_regex": r"\b320\s?i\b",
         },
         60,
     ),
@@ -279,7 +279,7 @@ PHASE4_SEARCHES: list[tuple[str, str, dict[str, object], int]] = [
             "query": "318i",
             "ez_from": 2008,
             "ez_to": 2014,
-            "motor_regex": r"\b318i\b",
+            "motor_regex": r"\b318\s?i\b",
         },
         60,
     ),

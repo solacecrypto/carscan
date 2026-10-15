@@ -34,6 +34,7 @@ def test_watchlist_matches_hand_seeded_searches() -> None:
     assert by_source["automobile_it"][0].params == hand["automobile_it"]
     assert by_source["bytbil"][0].params == hand["bytbil"]
     assert {s.params["query"] for s in by_source["kleinanzeigen"]} == {"318i", "320i"}
+    assert by_source["kleinanzeigen"][0].params["motor_regex"] in (r"\b318\s?i\b", r"\b320\s?i\b")
     assert {s.params["query"] for s in by_source["tweedehands_be"]} == {"318i", "320i"}
     nl = {src: p for _, src, p in COMPARABLE_SEARCHES}
     assert by_source["autoscout24_nl"][0].params == nl["autoscout24_nl"]
@@ -49,9 +50,10 @@ def test_sync_is_idempotent_and_prunes(db: Session) -> None:
     db.add(u)
     db.commit()
     models = load_models()
+    total = sum(len(build_specs(m)) for m in models)
     r = sync(db, u, models)
     db.commit()
-    assert r["created"] == 12 and r["updated"] == 0
+    assert r["created"] == total and r["updated"] == 0
     assert sync(db, u, models) == {"created": 0, "updated": 0, "paused": 0}
     extra = dict(
         models[0],
@@ -84,9 +86,53 @@ def test_sync_adopts_hand_seeded_searches(db: Session) -> None:
     CliRunner().invoke(cli, ["searches", "seed-phase4", "--owner", "q"])
     assert db.scalar(select(func.count()).select_from(SavedSearch)) == 13
     u = db.scalar(select(User))
-    r2 = sync(db, u, load_models(), prune=True)  # type: ignore[arg-type]
+    models = load_models()
+    total = sum(len(build_specs(m)) for m in models)
+    r2 = sync(db, u, models, prune=True)  # type: ignore[arg-type]
     db.commit()
-    assert r2["created"] == 0 and r2["updated"] == 12 and r2["paused"] == 1
-    assert db.scalar(select(func.count()).select_from(SavedSearch)) == 13
+    assert r2["created"] == total - 12 and r2["updated"] == 12 and r2["paused"] == 1
+    assert db.scalar(select(func.count()).select_from(SavedSearch)) == total + 1
     gp = db.scalar(select(SavedSearch).where(SavedSearch.source == "gaspedaal"))
     assert gp is not None and not gp.active
+
+
+def test_new_watchlist_entries_build() -> None:
+    import re
+
+    from app.watchlist import _motor_regex
+
+    entries = {m["key"]: m for m in load_models()}
+    assert len(entries) == 11
+    golf = {s.source: s for s in build_specs(entries["vw-golf-6"])}
+    assert golf["autoscout24_de"].params["cat"].startswith("ma74gr100101ge6")
+    assert (
+        golf["kleinanzeigen"].params["attributes"] == ["autos.model_s:golf"]
+        and golf["kleinanzeigen"].params["query"] == ""
+    )
+    assert (
+        golf["marktplaats"].params["query"] == "golf tsi"
+        and golf["marktplaats"].role == "comparables"
+    )
+    assert (
+        golf["autoscout24_it"].params["models"] == ["Golf"]
+        and "motor_regex" in golf["autoscout24_it"].params
+    )
+    rx = re.compile(golf["kleinanzeigen"].params["motor_regex"], re.I)
+    assert (
+        rx.search("VW Golf 1.4 TSI Highline")
+        and rx.search("Golf VI 1.2TSI")
+        and not rx.search("Golf 1.6 TDI")
+    )
+    merc = {s.source: s for s in build_specs(entries["mb-c-w204"])}
+    rx = re.compile(merc["kleinanzeigen"].params["motor_regex"], re.I)
+    assert (
+        rx.search("Mercedes C 180 Kompressor")
+        and rx.search("C200 CGI")
+        and not rx.search("C 220 CDI")
+    )
+    assert merc["marktplaats"].params["bodies"] == ["Sedan", "Stationwagon"] and merc[
+        "tweedehands_be"
+    ].params["bodies"] == ["Sedan", "Berline", "Stationwagon", "Break"]
+    assert _motor_regex(["E200"]) == r"\bE\s?200\b"
+    total = sum(len(build_specs(m)) for m in entries.values())
+    assert total > 90

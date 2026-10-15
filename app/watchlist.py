@@ -74,17 +74,27 @@ def load_models(path: Path = MODELS_PATH) -> list[dict[str, Any]]:
 
 
 def _motor_regex(motors: list[str], spaced: bool = False) -> str:
-    if spaced:  # Bytbil writes "320 i"
-        parts = [re.escape(m[:-1]) + r"\s?" + re.escape(m[-1:]) for m in motors]
-    else:
-        parts = [re.escape(m) for m in motors]
+    """Title pattern for engine names; tolerant of '320 i', 'C 180', '1.4TSI' spellings."""
+
+    def flex(m: str) -> str:
+        out = ""
+        for a, b in zip(m, m[1:] + " ", strict=True):
+            if a == " ":
+                out += r"\s?"
+                continue
+            out += re.escape(a)
+            if b != " " and (a.isdigit() != b.isdigit()) and b.isalnum():
+                out += r"\s?"
+        return out
+
+    parts = [flex(m) for m in motors]
     alts = "|".join(parts)
     return rf"\b{alts}\b" if len(parts) == 1 else rf"\b({alts})\b"
 
 
 def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
     """Translate one watchlist entry into search specs for each configured source."""
-    label, make = model["label"], model["make"]
+    label = model["label"]
     y0, y1 = model["years"]
     fuel = model.get("fuel", "petrol")
     motors: list[str] = model.get("motors") or []
@@ -106,6 +116,7 @@ def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
         "fregfrom": y0,
         "fregto": y1,
         "body": ",".join(sorted(AS24_BODY[b] for b in bodies if b in AS24_BODY)) or None,
+        "priceto": model.get("price_max"),
     }
     as24_common = {k: v for k, v in as24_common.items() if v is not None}
     for role, sources in (
@@ -127,6 +138,9 @@ def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
                         "path": as24["it_path"],
                         "cy": "I",
                         "models": as24.get("it_models") or [],
+                        "motor_regex": _motor_regex(motors)
+                        if as24.get("it_motor_regex") and motors
+                        else None,
                         **as24_common,
                     },
                 )
@@ -138,37 +152,61 @@ def build_specs(model: dict[str, Any]) -> list[SearchSpec]:
                     else {k: v[:1] for k, v in MP_BODY.items()}
                 )
                 mp_bodies = [x for b in bodies for x in labels.get(b, [])]
-                for motor in motors or [""]:
+                base = {
+                    "l2CategoryId": mp["make_id"],
+                    "model": mp["model"],
+                    "fuel": MP_FUEL.get(fuel, "Benzine"),
+                    "year_from": y0,
+                    "year_to": y1,
+                    "bodies": mp_bodies,
+                }
+                if mp.get("query") or not motors:
                     add(
                         source,
                         role,
                         {
-                            "l2CategoryId": mp["make_id"],
-                            "model": mp["model"],
-                            "fuel": MP_FUEL.get(fuel, "Benzine"),
-                            "year_from": y0,
-                            "year_to": y1,
-                            "query": motor or mp["model"],
-                            "motor_regex": _motor_regex([motor]) if motor else None,
-                            "bodies": mp_bodies,
-                        }
-                        | ({} if motor else {}),
-                        suffix=motor,
+                            **base,
+                            "query": mp.get("query") or mp["model"],
+                            "motor_regex": _motor_regex(motors) if motors else None,
+                        },
                     )
+                else:
+                    for motor in motors:
+                        add(
+                            source,
+                            role,
+                            {**base, "query": motor, "motor_regex": _motor_regex([motor])},
+                            suffix=motor,
+                        )
             elif source == "kleinanzeigen" and ka.get("make"):
-                for motor in motors or [make.lower()]:
+                attrs = [f"autos.model_s:{ka['model']}"] if ka.get("model") else []
+                if ka.get("model") or ka.get("query") or not motors:
                     add(
                         source,
                         role,
                         {
                             "make": ka["make"],
-                            "query": motor,
+                            "query": ka.get("query", ""),
                             "ez_from": y0,
                             "ez_to": y1,
-                            "motor_regex": _motor_regex([motor]) if motors else None,
+                            "attributes": attrs or None,
+                            "motor_regex": _motor_regex(motors) if motors else None,
                         },
-                        suffix=motor,
                     )
+                else:
+                    for motor in motors:
+                        add(
+                            source,
+                            role,
+                            {
+                                "make": ka["make"],
+                                "query": motor,
+                                "ez_from": y0,
+                                "ez_to": y1,
+                                "motor_regex": _motor_regex([motor]),
+                            },
+                            suffix=motor,
+                        )
             elif source == "automobile_it" and am.get("path"):
                 add(
                     source,

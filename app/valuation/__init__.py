@@ -15,6 +15,7 @@ __all__ = [
     "ValuationConfig",
     "ValueEstimate",
     "estimate_value",
+    "load_comps",
     "recompute_values",
 ]
 

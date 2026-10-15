@@ -42,8 +42,8 @@ def build_search_url(params: dict[str, Any], page: int) -> str:
     ]
     for extra in params.get("attributes") or []:
         attrs.append(str(extra))
-    seite = f"seite:{page}/" if page > 1 else ""
-    return f"{ORIGIN}{base}/{make}/{seite}{query}/k0c216+{'+'.join(attrs)}"
+    segments = [make] + ([f"seite:{page}"] if page > 1 else []) + ([query] if query else [])
+    return f"{ORIGIN}{base}/{'/'.join(segments)}/k0c216+{'+'.join(attrs)}"
 
 
 def parse_articles(html: str) -> list[dict[str, Any]]:

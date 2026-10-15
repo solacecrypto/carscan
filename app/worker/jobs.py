@@ -11,10 +11,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.alerts import notify_admin, queue_alerts
+from app.costs import landed_cost
 from app.db import ScrapeRun, ScrapeStatus, db_session
 from app.db.models import Listing, SavedSearch
 from app.insights import analyze_pending, default_analyzer
-from app.normalize import RawListing
+from app.normalize import NormalizedListing, RawListing
 from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, get_scraper
 from app.storage import (
     deactivate_missing,
@@ -23,7 +24,8 @@ from app.storage import (
     upsert_comparables,
     upsert_listings,
 )
-from app.valuation import recompute_values
+from app.valuation import load_comps, recompute_values
+from app.valuation.engine import Target, ValuationConfig, estimate_value
 
 log = structlog.get_logger()
 
@@ -70,10 +72,11 @@ def run_saved_search(
             search.role,
         )
 
-    if insights_budget is None:
-        from app.config import get_settings
+    from app.config import get_settings
 
-        insights_budget = get_settings().insights_per_run
+    settings = get_settings()
+    if insights_budget is None:
+        insights_budget = settings.insights_per_run
     log.info("scrape.start", run_id=run_id, source=source, search=name)
     scraper = get_scraper(source)
     own_client = client is None
@@ -93,19 +96,26 @@ def run_saved_search(
                 )
                 price_changed = 0
             else:
-                _enrich_new(s, scraper, client, raws, detail_budget)
+                items = [scraper.parse(r) for r in raws]
+                chosen = _select_for_enrichment(s, raws, items, settings.detail_min_spread_eur)
+                _enrich_new(s, scraper, client, chosen, detail_budget)
                 items = [scraper.parse(r) for r in raws]
                 result = upsert_listings(s, items, search, now)
                 stale = deactivate_missing(s, search, run_started_at=started)
                 dedup = link_duplicates(s, result.new, now)
                 if dedup.linked:
                     log.info("scrape.dedup", linked=dedup.linked, checked=dedup.checked)
+                recompute_values(s, now)
                 analyzer = default_analyzer() if insights_budget else None
                 if analyzer and result.new:
-                    counts = analyze_pending(
-                        s, analyzer, now, insights_budget, [x.id for x in result.new]
-                    )
-                    log.info("scrape.insights", **counts)
+                    floor = settings.insights_min_spread_eur
+                    ids = [
+                        x.id
+                        for x in result.new
+                        if floor is None or x.spread_eur is None or x.spread_eur >= floor
+                    ]
+                    counts = analyze_pending(s, analyzer, now, insights_budget, ids)
+                    log.info("scrape.insights", candidates=len(ids), **counts)
                 alerts = queue_alerts(s, search, result, now)
                 summary = RunSummary(
                     run_id,
@@ -151,6 +161,39 @@ def run_saved_search(
     finally:
         if own_client:
             client.close()
+
+
+def _select_for_enrichment(
+    s: Session, raws: list[RawListing], items: list[NormalizedListing], min_spread: int | None
+) -> list[RawListing]:
+    """Detail pages only for cars whose provisional spread (search data + current comparables)
+    clears the floor. Cars the valuation cannot price yet always qualify."""
+    if min_spread is None:
+        return raws
+    from app.costs import get_cost_config
+
+    comps = load_comps(s)
+    vcfg = ValuationConfig.from_mapping(get_cost_config().valuation)
+    chosen: list[RawListing] = []
+    for raw, item in zip(raws, items, strict=True):
+        lc = landed_cost(
+            price_eur=item.price_eur,
+            country=item.country,
+            first_registration=item.first_registration,
+            co2_g_km=item.co2_g_km,
+            fuel=item.fuel,
+            make=item.make,
+            model=item.model,
+        )
+        year = item.first_registration.year if item.first_registration else None
+        est = estimate_value(Target(item.model, item.body_type, year, item.mileage_km), comps, vcfg)
+        if lc.total_eur is None or est is None or est.value_eur - lc.total_eur >= min_spread:
+            chosen.append(raw)
+    if len(chosen) < len(raws):
+        log.info(
+            "scrape.enrich.gated", eligible=len(chosen), total=len(raws), min_spread=min_spread
+        )
+    return chosen
 
 
 def _enrich_new(

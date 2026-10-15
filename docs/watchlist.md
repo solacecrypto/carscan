@@ -17,6 +17,16 @@ Adding a model therefore needs one investigation per site to find its codes (ten
 with the browser), then one file edit and one command. Diesel entries get no BPM estimate
 until the diesel tariff tables are added to `costs.yaml`.
 
+## Spread gating
+
+Two settings keep the expensive per-car steps proportional to opportunity:
+`DETAIL_MIN_SPREAD_EUR` (detail pages, i.e. description/photos/CO₂ fetches) and
+`INSIGHTS_MIN_SPREAD_EUR` (the Claude pass). A new car's spread is estimated from the search
+page alone; only cars at or above the floor get a detail fetch and an analysis. Cars the
+valuation cannot price yet (no comparables) always qualify, and a car that later drops in
+price is picked up by the next run. Empty value = no gating. `price_max` on a watchlist entry
+adds a price cap to the AutoScout24 queries (fewer pages).
+
 ## Roadmap after the watchlist
 
 1. **Recency sweeps**: collect every new ad in a coarse segment (fuel, years, price band)

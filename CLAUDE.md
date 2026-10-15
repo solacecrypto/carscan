@@ -190,6 +190,7 @@ Not yet verified: a real `docker compose up` (no Docker on the dev Mac) and a re
 bot session; both need to be exercised on the VPS. Tests use `pgserver` (embedded Postgres).
 
 Dev notes:
-- Migrations: while nothing is deployed, the single initial migration is regenerated with
-  `alembic revision --autogenerate` against an embedded Postgres instead of adding new ones.
+- Migrations: **the schema is deployed (Railway, 2026-10-14)**. Every schema change now needs a
+  new incremental revision (`alembic revision --autogenerate -m "..."` against an embedded
+  Postgres with the current head applied), never a regenerated initial migration.
 - `tests/fixtures/` HTML is scrubbed of personal data; never commit raw downloads.

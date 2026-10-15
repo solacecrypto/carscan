@@ -211,3 +211,60 @@ def test_claude_analyzer_request_shape_and_refusal() -> None:
     )
     assert an("x", "please refuse").status == "refused"
     assert "truncated" in build_user_message("t", "x" * 20_000)
+
+
+def test_enrichment_gating_by_provisional_spread(db: Session, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from datetime import date
+
+    from app.db import Comparable
+    from app.normalize import NormalizedListing, RawListing
+    from app.worker.jobs import _select_for_enrichment
+
+    # six NL comparables at ~€9,000 for 320i estates of 2012
+    for i in range(6):
+        db.add(
+            Comparable(
+                source="autoscout24_nl",
+                source_listing_id=f"c{i}",
+                url="u",
+                make="BMW",
+                model="320i",
+                body_type="estate",
+                first_registration=date(2012, 1, 1),
+                mileage_km=150_000 + i * 1000,
+                price_eur=9000 + i * 100,
+                seller_type=SellerType.dealer,
+                first_seen=NOW,
+                last_seen=NOW,
+                is_active=True,
+            )
+        )
+    db.commit()
+
+    def item(sid: str, price: int, model: str = "320i") -> NormalizedListing:
+        return NormalizedListing(
+            source="autoscout24_de",
+            source_listing_id=sid,
+            url="u",
+            make="BMW",
+            model=model,
+            body_type="estate",
+            price_eur=price,
+            mileage_km=150_000,
+            first_registration=date(2012, 6, 1),
+            fuel="petrol",
+            seller_type=SellerType.dealer,
+            country="DE",
+        )
+
+    raws = [
+        RawListing(source="autoscout24_de", source_listing_id=s, url="u", data={}, fetched_at=NOW)
+        for s in ("cheap", "dear", "unknown")
+    ]
+    items = [item("cheap", 4000), item("dear", 9500), item("unknown", 4000, model="520i")]
+    chosen = _select_for_enrichment(db, raws, items, 0)
+    assert [r.source_listing_id for r in chosen] == [
+        "cheap",
+        "unknown",
+    ]  # dear car has negative spread; unknown model has no comps
+    assert len(_select_for_enrichment(db, raws, items, None)) == 3

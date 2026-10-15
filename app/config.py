@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr = SecretStr("")
     claude_model: str = "claude-opus-5-5"
     insights_per_run: int = 40
+    # spread gating: only fetch detail pages / run Claude for cars at or above this spread
+    # (cars without an NL value yet always qualify). Empty = no gating.
+    detail_min_spread_eur: int | None = 0
+    insights_min_spread_eur: int | None = 0
 
     @field_validator("database_url")
     @classmethod

@@ -28,3 +28,208 @@ models:
     sources:
       deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
       comparables: [autoscout24_nl, marktplaats]   # gaspedaal blocks datacenter IPs; add it back if that changes
+
+  - key: vw-golf-6
+    label: "VW Golf VI 1.2/1.4 TSI"
+    make: Volkswagen
+    years: [2009, 2013]
+    fuel: petrol
+    motors: ["1.2 TSI", "1.4 TSI"]
+    bodies: []                       # hatchbacks: no body filter
+    autoscout24:
+      path: /lst/volkswagen/golf
+      cat: "ma74gr100101ge6mt414,ma74gr100101ge6mt420,ma74gr100101ge6mt416"
+      it_path: /lst/volkswagen/golf
+      it_models: ["Golf"]
+      it_motor_regex: true
+    marktplaats: {make_id: 157, model: "Golf", query: "golf tsi"}
+    kleinanzeigen: {make: volkswagen, model: golf}
+    automobile_it: {path: /volkswagen-golf}
+    bytbil: {make: Volkswagen, model: Golf}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: vw-golf-7
+    label: "VW Golf VII 1.2/1.4 TSI"
+    make: Volkswagen
+    years: [2013, 2016]
+    fuel: petrol
+    motors: ["1.2 TSI", "1.4 TSI"]
+    bodies: []
+    autoscout24:
+      path: /lst/volkswagen/golf
+      cat: "ma74gr100101ge7mt414,ma74gr100101ge7mt420"
+      it_path: /lst/volkswagen/golf
+      it_models: ["Golf"]
+      it_motor_regex: true
+    marktplaats: {make_id: 157, model: "Golf", query: "golf 7 tsi"}
+    kleinanzeigen: {make: volkswagen, model: golf}
+    automobile_it: {path: /volkswagen-golf}
+    bytbil: {make: Volkswagen, model: Golf}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: vw-passat-b6-b7
+    label: "VW Passat B6/B7 1.4/1.8 TSI"
+    make: Volkswagen
+    years: [2008, 2014]
+    fuel: petrol
+    motors: ["1.4 TSI", "1.8 TSI"]
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/volkswagen/passat
+      cat: "ma74gr100100ge215mt543,ma74gr100100ge215mt552,ma74gr100100ge216mt543,ma74gr100100ge216mt552"
+      it_path: /lst/volkswagen/passat
+      it_models: ["Passat"]
+      it_motor_regex: true
+    marktplaats: {make_id: 157, model: "Passat", query: "passat tsi"}
+    kleinanzeigen: {make: volkswagen, model: passat}
+    automobile_it: {path: /volkswagen-passat}
+    bytbil: {make: Volkswagen, model: Passat}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: mb-c-w204
+    label: "Mercedes C W204 C180/C200"
+    make: Mercedes-Benz
+    years: [2007, 2014]
+    fuel: petrol
+    motors: ["C180", "C200"]
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/mercedes-benz/c-klasse
+      cat: "ma47gr100056ge11mt292,ma47gr100056ge11mt293"
+      it_path: /lst/mercedes-benz/classe-c
+      it_models: ["C 180", "C 200"]
+    marktplaats: {make_id: 130, model: "C-Klasse"}
+    kleinanzeigen: {make: mercedes_benz, model: c_klasse}
+    automobile_it: {path: /mercedes_benz-classe_c}
+    bytbil: {make: Mercedes-Benz, model: C-Klass}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: mb-e-w212
+    label: "Mercedes E W212 E200/E250"
+    make: Mercedes-Benz
+    years: [2009, 2015]
+    fuel: petrol
+    motors: ["E200", "E250"]
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/mercedes-benz/e-klasse
+      cat: "ma47gr100061ge34mt446,ma47gr100061ge34mt450"
+      it_path: /lst/mercedes-benz/classe-e
+      it_models: ["E 200", "E 250"]
+    marktplaats: {make_id: 130, model: "E-Klasse"}
+    kleinanzeigen: {make: mercedes_benz, model: e_klasse}
+    automobile_it: {path: /mercedes_benz-classe_e}
+    bytbil: {make: Mercedes-Benz, model: E-Klass}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: audi-a4-b8
+    label: "Audi A4 B8 1.8/2.0 TFSI"
+    make: Audi
+    years: [2008, 2015]
+    fuel: petrol
+    motors: ["1.8 TFSI", "2.0 TFSI"]
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/audi/a4
+      cat: "ma9gr1626ge133mt165,ma9gr1626ge133mt171"
+      it_path: /lst/audi/a4
+      it_models: ["A4"]
+      it_motor_regex: true
+    marktplaats: {make_id: 93, model: "A4", query: "a4 tfsi"}
+    kleinanzeigen: {make: audi, model: a4}
+    automobile_it: {path: /audi-a4}
+    bytbil: {make: Audi, model: A4}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: audi-a3-8p
+    label: "Audi A3 8P 1.2/1.4/1.8 TFSI"
+    make: Audi
+    years: [2008, 2013]
+    fuel: petrol
+    motors: ["1.2 TFSI", "1.4 TFSI", "1.8 TFSI"]
+    bodies: []
+    autoscout24:
+      path: /lst/audi/a3
+      cat: "ma9gr1624ge152mt228,ma9gr1624ge152mt229,ma9gr1624ge152mt239"
+      it_path: /lst/audi/a3
+      it_models: ["A3"]
+      it_motor_regex: true
+    marktplaats: {make_id: 93, model: "A3", query: "a3 tfsi"}
+    kleinanzeigen: {make: audi, model: a3}
+    automobile_it: {path: /audi-a3}
+    bytbil: {make: Audi, model: A3}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: bmw-1er-e87
+    label: "BMW 1 E81/E87/F20 116i/118i"
+    make: BMW
+    years: [2007, 2013]
+    fuel: petrol
+    motors: ["116i", "118i"]
+    bodies: []
+    autoscout24:
+      path: /lst/bmw/1er
+      cat: "ma13gr100037ge191mt519,ma13gr100037ge191mt521,ma13gr100037ge192mt519,ma13gr100037ge192mt521"
+      it_path: /lst/bmw/serie-1
+      it_models: ["116", "118"]
+    marktplaats: {make_id: 96, model: "1-Serie"}
+    kleinanzeigen: {make: bmw, model: 1er}
+    automobile_it: {path: /bmw-serie_1}
+    bytbil: {make: BMW, model: 1-serien}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: bmw-3er-f30
+    label: "BMW F30/F31 316i/320i/328i"
+    make: BMW
+    years: [2012, 2015]
+    fuel: petrol
+    motors: ["316i", "320i", "328i"]
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/bmw/3er
+      cat: "ma13gr100038ge26mt101,ma13gr100038ge26mt103,ma13gr100038ge26mt115"
+      it_path: /lst/bmw/serie-3
+      it_models: ["316", "320", "328"]
+    marktplaats: {make_id: 96, model: "3-Serie"}
+    kleinanzeigen: {make: bmw, model: 3er}
+    automobile_it: {path: /bmw-serie_3}
+    bytbil: {make: BMW, model: 3-serien}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
+
+  - key: bmw-5er-f10
+    label: "BMW 5 F10/F11 520i/523i/528i"
+    make: BMW
+    years: [2010, 2013]
+    fuel: petrol
+    motors: ["520i", "523i", "528i"]
+    bodies: [sedan, estate]
+    autoscout24:
+      path: /lst/bmw/5er
+      cat: "ma13gr100039ge126mt477,ma13gr100039ge126mt478,ma13gr100039ge126mt486"
+      it_path: /lst/bmw/serie-5
+      it_models: ["520", "523", "528"]
+    marktplaats: {make_id: 96, model: "5-Serie"}
+    kleinanzeigen: {make: bmw, model: 5er}
+    automobile_it: {path: /bmw-serie_5}
+    bytbil: {make: BMW, model: 5-serien}
+    sources:
+      deals: [autoscout24_de, autoscout24_be, autoscout24_it, tweedehands_be, kleinanzeigen, automobile_it, bytbil]
+      comparables: [autoscout24_nl, marktplaats]
