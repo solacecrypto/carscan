@@ -10,6 +10,7 @@ from __future__ import annotations
 import random
 import re
 import time
+import unicodedata
 from collections.abc import Callable
 from datetime import datetime
 from typing import Protocol
@@ -24,7 +25,7 @@ from app.db.models import Listing, ListingInsight
 
 log = structlog.get_logger()
 
-MAX_CHUNK = 4000  # characters per request; ads are rarely longer than this
+MAX_CHUNK = 1500  # characters per request
 _UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/129.0 Safari/537.36"
@@ -32,7 +33,15 @@ _UA = (
 
 
 class TranslateError(Exception):
-    pass
+    def __init__(self, message: str, permanent: bool = False) -> None:
+        super().__init__(message)
+        self.permanent = permanent  # the text itself is rejected; retrying will not help
+
+
+def normalize(text: str) -> str:
+    """Fold styled Unicode (𝐁𝐎𝐋𝐃, ｆｕｌｌｗｉｄｔｈ) to plain letters so sellers' decorated ads
+    translate like any other and stay small on the wire."""
+    return unicodedata.normalize("NFKC", text)
 
 
 class Translator(Protocol):
@@ -83,13 +92,16 @@ class GoogleTranslator:
 
     def translate(self, text: str) -> str:
         parts = []
-        for chunk in chunks(text):
-            r = self._client.get(
+        for chunk in chunks(normalize(text)):
+            r = self._client.post(
                 self.url,
-                params={"client": "gtx", "sl": "auto", "tl": "en", "dt": "t", "q": chunk},
+                params={"client": "gtx", "sl": "auto", "tl": "en", "dt": "t"},
+                data={"q": chunk},
             )
             if r.status_code != 200:
-                raise TranslateError(f"google translate HTTP {r.status_code}")
+                raise TranslateError(
+                    f"google translate HTTP {r.status_code}", permanent=r.status_code == 400
+                )
             try:
                 data = r.json()
                 parts.append("".join(seg[0] for seg in data[0] if seg and seg[0]))
@@ -110,10 +122,10 @@ class DeepLTranslator:
 
     def translate(self, text: str) -> str:
         parts = []
-        for chunk in chunks(text):
+        for chunk in chunks(normalize(text)):
             r = self._client.post(self.url, json={"text": [chunk], "target_lang": "EN"})
             if r.status_code != 200:
-                raise TranslateError(f"deepl HTTP {r.status_code}")
+                raise TranslateError(f"deepl HTTP {r.status_code}", permanent=r.status_code == 400)
             parts.append(r.json()["translations"][0]["text"])
         return "".join(parts)
 
@@ -215,6 +227,10 @@ def translate_pending(
         except (TranslateError, httpx.HTTPError) as e:
             log.warning("translate.failed", listing=row.id, provider=translator.name, error=str(e))
             counts["failed"] += 1
+            if isinstance(e, TranslateError) and e.permanent:
+                row.description_en = ""  # rejected text: show the original, don't retry
+                session.commit()
+                continue
             return counts
         session.commit()
     # cars translated earlier whose tags gained evidence since (re-tagging, rule updates)

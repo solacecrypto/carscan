@@ -29,7 +29,7 @@ def test_chunks_respect_limit_and_keep_text() -> None:
 
 def test_google_translator_parses_the_public_endpoint() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.params["q"] == "Steuerkette erneuert"
+        assert request.method == "POST" and b"q=Steuerkette+erneuert" in request.content
         return httpx.Response(
             200, json=[[["Timing chain replaced", "Steuerkette erneuert"]], None, "de"]
         )
@@ -94,3 +94,25 @@ def test_translate_pending_also_fills_evidence_on_older_cars(db: Session) -> Non
     counts = translate_pending(db, FakeTranslator(), NOW, limit=5, sleep=lambda _: None)
     assert counts == {"translated": 0, "evidence": 1, "failed": 0}
     assert row.insight.tags[0]["evidence_en"] == "EN: Motorschaden."
+
+
+def test_styled_unicode_is_folded_and_rejected_text_is_skipped(db: Session) -> None:
+    from app.translate import normalize
+
+    assert normalize("𝐆𝐎𝐋𝐅 𝟏.𝟒 𝐓𝐒𝐈 ｆｕｌｌ") == "GOLF 1.4 TSI full"
+
+    class Rejecting:
+        name = "fake"
+
+        def translate(self, text: str) -> str:
+            if "bad" in text:
+                raise TranslateError("HTTP 400", permanent=True)
+            return "EN: " + text
+
+    bad = _listing(db, "bad", "bad text", spread_eur=900)
+    good = _listing(db, "good", "fine text", spread_eur=100)
+    db.commit()
+    counts = translate_pending(db, Rejecting(), NOW, limit=5, sleep=lambda _: None)
+    assert counts["translated"] == 1 and counts["failed"] == 1
+    assert bad.description_en == "" and good.description_en == "EN: fine text"
+    assert translate_pending(db, Rejecting(), NOW, limit=5, sleep=lambda _: None)["failed"] == 0
