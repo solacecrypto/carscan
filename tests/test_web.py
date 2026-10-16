@@ -433,3 +433,23 @@ def test_detail_page_shows_the_repair_box(client: TestClient, seeded: dict, db: 
     from app.web.templating import eur
 
     assert f"incl. ≈ {eur(row.repair_cost_eur)} repairs" in page
+
+
+def test_paperwork_filter_and_box(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.insights.service import apply_rules
+
+    row = seeded["a"]
+    row.description = "Unfallfrei. TÜV bis 06/2027. Fahrzeugbrief und Fahrzeugschein vorhanden."
+    apply_rules(row, NOW)
+    db.commit()
+    page = client.get(f"/listings/{row.id}").text
+    assert "Paperwork" in page and "valid until 06/2027" in page and "3 of 4 mentioned" in page
+    results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
+    assert "320i" in results("/listings?paperwork=tuv")
+    assert "320i" in results("/listings?paperwork=all")
+    row.description = "Unfallfrei, TÜV bis 06/2027."
+    apply_rules(row, NOW)
+    db.commit()
+    assert "320i" in results("/listings?paperwork=tuv")
+    assert "No listings match" in results("/listings?paperwork=all")
+    assert "TÜV + Teil I + Teil II" in client.get("/listings?paperwork=all").text

@@ -68,10 +68,34 @@ PATTERNS: list[tuple[str, str, str, str]] = [
         r"motorkontroll?leuchte|kontrollleuchte|warnleuchte|spia (motore|accesa)|storingslamp|motorlamp|motorstörning|voyant (moteur|allum[ée])",
     ),
     (
+        "papers_teil2",
+        "registration part II (Brief) mentioned",
+        "note",
+        r"fahrzeugbrief|kfz-brief|zulassungsbescheinigung teil (ii|2)\b|\bteil ii\b|\bbrief vorhanden|inschrijvingsbewijs|certificato di propriet[àa]|registreringsbevis",
+    ),
+    (
+        "papers_teil1",
+        "registration part I (Schein) mentioned",
+        "note",
+        r"fahrzeugschein|zulassungsbescheinigung teil (i|1)\b|\bteil i\b|kentekenbewijs|libretto di circolazione|carta di circolazione",
+    ),
+    (
+        "papers_coc",
+        "COC paper mentioned",
+        "note",
+        r"\bcoc\b|certificate of conformity|übereinstimmungsbescheinigung|gelijkvormigheidsattest|certificato di conformit",
+    ),
+    (
+        "tuv_report",
+        "inspection report mentioned",
+        "note",
+        r"pr[üu]fbericht|t[üu]v[- ]?bericht|hu[- ]?bericht|keuringsrapport|keuringsbewijs|certificato di revisione|besiktningsprotokoll",
+    ),
+    (
         "tuv_new",
         "TÜV / inspection new",
         "good",
-        r"t[üu]v\W{0,8}(neu|nieuw|new|\d{2}[./]\d{2,4})|hu\W{0,3}(neu|\d{2}[./]\d{2,4})|apk\W{0,8}(nieuw|tot|t/m)|revisione (fatta|nuova|appena)|besiktigad|nybesiktigad|contr[ôo]le technique (ok|r[ée]cent|vierge)",
+        r"(t[üu]v|\bhu|hauptuntersuchung)\W{0,3}(bis|g[üu]ltig(?: bis)?|until|valid|neu bis|=|:)?\W{0,4}(neu|nieuw|new|\d{1,2}[./]\d{2,4}|20\d{2})|apk\W{0,8}(nieuw|tot|t/m|geldig)|revisione (fatta|nuova|appena|valida)|besiktigad|nybesiktigad|contr[ôo]le technique (ok|r[ée]cent|vierge|valable)",
     ),
     (
         "full_history",
@@ -138,6 +162,7 @@ class Tag:
     label: str
     polarity: str
     evidence: str
+    until: str | None = None  # TÜV / inspection validity as "MM/YYYY" when the ad gives one
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -159,6 +184,27 @@ def _sentence_around(text: str, start: int, end: int) -> str:
     return re.sub(r"\s+", " ", text[left:right]).strip()[:220]
 
 
+_VALID_UNTIL = re.compile(r"(\d{1,2})[./-](\d{2,4})|\b(20\d{2})\b")
+
+
+def _with_validity(tag: Tag, text: str, pos: int) -> Tag:
+    """'TÜV bis 06/2027', 'HU 03/28', 'TÜV neu bis 2028' → until='06/2027' and a dated label."""
+    m = _VALID_UNTIL.search(text, pos, pos + 60)
+    if not m:
+        return tag
+    if m.group(3):
+        until = f"12/{m.group(3)}"
+    else:
+        month, year = int(m.group(1)), int(m.group(2))
+        if not 1 <= month <= 12:
+            return tag
+        year = year + 2000 if year < 100 else year
+        if not 2020 <= year <= 2040:
+            return tag
+        until = f"{month:02d}/{year}"
+    return Tag(tag.key, f"TÜV / inspection until {until}", tag.polarity, tag.evidence, until)
+
+
 def extract_tags(text: str | None) -> list[Tag]:
     if not text:
         return []
@@ -169,7 +215,10 @@ def extract_tags(text: str | None) -> list[Tag]:
         if not m or key in seen:
             continue
         seen.add(key)
-        tags.append(Tag(key, label, pol, _sentence_around(text, m.start(), m.end())))
+        tag = Tag(key, label, pol, _sentence_around(text, m.start(), m.end()))
+        if key == "tuv_new":
+            tag = _with_validity(tag, text, m.start())
+        tags.append(tag)
     # "accident" never wins over an explicit "accident-free" claim about the same text
     if "accident_free" in seen and "accident" in seen:
         tags = [t for t in tags if t.key != "accident"]
