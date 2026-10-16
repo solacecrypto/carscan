@@ -29,6 +29,7 @@ class NormalizedListing(BaseModel):
     model_key: str | None = None
     variant: str | None = None
     body_type: str | None = None
+    color: str | None = None  # canonical, see app.normalize.attrs
     engine_code: str | None = None
     fuel: str | None = None
     gearbox: str | None = None

@@ -164,7 +164,7 @@
     <dl class="grid grid-cols-2 gap-x-3 gap-y-1 rounded-xl bg-white p-4 text-sm shadow">
       {% for k, v in [('First registration', l.first_registration|month), ('Mileage', l.mileage_km|km),
                       ('Gearbox', l.gearbox), ('Fuel', l.fuel), ('Power', (l.power_kw ~ ' kW') if l.power_kw else None),
-                      ('Body', l.body_type), ('CO₂', (l.co2_g_km ~ ' g/km') if l.co2_g_km else None),
+                      ('Body', l.body_type), ('Colour', l.color), ('CO₂', (l.co2_g_km ~ ' g/km') if l.co2_g_km else None),
                       ('Location', (l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' (' ~ l.country ~ ')'),
                       ('Source', l.source), ('First seen', l.first_seen|timeago), ('Last seen', l.last_seen|timeago)] %}
       <dt class="text-ink-400">{{ k }}</dt><dd>{{ v or '–' }}</dd>

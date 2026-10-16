@@ -10,6 +10,7 @@ from app.db import Alert, AlertStatus, Comparable, Listing
 from app.deals import get_deal_for_listing, sync_from_alert_status
 from app.deals.calibration import model_accuracy
 from app.market import market_for_listing
+from app.normalize.attrs import BODIES, COLORS
 from app.storage.filters import apply_sql, parse_filters
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -69,6 +70,9 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "f": f,
         "query": _clean_query(request),
         "accuracy": model_accuracy(db),
+        "bodies": BODIES,
+        "colors": COLORS,
+        "swatches": SWATCHES,
     }
     if request.headers.get("HX-Request"):
         resp = templates.TemplateResponse(request, "listings/_results.html", ctx)
@@ -188,6 +192,13 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "trip": _trip(db, listing),
         },
     )
+
+
+SWATCHES = {
+    "black": "#111", "grey": "#8a8f98", "silver": "#c9ccd1", "white": "#f4f4f4", "blue": "#2457c5",
+    "red": "#c22", "green": "#2a8a3e", "brown": "#6b4a2b", "beige": "#d8c9a5", "yellow": "#e6c21a",
+    "orange": "#e5731a", "gold": "#c9a227", "purple": "#6f3fa0", "other": "#b0b0b0",
+}  # fmt: skip
 
 
 def _trip(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]

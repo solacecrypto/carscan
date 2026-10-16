@@ -18,6 +18,7 @@ from app.db import ScrapeRun, ScrapeStatus, db_session
 from app.db.models import Digest, Listing, SavedSearch
 from app.insights import analyze_pending, default_analyzer
 from app.normalize import NormalizedListing, RawListing
+from app.normalize.attrs import canonical_body
 from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, get_scraper
 from app.storage import (
     deactivate_missing,
@@ -173,12 +174,30 @@ def _apply_watchlist(
 ) -> list[NormalizedListing]:
     """Stamp the watchlist's canonical make and model key on every parsed listing."""
     make, key = params.get("make_label"), params.get("model_key")
+    hint = _model_bodies().get(key) if key else None
     for it in items:
         if make:
             it.make = make
         if key:
             it.model_key = key
+        it.body_type = canonical_body(it.body_type, hint)
     return items
+
+
+_BODIES_CACHE: dict[str, list[str]] | None = None
+
+
+def _model_bodies() -> dict[str, list[str]]:
+    """Watchlist model key -> bodies it covers (a hint for generic site labels)."""
+    global _BODIES_CACHE
+    if _BODIES_CACHE is None:
+        from app.watchlist import load_models
+
+        try:
+            _BODIES_CACHE = {m["key"]: list(m.get("bodies") or []) for m in load_models()}
+        except FileNotFoundError:
+            _BODIES_CACHE = {}
+    return _BODIES_CACHE
 
 
 def _select_for_enrichment(

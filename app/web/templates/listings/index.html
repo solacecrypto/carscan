@@ -10,6 +10,7 @@
   'year': (f.year_min or f.year_max) and true,
   'mileage': f.mileage_max and true,
   'gearbox': f.gearbox and true,
+  'bodycolor': (f.body or f.color) and true,
   'seller': f.seller_type and true,
   'country': f.country and true,
   'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok or f.tuv_min_months) and true,
@@ -28,6 +29,7 @@
   {%- elif name == 'year' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
   {%- elif name == 'mileage' %}<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M8 10v4M12 10v4M16 10v4"/>
   {%- elif name == 'gearbox' %}<path d="M6 4v16M12 4v16M18 4v8M6 12h12"/>
+  {%- elif name == 'bodycolor' %}<path d="M4 12a8 8 0 1116 0c0 2-1.5 3-3 3h-1a2 2 0 00-2 2v1a2 2 0 01-2 2 8 8 0 01-8-8z"/><circle cx="8" cy="11" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="16" cy="11" r="1"/>
   {%- elif name == 'seller' %}<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>
   {%- elif name == 'country' %}<path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.2"/>
   {%- elif name == 'condition' %}<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4"/>
@@ -141,6 +143,23 @@
 
       {% call row('gearbox', 'Transmission', f.gearbox if g.gearbox else '') %}
         {{ pills('gearbox', [('', 'any'), ('manual', 'manual'), ('automatic', 'automatic')], f.gearbox) }}
+      {% endcall %}
+
+      {% call row('bodycolor', 'Body and colour', ((f.body or [])|join(', ')) ~ (' · ' if f.body and f.color else '') ~ ((f.color or [])|join(', ')) if g.bodycolor else '') %}
+        <span class="label text-xs">Body</span>
+        <div class="mt-1 flex flex-wrap gap-1.5">
+          {% for b in bodies %}
+          <label class="cursor-pointer"><input type="checkbox" name="body" value="{{ b }}" class="peer sr-only" {{ 'checked' if f.body and b in f.body }}>
+            <span class="pill inline-block border border-white/15 px-3 py-1.5 text-xs text-ink-200 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ b }}</span></label>
+          {% endfor %}
+        </div>
+        <span class="label mt-2 block text-xs">Colour <span class="font-normal text-ink-400">(known for cars whose ad page we fetched)</span></span>
+        <div class="mt-1 flex flex-wrap gap-1.5">
+          {% for c in colors %}
+          <label class="cursor-pointer"><input type="checkbox" name="color" value="{{ c }}" class="peer sr-only" {{ 'checked' if f.color and c in f.color }}>
+            <span class="pill inline-flex items-center gap-1.5 border border-white/15 px-3 py-1.5 text-xs text-ink-200 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950"><span class="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-white/40" style="background:{{ swatches[c] }}"></span>{{ c }}</span></label>
+          {% endfor %}
+        </div>
       {% endcall %}
 
       {% call row('seller', 'Seller', f.seller_type if g.seller else '') %}

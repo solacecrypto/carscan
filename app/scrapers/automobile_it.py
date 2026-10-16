@@ -9,6 +9,7 @@ import structlog
 
 from app.db.models import SellerType
 from app.normalize import NormalizedListing, RawListing, scrub_text, to_eur
+from app.normalize.attrs import canonical_color
 from app.scrapers.autoscout24_de import extract_next_data
 from app.scrapers.base import register
 from app.scrapers.errors import ParseError
@@ -165,6 +166,7 @@ class AutomobileIt:
             model=m.group(1).lower() if m else "",
             variant=title,
             body_type=body,
+            color=canonical_color(((raw.detail or {}).get("info") or {}).get("Colore esterno")),
             fuel={
                 "benzina": "petrol",
                 "diesel": "diesel",

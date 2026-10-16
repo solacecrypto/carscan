@@ -10,6 +10,7 @@ import structlog
 
 from app.db.models import SellerType
 from app.normalize import NormalizedListing, RawListing, scrub, scrub_text, to_eur
+from app.normalize.attrs import canonical_color
 from app.scrapers.base import register
 from app.scrapers.errors import ParseError
 from app.scrapers.http import PoliteClient
@@ -236,6 +237,9 @@ class AutoScout24DE:
             model=_model_name(veh, dveh),
             variant=veh.get("modelVersionInput") or dveh.get("modelVersionInput"),
             body_type=BODY.get(body_src, body_src.lower() if body_src else None),
+            color=canonical_color(
+                dveh.get("bodyColorRaw") or dveh.get("bodyColor") or veh.get("bodyColorRaw")
+            ),
             fuel=FUEL.get(fuel_src, fuel_src.lower() if fuel_src else None),
             gearbox=GEARBOX.get(gearbox_src, gearbox_src.lower() if gearbox_src else None),
             power_kw=dveh.get("rawPowerInKw") or _kw(details.get("Leistung")),

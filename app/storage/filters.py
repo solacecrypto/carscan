@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import Select, extract, func
 
 from app.db.models import Listing, ListingInsight, SellerType
+from app.normalize.attrs import BODIES, COLORS
 
 FILTER_KEYS = (
     "make",
@@ -29,6 +30,8 @@ FILTER_KEYS = (
     "service_full",
     "papers_ok",
     "tuv_min_months",
+    "color",
+    "body",
 )
 
 
@@ -100,6 +103,8 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "gearbox": text("gearbox"),
         "seller_type": text("seller_type"),
         "country": _countries(countries) or None,
+        "color": [c for c in many("color") if c in COLORS] or None,
+        "body": [b for b in many("body") if b in BODIES] or None,
         "new_hours": num("new_hours"),
         "no_accident": flag("no_accident") or None,
         "no_export_only": flag("no_export_only") or None,
@@ -162,6 +167,10 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         keys = {t.get("key") for t in ((ins.tags if ins else None) or [])}
         if "papers_missing" in keys:
             return False
+    if f.get("color") and listing.color not in f["color"]:
+        return False
+    if f.get("body") and listing.body_type not in f["body"]:
+        return False
     if f.get("tuv_min_months"):
         until = ins.tuv_until if ins else None
         if until is None or until < _months_ahead(int(f["tuv_min_months"])):
@@ -206,6 +215,10 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
     countries = _countries(f.get("country"))
     if countries:
         stmt = stmt.where(Listing.country.in_(countries))
+    if f.get("color"):
+        stmt = stmt.where(Listing.color.in_(f["color"]))
+    if f.get("body"):
+        stmt = stmt.where(Listing.body_type.in_(f["body"]))
     insight_keys = (
         "no_accident",
         "no_export_only",

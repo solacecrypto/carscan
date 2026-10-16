@@ -9,6 +9,7 @@ from selectolax.lexbor import LexborHTMLParser
 
 from app.db.models import SellerType
 from app.normalize import NormalizedListing, RawListing, scrub_text, to_eur
+from app.normalize.attrs import canonical_color
 from app.scrapers.base import register
 from app.scrapers.errors import ParseError
 from app.scrapers.http import PoliteClient
@@ -203,6 +204,7 @@ class Kleinanzeigen:
             model=m.group(1).lower() if m else "",
             variant=title,
             body_type=body,
+            color=canonical_color(info.get("Außenfarbe")),
             fuel="petrol" if m and m.group(1).lower().endswith("i") else None,
             gearbox=gearbox,
             power_kw=round(int(kw.group(1)) * 0.7355) if kw else None,

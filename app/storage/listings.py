@@ -33,6 +33,7 @@ _UPDATABLE = (
     "model_key",
     "variant",
     "body_type",
+    "color",
     "engine_code",
     "fuel",
     "gearbox",

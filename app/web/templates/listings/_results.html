@@ -29,7 +29,7 @@
           </div>
         </div>
         <div class="text-sm text-ink-600">
-          {{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}{% if l.power_kw %} · {{ l.power_kw }} kW{% endif %}
+          {{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}{% if l.power_kw %} · {{ l.power_kw }} kW{% endif %}{% if l.body_type %} · {{ l.body_type }}{% endif %}{% if l.color %} · {{ l.color }}{% endif %}
         </div>
         <div class="flex flex-wrap gap-x-2 text-xs text-ink-400">
           {% if l.landed_cost_eur %}<span title="estimated landed cost{% if l.repair_cost_eur %}, including a rough repair estimate of {{ l.repair_cost_eur|eur }}{% endif %}">landed ≈ {{ l.landed_cost_eur|eur }}{% if l.repair_cost_eur %} <span class="pill bg-brand-100 text-brand-700">+{{ l.repair_cost_eur|eur }} repairs</span>{% endif %}</span>{% endif %}

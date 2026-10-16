@@ -54,6 +54,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.ruff.lint.per-file-ignores]
 "app/insights/rules.py" = ["E501"]  # multilingual regex dictionary
 "app/costs/repairs.py" = ["E501"]  # multilingual regex dictionary
+"app/normalize/attrs.py" = ["E501"]  # multilingual regex dictionary
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

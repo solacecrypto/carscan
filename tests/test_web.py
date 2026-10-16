@@ -527,3 +527,17 @@ def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, d
     store_digest(db, NOW, "http://localhost")
     db.commit()
     assert "Morning digest" in client.get("/digest").text
+
+
+def test_color_and_body_filters(client: TestClient, seeded: dict, db: Session) -> None:
+    row = seeded["a"]
+    row.color, row.body_type = "black", "estate"
+    db.commit()
+    results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
+    assert "320i" in results("/listings?color=black&color=blue")
+    assert "No listings match" in results("/listings?color=red")
+    assert "320i" in results("/listings?body=estate")
+    assert "No listings match" in results("/listings?body=sedan")
+    page = client.get("/listings?color=black").text
+    assert 'name="color" value="black" class="peer sr-only" checked' in page
+    assert "Body and colour" in page

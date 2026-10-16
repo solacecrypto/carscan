@@ -525,6 +525,39 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+@app.command("normalize")
+def normalize_cmd() -> None:
+    """Backfill canonical colour and body type on stored listings and comparables from raw."""
+    from sqlalchemy import select
+
+    from app.db import Comparable, Listing, db_session
+    from app.normalize.attrs import canonical_body, canonical_color
+    from app.worker.jobs import _model_bodies
+
+    def color_from_raw(row: Listing) -> str | None:
+        det = (row.raw or {}).get("detail") or {}
+        if row.source.startswith("autoscout24"):
+            veh = det.get("vehicle") or {}
+            return canonical_color(veh.get("bodyColorRaw") or veh.get("bodyColor"))
+        if row.source == "kleinanzeigen":
+            return canonical_color((det.get("details") or {}).get("Außenfarbe"))
+        if row.source == "automobile_it":
+            return canonical_color((det.get("info") or {}).get("Colore esterno"))
+        return None
+
+    hints = _model_bodies()
+    n = c = 0
+    with db_session() as s:
+        for row in s.scalars(select(Listing).order_by(Listing.id)):
+            row.color = color_from_raw(row) or row.color
+            row.body_type = canonical_body(row.body_type, hints.get(row.model_key or ""))
+            n += 1
+        for comp in s.scalars(select(Comparable).order_by(Comparable.id)):
+            comp.body_type = canonical_body(comp.body_type, hints.get(comp.model_key or ""))
+            c += 1
+    typer.echo(f"normalized {n} listings and {c} comparables")
+
+
 geo = typer.Typer(help="places and pickup distances")
 app.add_typer(geo, name="geo")
 
