@@ -414,6 +414,8 @@ def test_paperwork_tags_and_tuv_validity() -> None:
     assert tags["tuv_new"].label == "TÜV / inspection until 06/2027"
     assert "papers_missing" not in tags
     assert extract_tags("HU 03/28 neu")[0].until == "03/2028"
+    assert extract_tags("AU/HU-NEU")[0].key == "tuv_new"
+    assert extract_tags("HU 05/28")[0].until == "05/2028"
     assert extract_tags("TÜV neu bis 2028")[0].until == "12/2028"
     assert extract_tags("TÜV neu")[0].until is None
     assert extract_tags("TÜV 13/2027")[0].until is None  # not a month

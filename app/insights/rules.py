@@ -77,7 +77,7 @@ PATTERNS: list[tuple[str, str, str, str]] = [
         "tuv_new",
         "TÜV / inspection new",
         "good",
-        r"(t[üu]v|\bhu|hauptuntersuchung)\W{0,3}(bis|g[üu]ltig(?: bis)?|until|valid|neu bis|=|:)?\W{0,4}(neu|nieuw|new|\d{1,2}[./]\d{2,4}|20\d{2})|apk\W{0,8}(nieuw|tot|t/m|geldig)|revisione (fatta|nuova|appena|valida)|besiktigad|nybesiktigad|contr[ôo]le technique (ok|r[ée]cent|vierge|valable)",
+        r"(t[üu]v|(?<![a-z])hu|hauptuntersuchung)\W{0,3}(bis|g[üu]ltig(?: bis)?|until|valid|neu bis|=|:)?\W{0,4}(neu|nieuw|new|\d{1,2}[./]\d{2,4}|20\d{2})|apk\W{0,8}(nieuw|tot|t/m|geldig)|revisione (fatta|nuova|appena|valida)|besiktigad|nybesiktigad|contr[ôo]le technique (ok|r[ée]cent|vierge|valable)",
     ),
     (
         "full_history",
