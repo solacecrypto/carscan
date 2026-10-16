@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -47,6 +47,18 @@ def pending_listings(
     return rows
 
 
+def tuv_until_date(until: str | None) -> date | None:
+    """'06/2027' -> last day of that month (German inspections run to the end of the month)."""
+    if not until:
+        return None
+    try:
+        month, year = (int(x) for x in until.split("/"))
+        nxt = date(year + (month == 12), month % 12 + 1, 1)
+        return nxt - timedelta(days=1)
+    except ValueError:
+        return None
+
+
 def apply_rules(listing: Listing, now: datetime) -> ListingInsight | None:
     """Rule-based tags for a listing's description; keeps a Claude result if one is current."""
     text = listing.description or ""
@@ -74,6 +86,7 @@ def apply_rules(listing: Listing, now: datetime) -> ListingInsight | None:
         if en := had.get((t["key"], t.get("evidence"))):
             t["evidence_en"] = en
     ins.tags = new_tags
+    ins.tuv_until = next((tuv_until_date(t["until"]) for t in new_tags if t.get("until")), None)
     ins.accident = fields["accident"]
     ins.accident_evidence = fields["accident_evidence"]
     ins.timing_chain = fields["timing_chain"]

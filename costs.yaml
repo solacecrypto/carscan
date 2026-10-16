@@ -107,6 +107,7 @@ repairs:
   electrical: [150, 600]  # electrical fault
   battery: [100, 250]  # battery
   tyres_due: [300, 600]  # tyres
+  tuv_due: [150, 400]  # inspection runs out soon (Dutch APK + usual fixes)
   tuv_expired: [150, 400]  # inspection expired
   oil_consumption: [300, 2000]  # oil consumption
   oil_leak: [200, 800]  # oil leak

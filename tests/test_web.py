@@ -453,3 +453,15 @@ def test_paperwork_filter_and_box(client: TestClient, seeded: dict, db: Session)
     assert "Seller says papers are missing" in client.get(f"/listings/{row.id}").text
     assert "No listings match" in results("/listings?papers_ok=true")
     assert "320i" in results("/listings")
+
+
+def test_tuv_months_filter(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.insights.service import apply_rules
+
+    row = seeded["a"]
+    row.description = "TÜV bis 06/2027."
+    apply_rules(row, NOW)
+    db.commit()
+    results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
+    assert "320i" in results("/listings?tuv_min_months=3")
+    assert "No listings match" in results("/listings?tuv_min_months=36")

@@ -61,6 +61,7 @@ def apply_value(row: Listing, comps: list[Comp], cfg: ValuationConfig) -> ValueE
         gearbox=row.gearbox,
         fuel=row.fuel,
         power_kw=row.power_kw,
+        price_eur=row.price_eur,
     )
     est = estimate_value(target, comps, cfg)
     name = row.model or engine_token(row.variant)  # some sites leave the model blank

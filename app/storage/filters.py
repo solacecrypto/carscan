@@ -1,6 +1,7 @@
 """Saved-search filter criteria (the `filters` JSON), applied in Python for alerting
 and translated to SQL for the listings page."""
 
+from datetime import date
 from typing import Any
 
 from sqlalchemy import Select, extract, func
@@ -27,6 +28,7 @@ FILTER_KEYS = (
     "chain_replaced",
     "service_full",
     "papers_ok",
+    "tuv_min_months",
 )
 
 
@@ -104,6 +106,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "chain_replaced": flag("chain_replaced") or None,
         "service_full": flag("service_full") or None,
         "papers_ok": flag("papers_ok") or None,  # hide ads that say the papers are missing
+        "tuv_min_months": num("tuv_min_months"),  # inspection valid for at least this long
         "price_dropped": flag("price_dropped"),
         "include_inactive": flag("include_inactive"),
         "include_duplicates": flag("include_duplicates"),
@@ -159,7 +162,17 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         keys = {t.get("key") for t in ((ins.tags if ins else None) or [])}
         if "papers_missing" in keys:
             return False
+    if f.get("tuv_min_months"):
+        until = ins.tuv_until if ins else None
+        if until is None or until < _months_ahead(int(f["tuv_min_months"])):
+            return False
     return True
+
+
+def _months_ahead(months: int) -> date:
+    today = date.today()
+    y, m = divmod(today.month - 1 + months, 12)
+    return date(today.year + y, m + 1, min(today.day, 28))
 
 
 def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
@@ -193,9 +206,18 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
     countries = _countries(f.get("country"))
     if countries:
         stmt = stmt.where(Listing.country.in_(countries))
-    insight_keys = ("no_accident", "no_export_only", "chain_replaced", "service_full", "papers_ok")
+    insight_keys = (
+        "no_accident",
+        "no_export_only",
+        "chain_replaced",
+        "service_full",
+        "papers_ok",
+        "tuv_min_months",
+    )
     if any(f.get(k) for k in insight_keys):
         stmt = stmt.outerjoin(ListingInsight, ListingInsight.listing_id == Listing.id)
+        if f.get("tuv_min_months"):
+            stmt = stmt.where(ListingInsight.tuv_until >= _months_ahead(int(f["tuv_min_months"])))
         if f.get("papers_ok"):
             stmt = stmt.where(
                 (ListingInsight.tags.is_(None))

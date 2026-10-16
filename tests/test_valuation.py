@@ -308,3 +308,12 @@ def test_recompute_can_be_scoped_to_one_model(db: Session) -> None:
     db.flush()
     assert recompute_values(db, datetime.now(UTC), model_key="bmw-3er-e90") == 1
     assert rows[0].nl_value_eur != 1 and rows[1].nl_value_eur == 1
+
+
+def test_plausibility_flags() -> None:
+    comps = [_c(i, 2012, 150_000 + i * 1000, 8000 + i * 10) for i in range(6)]
+    est = estimate_value(Target("320i", "sedan", 2012, 40_000, price_eur=2500), comps, CFG)
+    assert est is not None
+    assert {f["key"] for f in est.flags} == {"low_mileage", "too_cheap"}
+    est = estimate_value(Target("320i", "sedan", 2012, 140_000, price_eur=6000), comps, CFG)
+    assert est is not None and est.flags == ()

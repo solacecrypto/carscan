@@ -63,6 +63,7 @@ class Target:
     gearbox: str | None = None
     fuel: str | None = None
     power_kw: int | None = None
+    price_eur: int | None = None  # the foreign asking price, for plausibility checks
 
 
 @dataclass(frozen=True)
@@ -80,10 +81,12 @@ class ValueEstimate:
     method: str = "median"  # "benchmark" when a close match sets the value
     benchmark: dict[str, Any] | None = None
     median_value_eur: int | None = None  # the median-based value, for context
+    flags: tuple[dict[str, str], ...] = ()  # plausibility warnings (too cheap, too few km)
 
     def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["nearest"] = list(self.nearest)
+        d["flags"] = list(self.flags)
         return d
 
 
@@ -206,6 +209,42 @@ def _closeness(target: Target, c: Comp, facts: dict[str, Any]) -> tuple[float, .
     )
 
 
+def _eur_fmt(text: str) -> str:
+    return text.replace(",", ".")
+
+
+def plausibility_flags(
+    target: Target, pool: list[Comp], asking_median: float
+) -> list[dict[str, str]]:
+    """Classic fraud and clocking tells, judged against the comparables actually used."""
+    flags: list[dict[str, str]] = []
+    kms = sorted(c.mileage_km for c in pool if c.mileage_km is not None)
+    if target.mileage_km is not None and len(kms) >= 5:
+        med_km = kms[len(kms) // 2]
+        if target.mileage_km < 0.5 * med_km and target.mileage_km < 80_000:
+            flags.append(
+                {
+                    "key": "low_mileage",
+                    "label": "mileage far below similar cars",
+                    "detail": f"{target.mileage_km:,} km vs a median of {med_km:,} km".replace(
+                        ",", "."
+                    ),
+                }
+            )
+    if target.price_eur and asking_median and target.price_eur < 0.45 * asking_median:
+        flags.append(
+            {
+                "key": "too_cheap",
+                "label": "priced far under the NL market",
+                "detail": _eur_fmt(
+                    f"asks € {target.price_eur:,} where NL ads ask ≈ "
+                    f"€ {round(asking_median):,}; ask why"
+                ),
+            }
+        )
+    return flags
+
+
 def estimate_value(target: Target, comps: list[Comp], cfg: ValuationConfig) -> ValueEstimate | None:
     if target.year is None:
         return None
@@ -290,7 +329,9 @@ def estimate_value(target: Target, comps: list[Comp], cfg: ValuationConfig) -> V
     )[: cfg.nearest_to_show]
     if benchmark and benchmark["id"] not in {c.id for c in nearest}:
         nearest = [close[0][0], *nearest][: cfg.nearest_to_show]
+    flags = plausibility_flags(target, chosen, med)
     return ValueEstimate(
+        flags=tuple(flags),
         method="benchmark" if benchmark else "median",
         benchmark=benchmark,
         median_value_eur=round(median_value),

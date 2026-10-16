@@ -428,3 +428,16 @@ def test_paperwork_tags_and_tuv_validity() -> None:
     ):
         keys = [t.key for t in extract_tags(text)]
         assert "papers_missing" in keys, text
+
+
+def test_tuv_until_is_stored_as_a_date(db: Session) -> None:
+    from datetime import date
+
+    from app.insights.service import apply_rules, tuv_until_date
+
+    assert tuv_until_date("06/2027") == date(2027, 6, 30)
+    assert tuv_until_date("12/2027") == date(2027, 12, 31)
+    assert tuv_until_date(None) is None
+    row = _listing(db, "tuv", "TÜV bis 06/2027")
+    apply_rules(row, NOW)
+    assert row.insight.tuv_until == date(2027, 6, 30)

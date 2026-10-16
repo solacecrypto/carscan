@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
 _DEFECT = r"(?:defekt|kaputt|schaden|undicht|fällig|verschlissen|muss|defect|kapot|lek|versleten|moet|rott[ao]|da sostituire|non funziona|trasig|läcker|slut|broken|failed|fault\w*|worn|needs?|leak\w*|not working|slipping|noise|due)"
@@ -74,6 +75,7 @@ ITEMS: tuple[RepairItem, ...] = (
         _near("batterie|accu|batteria|batteri|battery", _DEFECT + r"|leer|schwach|leeg|scarica|d[åa]ligt|dead|flat")),
     RepairItem("tyres_due", "tyres", 300, 600,
         _near("reifen|banden|gomme|d[äa]ck|tyres|tires", _DEFECT + r"|abgefahren|consumate|usurate|slitna|bald")),
+    RepairItem("tuv_due", "inspection runs out soon (Dutch APK + usual fixes)", 150, 400, r"(?!x)x", negatable=False),
     RepairItem("tuv_expired", "inspection expired", 150, 400,
         r"t[üu]v (?:abgelaufen|f[äa]llig|[üu]berf[äa]llig)|ohne t[üu]v|kein t[üu]v|apk (?:verlopen|is verlopen)|geen apk|zonder apk|revisione scaduta|senza revisione|besiktning(?:en)? (?:utg[åa]tt|ej godk[äa]nd)|no mot\b|mot expired|inspection expired", negatable=False),
     RepairItem("oil_consumption", "oil consumption", 300, 2000,
@@ -114,15 +116,28 @@ def find_items(text: str) -> dict[str, str]:
     return found
 
 
+TUV_DUE_DAYS = 90  # an inspection that runs out within this gets the APK item
+
+
 def estimate_repairs(
-    *texts: str | None, ranges: dict[str, tuple[int, int]] | None = None
+    *texts: str | None,
+    ranges: dict[str, tuple[int, int]] | None = None,
+    tuv_until: date | None = None,
+    today: date | None = None,
 ) -> dict[str, Any] | None:
-    """Combine the original and the English text; specific items win over 'unspecified'."""
+    """Combine the original and the English text; specific items win over 'unspecified'.
+    ``tuv_until`` (parsed from the ad) adds the inspection item when it runs out soon."""
     found: dict[str, str] = {}
     for t in texts:
         if t:
             for k, ev in find_items(t).items():
                 found.setdefault(k, ev)
+    if tuv_until is not None and "tuv_expired" not in found:
+        left = (tuv_until - (today or date.today())).days
+        if left <= TUV_DUE_DAYS:
+            found["tuv_due"] = f"inspection valid until {tuv_until:%m/%Y}: " + (
+                "already expired" if left < 0 else f"{left} days left"
+            )
     if len(found) > 1:
         found.pop("unspecified", None)
     if not found:

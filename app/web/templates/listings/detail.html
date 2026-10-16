@@ -210,6 +210,11 @@
       {% if v %}
       <p class="text-2xl font-bold">{{ l.nl_value_eur|eur }}
         {% if l.spread_eur is not none %}<span class="ml-2 text-lg {{ 'text-good-700' if l.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} · {{ l.spread_pct }}%</span>{% endif %}</p>
+      {% if v.flags %}
+      <ul class="mt-2 space-y-1 text-sm">
+        {% for fl in v.flags %}<li class="rounded-lg bg-amber-50 px-2.5 py-1.5 text-amber-900"><b>⚠ {{ fl.label }}</b> <span class="text-xs">{{ fl.detail }}</span></li>{% endfor %}
+      </ul>
+      {% endif %}
       {% set b = v.benchmark %}
       {% if b %}
       <div class="mt-3 rounded-xl border-2 border-good-700/40 bg-good-100/60 p-3">

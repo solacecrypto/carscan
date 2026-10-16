@@ -12,7 +12,7 @@
   'gearbox': f.gearbox and true,
   'seller': f.seller_type and true,
   'country': f.country and true,
-  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok) and true,
+  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok or f.tuv_min_months) and true,
   'listed': (f.new_hours or f.price_dropped) and true,
   'more': (f.include_inactive or f.include_duplicates) and true,
 } %}
@@ -158,8 +158,9 @@
         </div>
       {% endcall %}
 
-      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ('papers ok' if f.papers_ok)]|select|join(', ')) if g.condition else '') %}
+      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ('papers ok' if f.papers_ok), ('TÜV ≥ ' ~ f.tuv_min_months ~ ' mo' if f.tuv_min_months)]|select|join(', ')) if g.condition else '') %}
         {{ checks([('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('papers_ok', 'hide "papers missing"'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')]) }}
+        {{ num('tuv_min_months', 'TÜV / inspection valid for at least (months)', f.tuv_min_months, 1, 'e.g. 12') }}
       {% endcall %}
 
       {% call row('listed', 'Listed', ([({24: 'today', 168: 'this week', 720: 'this month'}.get(f.new_hours, 'last ' ~ f.new_hours ~ ' h') if f.new_hours), ('price dropped' if f.price_dropped)]|select|join(' · ')) if g.listed else '') %}

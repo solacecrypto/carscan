@@ -97,3 +97,15 @@ def test_renewed_parts_are_not_defects() -> None:
     assert find_items("New clutch fitted, shock absorbers replaced last year") == {}
     assert "suspension" in find_items("Stoßdämpfer hinten undicht, Querlenker ausgeschlagen")
     assert "suspension" in find_items("Rear shock absorbers leak and the suspension knocks")
+
+
+def test_inspection_running_out_adds_the_apk_item() -> None:
+    from datetime import date
+
+    today = date(2026, 10, 16)
+    est = estimate_repairs("Top Zustand", tuv_until=date(2026, 12, 31), today=today)
+    assert est is not None and est["items"][0]["key"] == "tuv_due"
+    assert "76 days left" in est["items"][0]["evidence"]
+    assert estimate_repairs("Top Zustand", tuv_until=date(2028, 6, 30), today=today) is None
+    expired = estimate_repairs("TÜV abgelaufen", tuv_until=date(2026, 1, 31), today=today)
+    assert [i["key"] for i in expired["items"]] == ["tuv_expired"]  # no double counting

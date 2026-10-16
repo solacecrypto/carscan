@@ -70,7 +70,12 @@ def apply_costs(row: Listing, today: datetime) -> None:
         today=today.date(),
     )
     repairs = estimate_repairs(
-        row.variant, row.description, row.description_en, ranges=get_cost_config().repairs
+        row.variant,
+        row.description,
+        row.description_en,
+        ranges=get_cost_config().repairs,
+        tuv_until=row.insight.tuv_until if row.insight is not None else None,
+        today=today.date(),
     )
     row.repair_breakdown = repairs
     row.repair_cost_eur = repairs["estimate"] if repairs else None
@@ -124,8 +129,8 @@ def upsert_listings(
             )
             row.price_history.append(PriceHistory(price_eur=item.price_eur, seen_at=now))
             row.saved_searches.append(saved_search)
+            apply_rules(row, now)  # tags first: the TÜV date feeds the repair estimate
             apply_costs(row, now)
-            apply_rules(row, now)
             session.add(row)
             result.new.append(row)
             continue
@@ -162,8 +167,8 @@ def upsert_listings(
                 result.price_raised.append(row)
         else:
             result.unchanged += 1
-        apply_costs(row, now)
         apply_rules(row, now)
+        apply_costs(row, now)
     session.flush()
     return result
 
