@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/listings" class="text-sm text-ink-400 hover:text-ink-700">← Listings</a>
+<div class="mt-2 mb-4 flex flex-wrap items-end justify-between gap-3">
+  <div><h1>{{ name }}</h1><p class="text-sm text-ink-400">dealer · {{ stats.cities|join(', ') or 'location unknown' }} · on {{ stats.sources|join(', ') }}</p></div>
+</div>
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+  {% for label, value, note in [
+    ('cars seen', stats.total, 'since we started tracking'),
+    ('on sale now', stats.active, stats.positive ~ ' with positive return'),
+    ('gone', stats.gone, 'sold or withdrawn'),
+    ('days until gone', stats.median_days if stats.median_days is not none else '–', 'median; fast = they price to sell'),
+    ('cars with a price drop', stats.drop_share ~ '%', 'share that dropped at least once'),
+    ('typical drop', (stats.median_discount ~ '%') if stats.median_discount is not none else '–', 'median cut when they drop'),
+  ] %}
+  <div class="card p-3"><div class="text-xs text-ink-400">{{ label }}</div><div class="text-xl font-bold">{{ value }}</div><div class="text-[11px] text-ink-400">{{ note }}</div></div>
+  {% endfor %}
+</div>
+<p class="mt-4 mb-2 text-sm text-ink-400">{{ cars|length }} car{{ '' if cars|length == 1 else 's' }}, on sale first</p>
+{% with listings=cars, total=cars|length, page=1, pages=1, query='', since=now_iso if now_iso else '' %}
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {% for l in cars %}
+  <article class="card {{ 'opacity-60' if not l.is_active }}">
+    <a href="/listings/{{ l.id }}" class="relative block overflow-hidden rounded-t-2xl">
+      {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover">{% else %}<div class="flex aspect-[4/3] w-full items-center justify-center bg-ink-100 text-xs text-ink-400">no photo</div>{% endif %}
+      {% if not l.is_active %}<span class="pill absolute left-2 top-2 bg-bad-700 text-white">gone</span>{% endif %}
+      {% if l.spread_eur is not none %}<div class="absolute bottom-2 right-2 rounded-lg px-2 py-1 text-sm font-bold shadow {{ 'bg-good-100 text-good-700' if l.spread_eur > 0 else 'bg-white/90 text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}</div>{% endif %}
+    </a>
+    <div class="space-y-1 p-3.5 text-sm">
+      <div class="flex items-start justify-between gap-2"><a href="/listings/{{ l.id }}" class="font-semibold">{{ l.make }} {{ l.model }}</a><b>{{ l.price_eur|eur }}</b></div>
+      <div class="text-ink-600">{{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.gearbox or '–' }}</div>
+      <div class="text-xs text-ink-400">seen {{ l.first_seen|timeago }}{% if not l.is_active %} · gone after {{ (l.last_seen - l.first_seen).days }} days{% endif %}{% if l.previous_price_eur and l.previous_price_eur > l.price_eur %} · was {{ l.previous_price_eur|eur }}{% endif %}</div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endwith %}
+{% endblock %}

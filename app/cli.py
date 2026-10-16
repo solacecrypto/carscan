@@ -525,6 +525,18 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+digest = typer.Typer(help="morning digest")
+app.add_typer(digest, name="digest")
+
+
+@digest.command("run")
+def digest_run(send: bool = typer.Option(False, "--send", help="also post to Telegram")) -> None:
+    """Build today's digest now (shown at /digest); --send posts it to the group."""
+    from app.worker.jobs import digest_job
+
+    typer.echo(f"digest #{digest_job(send=send)} built")
+
+
 @models.command("snapshot")
 def models_snapshot() -> None:
     """Take today's per-model history snapshot now (the worker does it nightly)."""

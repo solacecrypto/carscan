@@ -12,9 +12,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.alerts import notify_admin, queue_alerts
+from app.alerts.watch import check_watches
 from app.costs import landed_cost
 from app.db import ScrapeRun, ScrapeStatus, db_session
-from app.db.models import Listing, SavedSearch
+from app.db.models import Digest, Listing, SavedSearch
 from app.insights import analyze_pending, default_analyzer
 from app.normalize import NormalizedListing, RawListing
 from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, get_scraper
@@ -118,6 +119,7 @@ def run_saved_search(
                     counts = analyze_pending(s, analyzer, now, insights_budget, ids)
                     log.info("scrape.insights", candidates=len(ids), **counts)
                 alerts = queue_alerts(s, search, result, now)
+                alerts += check_watches(s, result, stale, now)
                 summary = RunSummary(
                     run_id,
                     ScrapeStatus.ok,
@@ -386,6 +388,27 @@ def translate_backlog(limit: int | None = None) -> dict[str, int]:
     if any(counts.values()):
         log.info("translate.backlog", **counts)
     return counts
+
+
+def digest_job(send: bool = True) -> int:
+    """Morning digest: build, store, and post to the group when Telegram is configured."""
+    from app.alerts import notify_group
+    from app.config import get_settings
+    from app.digest import store_digest
+
+    settings = get_settings()
+    now = datetime.now(UTC)
+    with db_session() as s:
+        row = store_digest(s, now, settings.site_url)
+        text, digest_id = row.text, row.id
+    if send and settings.telegram_enabled:
+        notify_group(text)
+        with db_session() as s:
+            d = s.get(Digest, digest_id)
+            if d is not None:
+                d.sent_at = datetime.now(UTC)
+    log.info("digest.built", day=now.date().isoformat(), sent=send and settings.telegram_enabled)
+    return digest_id
 
 
 def snapshot_models_job() -> int:

@@ -59,7 +59,7 @@
       <a href="/listings" class="mr-2 flex shrink-0 items-center gap-2 font-bold tracking-tight text-white">
         <span class="inline-block h-6 w-6 rounded-md bg-brand-500"></span><span class="hidden sm:inline">Car Scanner</span></a>
       {% set path = request.url.path %}
-      {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/models', 'Models'), ('/searches', 'Searches'), ('/calibration', 'Calibration'), ('/status', 'Status')] %}
+      {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/models', 'Models'), ('/digest', 'Digest'), ('/searches', 'Searches'), ('/calibration', 'Calibration'), ('/status', 'Status')] %}
       <a href="{{ href }}" class="shrink-0 rounded-lg px-3 py-1.5 {{ 'bg-white/10 text-white' if path.startswith(href) or (href == '/listings' and path == '/') else 'text-ink-300 hover:bg-white/5 hover:text-white' }}">{{ text }}</a>
       {% endfor %}
       <form method="post" action="/logout" class="ml-auto shrink-0">

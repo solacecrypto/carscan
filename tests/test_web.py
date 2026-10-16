@@ -490,3 +490,40 @@ def test_models_page_and_accuracy_on_cards(client: TestClient, seeded: dict, db:
     page = client.get("/models").text
     assert "closed deal" in page and "landed cost off by" in page and "median spread" in page
     assert "estimates within" in client.get("/listings?profitable=false").text
+
+
+def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.db import Watch
+    from app.digest import store_digest
+
+    row = seeded["a"]
+    row.seller_name = "Auto Müller"
+    db.commit()
+    page = client.get(f"/listings/{row.id}").text
+    assert "Watch this car" in page and "No notes yet" in page and 'href="/sellers/Auto%20M' in page
+    token = _csrf(page)
+    r = client.post(
+        f"/listings/{row.id}/watch",
+        data={"target_price_eur": "5.500", "action": "watch", "csrf_token": token},
+        headers={"HX-Request": "true"},
+    )
+    assert r.status_code == 200 and "Update" in r.text and "to € 5.500 or below" in r.text
+    assert db.query(Watch).filter_by(listing_id=row.id).one().target_price_eur == 5500
+    r = client.post(
+        f"/listings/{row.id}/watch",
+        data={"action": "unwatch", "csrf_token": token},
+        headers={"HX-Request": "true"},
+    )
+    assert db.query(Watch).filter_by(listing_id=row.id).count() == 0
+    r = client.post(
+        f"/listings/{row.id}/notes",
+        data={"text": "called, wants 5.800", "csrf_token": token},
+        headers={"HX-Request": "true"},
+    )
+    assert r.status_code == 200 and "called, wants 5.800" in r.text and "q ·" in r.text
+    page = client.get("/sellers/Auto%20M%C3%BCller").text
+    assert "Auto Müller" in page and "cars seen" in page and "320i" in page
+    assert client.get("/sellers/Nobody").status_code == 404
+    store_digest(db, NOW, "http://localhost")
+    db.commit()
+    assert "Morning digest" in client.get("/digest").text

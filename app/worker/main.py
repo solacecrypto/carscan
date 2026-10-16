@@ -18,6 +18,7 @@ from app.config import Settings, get_settings
 from app.logging import configure_logging
 from app.worker.jobs import (
     analyze_backlog,
+    digest_job,
     enrich_backlog,
     run_due_searches,
     snapshot_models_job,
@@ -54,6 +55,14 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         id="translate_backlog",
         max_instances=1,
         coalesce=True,
+    )
+    scheduler.add_job(
+        digest_job,
+        CronTrigger(hour=7, minute=0, timezone="Europe/Amsterdam"),
+        id="digest",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
     )
     scheduler.add_job(
         snapshot_models_job,

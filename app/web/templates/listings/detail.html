@@ -94,6 +94,7 @@
       {% else %}<p class="mt-1 text-sm text-ink-400">Nothing notable found in the text.</p>{% endif %}
     </div>
     {% endif %}
+    {% with listing=l %}{% include "listings/_notes.html" %}{% endwith %}
     {% if l.description %}
     {% set tagmap = {} %}
     {% for t in ((i.tags if i else None) or []) %}{% set _ = tagmap.update({t.key: t}) %}{% endfor %}
@@ -147,6 +148,7 @@
       </div>
       <a href="{{ l.url }}" target="_blank" rel="noopener"
          class="btn-dark mt-4 w-full py-2.5">Open original ad ↗</a>
+      <div class="mt-3">{% with listing=l %}{% include "listings/_watch.html" %}{% endwith %}</div>
       {% if l.duplicates or l.duplicate_of %}
       <div class="mt-3 text-sm">
         <span class="text-ink-400">Same car on:</span>
@@ -159,11 +161,11 @@
       {% for k, v in [('First registration', l.first_registration|month), ('Mileage', l.mileage_km|km),
                       ('Gearbox', l.gearbox), ('Fuel', l.fuel), ('Power', (l.power_kw ~ ' kW') if l.power_kw else None),
                       ('Body', l.body_type), ('CO₂', (l.co2_g_km ~ ' g/km') if l.co2_g_km else None),
-                      ('Seller', l.seller_type.value ~ (' · ' ~ l.seller_name if l.seller_name else '')),
                       ('Location', (l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' (' ~ l.country ~ ')'),
                       ('Source', l.source), ('First seen', l.first_seen|timeago), ('Last seen', l.last_seen|timeago)] %}
       <dt class="text-ink-400">{{ k }}</dt><dd>{{ v or '–' }}</dd>
       {% endfor %}
+      <dt class="text-ink-400">Seller</dt><dd>{{ l.seller_type.value }}{% if l.seller_name %} · <a class="underline" href="/sellers/{{ l.seller_name|urlencode }}">{{ l.seller_name }}</a>{% endif %}</dd>
     </dl>
     <div class="card p-4">
       <h2 class="font-semibold">Landed cost estimate</h2>

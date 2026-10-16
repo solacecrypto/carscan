@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4"><h1>Morning digest</h1><p class="text-sm text-ink-400">Posted to the Telegram group every morning at 07:00; the last two weeks are kept here.</p></div>
+{% if not digests %}<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">No digest yet. The first one is built tomorrow morning, or now with <code>carscan digest run</code>.</p>{% endif %}
+<div class="space-y-4">
+  {% for d in digests %}
+  {% set it = d.items %}
+  <section class="card p-4">
+    <h2 class="flex items-center justify-between font-semibold"><span>{{ d.day.strftime('%A %d %B') }}</span><span class="text-xs font-normal text-ink-400">{{ it.n_new }} new cars in 24 h{% if d.sent_at %} · sent to Telegram{% endif %}</span></h2>
+    {% for heading, key in [('Top new cars by spread', 'top_new'), ('Biggest price drops', 'price_drops'), ('Red flags on new cars', 'flagged')] %}
+    {% if it[key] %}
+    <h3 class="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ heading }}</h3>
+    <ul class="mt-1 divide-y divide-ink-100 text-sm">
+      {% for c in it[key] %}
+      <li class="flex items-center justify-between gap-2 py-1">
+        <a href="/listings/{{ c.id }}" class="truncate underline">{{ c.title }} <span class="text-xs text-ink-400">{{ c.country }} · {{ c.source }}</span></a>
+        <span class="whitespace-nowrap text-ink-600">
+          {% if key == 'price_drops' %}<s>{{ c.previous_price_eur|eur }}</s> → <b>{{ c.price_eur|eur }}</b>{% elif key == 'flagged' %}<span class="pill bg-bad-100 text-bad-700">{{ c.flags|join(', ') }}</span>{% else %}{{ c.price_eur|eur }}{% endif %}
+          {% if c.spread_eur is not none and c.spread_eur > 0 %}<span class="text-good-700">+{{ c.spread_eur|eur }}</span>{% endif %}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endfor %}
+    {% if not (it.top_new or it.price_drops or it.flagged) %}<p class="mt-2 text-sm text-ink-400">Nothing worth a look that day.</p>{% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

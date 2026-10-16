@@ -53,9 +53,15 @@ def format_alert(alert: Alert, site_url: str, old_price: int | None = None) -> s
     title = f"{listing.make} {listing.model}"
     if listing.variant:
         title += f" · {listing.variant}"
-    head = "🔻 <b>Price drop</b>" if alert.kind == "price_drop" else "🆕 <b>New listing</b>"
+    head = {
+        "price_drop": "🔻 <b>Price drop</b>",
+        "watch": "👀 <b>Watched car dropped in price</b>",
+        "gone": "🚫 <b>Watched car is gone</b>",
+    }.get(alert.kind, "🆕 <b>New listing</b>")
+    if alert.kind in ("watch", "gone") and listing.watches:
+        head += " · " + e(", ".join(w.user.username for w in listing.watches))
     price = f"€ {listing.price_eur:,}".replace(",", ".")
-    if alert.kind == "price_drop" and (old_price or listing.previous_price_eur):
+    if alert.kind in ("price_drop", "watch") and (old_price or listing.previous_price_eur):
         old = old_price or listing.previous_price_eur
         price = f"<s>€ {old:,}</s> → <b>{price}</b>".replace(",", ".")
     else:

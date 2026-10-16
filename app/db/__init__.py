@@ -6,8 +6,10 @@ from app.db.models import (
     Deal,
     DealEvent,
     DealStage,
+    Digest,
     Listing,
     ListingInsight,
+    ListingNote,
     ModelHistory,
     PriceHistory,
     SavedSearch,
@@ -15,9 +17,13 @@ from app.db.models import (
     ScrapeStatus,
     SellerType,
     User,
+    Watch,
 )
 
 __all__ = [
+    "Digest",
+    "ListingNote",
+    "Watch",
     "ModelHistory",
     "Alert",
     "AlertStatus",

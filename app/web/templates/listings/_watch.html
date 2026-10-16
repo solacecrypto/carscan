@@ -1,0 +1,14 @@
+{% set mine = (listing.watches|selectattr('user_id', 'equalto', user.id)|list|first) if user else none %}
+<div id="watch-{{ listing.id }}" class="rounded-xl border border-ink-100 p-3 text-sm">
+  <div class="flex items-center justify-between gap-2">
+    <span class="font-semibold">Watch this car</span>
+    {% if listing.watches %}<span class="text-xs text-ink-400">watched by {{ listing.watches|map(attribute='user.username')|join(', ') }}</span>{% endif %}
+  </div>
+  <form hx-post="/listings/{{ listing.id }}/watch" hx-target="#watch-{{ listing.id }}" hx-swap="outerHTML" method="post" action="/listings/{{ listing.id }}/watch" class="mt-2 flex flex-wrap items-end gap-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="label block text-xs">alert me below €<input type="number" name="target_price_eur" step="100" value="{{ mine.target_price_eur if mine and mine.target_price_eur }}" placeholder="any drop" class="input !mt-1 !w-36"></label>
+    <button name="action" value="watch" class="btn-primary !py-2">{{ 'Update' if mine else 'Watch' }}</button>
+    {% if mine %}<button name="action" value="unwatch" class="btn-ghost !py-2">Stop</button>{% endif %}
+  </form>
+  <p class="mt-1 text-[11px] text-ink-400">Alerts in the group when the price drops{% if mine and mine.target_price_eur %} to {{ mine.target_price_eur|eur }} or below{% endif %}, and when the ad disappears.{% if mine and mine.triggered_at %} Last triggered {{ mine.triggered_at|timeago }}.{% endif %}</p>
+</div>

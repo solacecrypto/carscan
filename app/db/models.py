@@ -160,6 +160,12 @@ class Listing(Base):
     duplicates: Mapped[list[Listing]] = relationship(
         back_populates="duplicate_of", foreign_keys=[duplicate_of_id]
     )
+    watches: Mapped[list[Watch]] = relationship(
+        back_populates="listing", cascade="all, delete-orphan"
+    )
+    notes: Mapped[list[ListingNote]] = relationship(
+        back_populates="listing", cascade="all, delete-orphan", order_by="ListingNote.created_at"
+    )
     insight: Mapped[ListingInsight | None] = relationship(
         back_populates="listing", uselist=False, cascade="all, delete-orphan"
     )
@@ -365,6 +371,54 @@ class DealEvent(Base):
 
     deal: Mapped[Deal] = relationship(back_populates="events")
     user: Mapped[User | None] = relationship()
+
+
+class Watch(Base):
+    """A user watching one car: alert on a price drop (optionally below a target) or when gone."""
+
+    __tablename__ = "watches"
+    __table_args__ = (UniqueConstraint("listing_id", "user_id", name="uq_watches_listing_user"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    listing_id: Mapped[int] = mapped_column(
+        ForeignKey("listings.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    target_price_eur: Mapped[int | None] = mapped_column(Integer)
+    notify_gone: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    triggered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    listing: Mapped[Listing] = relationship(back_populates="watches")
+    user: Mapped[User] = relationship()
+
+
+class ListingNote(Base):
+    __tablename__ = "listing_notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    listing_id: Mapped[int] = mapped_column(
+        ForeignKey("listings.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    listing: Mapped[Listing] = relationship(back_populates="notes")
+    user: Mapped[User] = relationship()
+
+
+class Digest(Base):
+    """One morning digest per day: structured items plus the Telegram text."""
+
+    __tablename__ = "digests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day: Mapped[date] = mapped_column(Date, unique=True)
+    items: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class ModelHistory(Base):
