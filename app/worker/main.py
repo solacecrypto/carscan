@@ -11,11 +11,18 @@ from datetime import UTC, datetime
 
 import structlog
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import Settings, get_settings
 from app.logging import configure_logging
-from app.worker.jobs import analyze_backlog, enrich_backlog, run_due_searches, translate_backlog
+from app.worker.jobs import (
+    analyze_backlog,
+    enrich_backlog,
+    run_due_searches,
+    snapshot_models_job,
+    translate_backlog,
+)
 
 log = structlog.get_logger()
 
@@ -47,6 +54,14 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         id="translate_backlog",
         max_instances=1,
         coalesce=True,
+    )
+    scheduler.add_job(
+        snapshot_models_job,
+        CronTrigger(hour=2, minute=30, timezone="UTC"),
+        id="models_snapshot",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
     )
     scheduler.add_job(
         enrich_backlog,

@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db import Alert, AlertStatus, Comparable, Listing
 from app.deals import get_deal_for_listing, sync_from_alert_status
+from app.deals.calibration import model_accuracy
 from app.market import market_for_listing
 from app.storage.filters import apply_sql, parse_filters
 from app.web.deps import DB, CurrentUser, csrf_protect
@@ -67,6 +68,7 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "sort": sort,
         "f": f,
         "query": _clean_query(request),
+        "accuracy": model_accuracy(db),
     }
     if request.headers.get("HX-Request"):
         resp = templates.TemplateResponse(request, "listings/_results.html", ctx)

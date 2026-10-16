@@ -17,6 +17,7 @@ from app.deals import (
     set_stage,
     update_actuals,
 )
+from app.deals.calibration import model_accuracy
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
 
@@ -143,5 +144,7 @@ async def deal_update_actuals(
 def calibration_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
     report = calibrate(db)
     return templates.TemplateResponse(
-        request, "calibration.html", {"title": "Calibration", "report": report}
+        request,
+        "calibration.html",
+        {"title": "Calibration", "report": report, "accuracy": model_accuracy(db)},
     )

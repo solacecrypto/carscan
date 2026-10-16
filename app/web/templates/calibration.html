@@ -20,4 +20,15 @@
 {% else %}
 <p class="mt-4 text-ink-400">No bought or sold deals with actuals yet.</p>
 {% endif %}
+{% if accuracy %}
+<h2 class="mt-6 font-semibold">Per model: how far off were we?</h2>
+<table class="card mt-2 w-full text-sm">
+  <thead><tr class="text-left text-xs text-ink-400"><th class="p-2">model</th><th class="p-2">deals</th><th class="p-2">landed cost off by</th><th class="p-2">NL value off by</th></tr></thead>
+  <tbody>
+  {% for key, a in accuracy.items() %}
+  <tr class="border-t border-ink-100"><td class="p-2 font-medium">{{ key }}</td><td class="p-2">{{ a.n }}</td><td class="p-2">{{ a.landed_err_pct }}%</td><td class="p-2">{{ a.value_err_pct ~ '% (' ~ a.n_sold ~ ' sold)' if a.value_err_pct is not none else '–' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 {% endblock %}

@@ -36,6 +36,8 @@
           {% if l.nl_value_eur %}{% set bm = (l.nl_value_breakdown or {}).get('benchmark') %}<span title="{{ 'NL value from a close match on the NL market' if bm else 'NL value from the median of ' ~ l.nl_value_n ~ ' comparables' }}">NL ≈ {{ l.nl_value_eur|eur }}{% if l.spread_pct is not none %} ({{ l.spread_pct }}%){% endif %}{% if bm %} <span class="pill bg-good-100 text-good-700">{{ 'perfect match' if bm.perfect else 'close match' }}</span>{% endif %}</span>{% endif %}
         </div>
         <div class="text-xs text-ink-400">{{ l.city or '' }} · {{ l.seller_type.value }} · {{ l.source }} · seen {{ l.first_seen|timeago }}</div>
+        {% set acc = (accuracy or {}).get(l.model_key or l.model) %}
+        {% if acc %}<div class="text-[11px] text-ink-400" title="how far our landed-cost estimate was off on real deals of this model">estimates within {{ acc.landed_err_pct }}% on {{ acc.n }} deal{{ '' if acc.n == 1 else 's' }}{% if acc.value_err_pct is not none %} · NL value within {{ acc.value_err_pct }}%{% endif %}</div>{% endif %}
         {% set vflags = (l.nl_value_breakdown or {}).get('flags') or [] %}
         {% if vflags %}<div class="flex flex-wrap gap-1">{% for fl in vflags %}<span class="pill tip bg-amber-100 text-amber-800" tabindex="0" data-tip="{{ fl.detail }}">⚠ {{ fl.label }}</span>{% endfor %}</div>{% endif %}
         {% if l.description_en or l.description %}

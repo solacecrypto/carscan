@@ -465,3 +465,28 @@ def test_tuv_months_filter(client: TestClient, seeded: dict, db: Session) -> Non
     results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
     assert "320i" in results("/listings?tuv_min_months=3")
     assert "No listings match" in results("/listings?tuv_min_months=36")
+
+
+def test_models_page_and_accuracy_on_cards(client: TestClient, seeded: dict, db: Session) -> None:
+    from datetime import date
+
+    from app.db import DealStage
+    from app.deals import create_deal, set_stage, update_actuals
+    from app.market.history import snapshot_models
+
+    row = seeded["a"]
+    row.model_key = "bmw-3er-e90"
+    row.landed_cost_eur = 7700
+    deal = create_deal(db, row, seeded["user"], NOW)
+    set_stage(deal, DealStage.bought, seeded["user"], NOW)
+    update_actuals(
+        deal,
+        {"purchase_price_eur": 6000, "transport_eur": 350, "bpm_eur": 1200, "fees_eur": 304},
+        seeded["user"],
+        NOW,
+    )
+    snapshot_models(db, date(2026, 10, 16))
+    db.commit()
+    page = client.get("/models").text
+    assert "closed deal" in page and "landed cost off by" in page and "median spread" in page
+    assert "estimates within" in client.get("/listings?profitable=false").text

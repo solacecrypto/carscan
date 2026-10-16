@@ -8,6 +8,7 @@ from app.db.models import (
     DealStage,
     Listing,
     ListingInsight,
+    ModelHistory,
     PriceHistory,
     SavedSearch,
     ScrapeRun,
@@ -17,6 +18,7 @@ from app.db.models import (
 )
 
 __all__ = [
+    "ModelHistory",
     "Alert",
     "AlertStatus",
     "Base",

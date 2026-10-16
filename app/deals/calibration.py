@@ -38,6 +38,39 @@ def _med(values: list[float]) -> float | None:
     return float(median(values)) if values else None
 
 
+def model_accuracy(session: Session) -> dict[str, dict[str, Any]]:
+    """How far our frozen estimates were off on real deals, per watchlist model.
+    landed: |actual landed - estimate| / estimate for bought cars; value: |sale - NL value|."""
+    deals = list(
+        session.scalars(
+            select(Deal)
+            .where(Deal.purchase_price_eur.isnot(None), Deal.est_landed_cost_eur.isnot(None))
+            .options(selectinload(Deal.listing))
+        )
+    )
+    by_model: dict[str, list[Deal]] = {}
+    for d in deals:
+        key = d.listing.model_key or d.listing.model
+        if key:
+            by_model.setdefault(key, []).append(d)
+    out: dict[str, dict[str, Any]] = {}
+    for key, ds in by_model.items():
+        landed = [
+            abs((d.actual_landed_cost_eur or 0) - d.est_landed_cost_eur) / d.est_landed_cost_eur
+            for d in ds
+            if d.est_landed_cost_eur
+        ]
+        sold = [d for d in ds if d.sale_price_eur and d.est_nl_value_eur]
+        value = [abs(d.sale_price_eur - d.est_nl_value_eur) / d.est_nl_value_eur for d in sold]  # type: ignore[operator]
+        out[key] = {
+            "n": len(ds),
+            "n_sold": len(sold),
+            "landed_err_pct": round(100 * (_med(landed) or 0), 1),
+            "value_err_pct": round(100 * (_med(value) or 0), 1) if value else None,
+        }
+    return out
+
+
 def calibrate(session: Session) -> CalibrationReport:
     cfg = get_cost_config()
     deals = list(

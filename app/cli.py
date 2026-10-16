@@ -525,6 +525,14 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+@models.command("snapshot")
+def models_snapshot() -> None:
+    """Take today's per-model history snapshot now (the worker does it nightly)."""
+    from app.worker.jobs import snapshot_models_job
+
+    typer.echo(f"snapshot for {snapshot_models_job()} models")
+
+
 @scrape.command("details")
 def scrape_details(
     limit: int = typer.Option(40, help="max ad pages to fetch"),

@@ -367,6 +367,25 @@ class DealEvent(Base):
     user: Mapped[User | None] = relationship()
 
 
+class ModelHistory(Base):
+    """One row per watchlist model per day: supply, valued share and median spread."""
+
+    __tablename__ = "model_history"
+    __table_args__ = (UniqueConstraint("model_key", "day", name="uq_model_history_model_day"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    model_key: Mapped[str] = mapped_column(String(64), index=True)
+    day: Mapped[date] = mapped_column(Date)
+    n_active: Mapped[int] = mapped_column(Integer)
+    n_valued: Mapped[int] = mapped_column(Integer)
+    n_positive: Mapped[int] = mapped_column(Integer)
+    median_price_eur: Mapped[int | None] = mapped_column(Integer)
+    median_landed_eur: Mapped[int | None] = mapped_column(Integer)
+    median_nl_value_eur: Mapped[int | None] = mapped_column(Integer)
+    median_spread_eur: Mapped[int | None] = mapped_column(Integer)
+    n_comparables: Mapped[int] = mapped_column(Integer)
+
+
 class ListingInsight(Base):
     """What Claude read in the seller's description (phase 6). One row per listing."""
 

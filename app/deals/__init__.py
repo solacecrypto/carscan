@@ -1,4 +1,4 @@
-from app.deals.calibration import CalibrationReport, calibrate
+from app.deals.calibration import CalibrationReport, calibrate, model_accuracy
 from app.deals.service import (
     ACTUAL_FIELDS,
     DATE_FIELDS,
@@ -12,6 +12,7 @@ from app.deals.service import (
 )
 
 __all__ = [
+    "model_accuracy",
     "ACTUAL_FIELDS",
     "DATE_FIELDS",
     "STAGE_ORDER",

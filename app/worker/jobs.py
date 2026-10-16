@@ -388,6 +388,16 @@ def translate_backlog(limit: int | None = None) -> dict[str, int]:
     return counts
 
 
+def snapshot_models_job() -> int:
+    """Nightly: one history row per watchlist model (supply, valued share, median spread)."""
+    from app.market.history import snapshot_models
+
+    with db_session() as s:
+        n = snapshot_models(s, datetime.now(UTC).date())
+    log.info("models.snapshot", models=n)
+    return n
+
+
 def analyze_backlog(limit: int | None = None) -> dict[str, int]:
     """Catch-up pass: listings that still lack a current insight (older ones, budget overflow)."""
     from app.config import get_settings
