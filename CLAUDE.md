@@ -136,6 +136,18 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Additions round (2026-10-16)
+
+Ten features, all live: TÜV validity as a date (`listing_insights.tuv_until`, filter
+`tuv_min_months`, APK item in repairs when it runs out within 90 days); plausibility flags in
+`nl_value_breakdown.flags`; nightly `model_history` snapshots + `/models` page
+(`carscan models snapshot`); per-model estimate accuracy from deals (`model_accuracy`);
+per-car watches (`watches`, alert kinds `watch`/`gone`, `app/alerts/watch.py`); shared
+`listing_notes`; dealer pages `/sellers/{name}`; morning digest (`digests`, 07:00 Amsterdam,
+`/digest`, `carscan digest run [--send]`); photo checks in the Claude pass (`photo_flags`,
+`INSIGHTS_PHOTOS`); pickup trips via Nominatim geocoding (`geo_cache`, `app/geo.py`,
+`BASE_CITY/BASE_POSTCODE/BASE_COUNTRY`, `travel:` in costs.yaml, `carscan geo run`).
+
 ## Market grade (2026-10-15)
 
 `app/market/`: A–E popularity grade on the detail page from comparables (supply, Marktplaats

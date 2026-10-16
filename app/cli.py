@@ -525,6 +525,19 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+geo = typer.Typer(help="places and pickup distances")
+app.add_typer(geo, name="geo")
+
+
+@geo.command("run")
+def geo_run(limit: int = typer.Option(30, help="max places to geocode now")) -> None:
+    """Geocode places of active cars that are not cached yet (the worker does this too)."""
+    from app.worker.jobs import geocode_backlog_job
+
+    counts = geocode_backlog_job(limit=limit)
+    typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
+
+
 digest = typer.Typer(help="morning digest")
 app.add_typer(digest, name="digest")
 

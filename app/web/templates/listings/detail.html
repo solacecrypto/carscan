@@ -92,6 +92,10 @@
         {% endfor %}
       </ul>
       {% else %}<p class="mt-1 text-sm text-ink-400">Nothing notable found in the text.</p>{% endif %}
+      {% if i.photo_flags %}
+      <h3 class="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-400">Seen in the photos</h3>
+      <ul class="mt-1 flex flex-wrap gap-1">{% for pf in i.photo_flags %}<li class="pill bg-bad-100 text-bad-700">📷 {{ pf }}</li>{% endfor %}</ul>
+      {% elif i.status == 'ok' and i.photo_flags is not none %}<p class="mt-2 text-xs text-ink-300">📷 Photos checked: nothing alarming.</p>{% endif %}
     </div>
     {% endif %}
     {% with listing=l %}{% include "listings/_notes.html" %}{% endwith %}
@@ -253,6 +257,19 @@
       {% endif %}
       {% else %}
       <p class="text-sm text-ink-400">Not enough comparables yet (run the NL comparables searches).</p>
+      {% endif %}
+    </div>
+    <div class="card p-4">
+      <h2 class="font-semibold">Pickup <span class="text-xs font-normal text-ink-300">from {{ trip['from'] if trip else 'the base' }}</span></h2>
+      {% if trip %}
+      <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
+        <div><div class="text-xs text-ink-400">distance</div><div class="text-lg font-bold">≈ {{ trip.km }} km</div></div>
+        <div><div class="text-xs text-ink-400">drive, one way</div><div class="text-lg font-bold">≈ {{ trip.hours_one_way }} h</div></div>
+        <div><div class="text-xs text-ink-400">fuel + tolls</div><div class="text-lg font-bold">{{ trip.total_eur|eur }}</div></div>
+      </div>
+      <p class="mt-1 text-xs text-ink-400">Fuel {{ trip.fuel_eur|eur }} for the trip there and the drive back{% if trip.tolls_eur %}, tolls ≈ {{ trip.tolls_eur|eur }}{% endif %}. Road distance estimated from the straight line; the transport line in the landed cost already assumes a pickup.</p>
+      {% else %}
+      <p class="text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}.</p>
       {% endif %}
     </div>
     <div class="card p-4">

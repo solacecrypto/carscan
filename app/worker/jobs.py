@@ -390,6 +390,21 @@ def translate_backlog(limit: int | None = None) -> dict[str, int]:
     return counts
 
 
+def geocode_backlog_job(limit: int = 30) -> dict[str, int]:
+    """Resolve the places of active cars through Nominatim, a few per run, cached forever."""
+    from app.config import get_settings
+    from app.geo import geocode_backlog
+
+    st = get_settings()
+    with db_session() as s:
+        counts = geocode_backlog(
+            s, limit=limit, base=(st.base_city, st.base_postcode, st.base_country)
+        )
+    if any(counts.values()):
+        log.info("geo.backlog", **counts)
+    return counts
+
+
 def digest_job(send: bool = True) -> int:
     """Morning digest: build, store, and post to the group when Telegram is configured."""
     from app.alerts import notify_group

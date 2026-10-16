@@ -19,7 +19,7 @@ NOW = datetime(2026, 10, 13, 9, 0, tzinfo=UTC)
 FIX = Path(__file__).parent / "fixtures"
 
 
-def _fake(title: str, description: str) -> AnalysisResult:
+def _fake(title: str, description: str, photos: object = ()) -> AnalysisResult:
     if "einen Unfall" in description:
         ins = DescriptionInsight(
             language="de",
@@ -159,7 +159,7 @@ def test_claude_analyzer_request_shape_and_refusal() -> None:
     class FakeMessages:
         def create(self, **kw):  # type: ignore[no-untyped-def]
             calls.append(kw)
-            if "refuse" in kw["messages"][0]["content"]:
+            if "refuse" in kw["messages"][0]["content"][0]["text"]:
                 return SimpleNamespace(
                     stop_reason="refusal",
                     stop_details=SimpleNamespace(category="general_harms"),
@@ -208,7 +208,7 @@ def test_claude_analyzer_request_shape_and_refusal() -> None:
     )
     assert (
         kw["system"][0]["cache_control"] == {"type": "ephemeral"}
-        and "<description>" in kw["messages"][0]["content"]
+        and "<description>" in kw["messages"][0]["content"][0]["text"]
     )
     assert an("x", "please refuse").status == "refused"
     assert "truncated" in build_user_message("t", "x" * 20_000)
@@ -441,3 +441,36 @@ def test_tuv_until_is_stored_as_a_date(db: Session) -> None:
     row = _listing(db, "tuv", "TÜV bis 06/2027")
     apply_rules(row, NOW)
     assert row.insight.tuv_until == date(2027, 6, 30)
+
+
+def test_photo_flags_become_tags_and_reach_the_claude_call(db: Session) -> None:
+    from app.insights.analyzer import build_content
+    from app.insights.schema import DescriptionInsight
+
+    def fake_photos(title: str, description: str, photos: object = ()) -> AnalysisResult:
+        ins = DescriptionInsight(
+            language="de",
+            summary="ok",
+            accident="unknown",
+            accident_evidence="",
+            timing_chain="not_mentioned",
+            service_history="unknown",
+            export_only=False,
+            defects=[],
+            photo_flags=["rust on rear arch", "warning light on dash"] if photos else [],
+        )
+        return AnalysisResult("ok", insight=ins, raw=ins.model_dump(), model="fake")
+
+    row = _listing(db, "ph", "Schönes Auto.", photos=["https://x/1.jpg", "https://x/2.jpg"])
+    analyze_pending(db, fake_photos, NOW, limit=5, photos_per_listing=4)
+    assert row.insight.photo_flags == ["rust on rear arch", "warning light on dash"]
+    keys = [t["key"] for t in row.insight.tags]
+    assert "photo:rust_on_rear_arch" in keys and "photo:warning_light_on_dash" in keys
+    assert next(t for t in row.insight.tags if t["key"].startswith("photo:"))["polarity"] == "bad"
+    blocks = build_content("t", "d", ["https://x/1.jpg"] * 6)
+    assert blocks[0]["type"] == "text" and len(blocks) == 5  # at most four images
+    assert blocks[1] == {"type": "image", "source": {"type": "url", "url": "https://x/1.jpg"}}
+    # text-only when photos are switched off
+    row2 = _listing(db, "ph2", "Noch ein Auto.", photos=["https://x/3.jpg"])
+    analyze_pending(db, fake_photos, NOW, limit=5, listing_ids=[row2.id], photos_per_listing=0)
+    assert row2.insight.photo_flags == []

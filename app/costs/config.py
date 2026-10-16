@@ -32,6 +32,7 @@ class CostConfig:
     co2_fallback: dict[str, int] = field(default_factory=dict)
     valuation: dict[str, Decimal] = field(default_factory=dict)
     repairs: dict[str, tuple[int, int]] = field(default_factory=dict)  # key -> (low, high) €
+    travel: dict[str, Any] = field(default_factory=dict)  # pickup trip parameters
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> CostConfig:
@@ -60,6 +61,7 @@ class CostConfig:
             co2_fallback={str(k).lower(): int(v) for k, v in (b.get("co2_fallback") or {}).items()},
             valuation={k: Decimal(str(v)) for k, v in (d.get("valuation") or {}).items()},
             repairs={str(k): (int(v[0]), int(v[1])) for k, v in (d.get("repairs") or {}).items()},
+            travel=dict(d.get("travel") or {}),
         )
 
     @classmethod

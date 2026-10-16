@@ -20,6 +20,7 @@ from app.worker.jobs import (
     analyze_backlog,
     digest_job,
     enrich_backlog,
+    geocode_backlog_job,
     run_due_searches,
     snapshot_models_job,
     translate_backlog,
@@ -53,6 +54,13 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         translate_backlog,
         IntervalTrigger(minutes=5, jitter=30),
         id="translate_backlog",
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        geocode_backlog_job,
+        IntervalTrigger(minutes=5, jitter=30),
+        id="geocode_backlog",
         max_instances=1,
         coalesce=True,
     )

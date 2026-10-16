@@ -109,3 +109,13 @@ oil leak, and "unspecified" when the seller only says it needs work). Each maps 
 range under `repairs:` in costs.yaml; the midpoint is used. Negated mentions ("kein Rost",
 "no rust") are ignored. Both the original and the English text are scanned, so the estimate
 can change once the translation arrives. Deliberately coarse: a flag, not a quote.
+
+## Pickup trip (not part of the landed cost)
+
+`app/geo.py` geocodes each car's city/postcode once through Nominatim (cached in
+`geo_cache`, one request per second, worker job every 5 minutes) and the base location from
+`BASE_CITY`/`BASE_POSTCODE`/`BASE_COUNTRY`. The detail and deal pages show road distance
+(straight line × `travel.detour_factor`), drive time at `travel.avg_speed_kmh`, fuel for the
+trip there and the drive back at `travel.fuel_eur_per_km`, and round-trip tolls per country.
+The transport line in the landed cost already assumes a pickup, so this is a planning aid and
+is not added again.

@@ -7,6 +7,7 @@ from app.db.models import (
     DealEvent,
     DealStage,
     Digest,
+    GeoCache,
     Listing,
     ListingInsight,
     ListingNote,
@@ -22,6 +23,7 @@ from app.db.models import (
 
 __all__ = [
     "Digest",
+    "GeoCache",
     "ListingNote",
     "Watch",
     "ModelHistory",

@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr = SecretStr("")
     claude_model: str = "claude-opus-5-5"
     insights_per_run: int = 40
+    insights_photos: int = 4  # photos sent with each Claude call (0 = text only)
+    # where the cars are collected from (for distance, fuel and tolls on each car)
+    base_city: str = "Utrecht"
+    base_postcode: str = ""
+    base_country: str = "NL"
     # spread gating: only fetch detail pages / run Claude for cars at or above this spread
     # (cars without an NL value yet always qualify). Empty = no gating.
     detail_min_spread_eur: int | None = 0

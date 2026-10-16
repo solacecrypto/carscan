@@ -26,7 +26,19 @@ class AnalysisResult:
     model: str | None = None
 
 
-Analyzer = Callable[[str, str], AnalysisResult]
+Analyzer = Callable[..., AnalysisResult]  # (title, description, photos=()) -> result
+MAX_PHOTOS = 4
+
+
+def build_content(
+    title: str, description: str, photos: tuple[str, ...] | list[str] = ()
+) -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = [
+        {"type": "text", "text": build_user_message(title, description)}
+    ]
+    for url in list(photos)[:MAX_PHOTOS]:
+        blocks.append({"type": "image", "source": {"type": "url", "url": url}})
+    return blocks
 
 
 def build_user_message(title: str, description: str) -> str:
@@ -41,7 +53,9 @@ class ClaudeAnalyzer:
         self.client = anthropic.Anthropic(api_key=api_key, max_retries=3, timeout=60.0)
         self.model = model
 
-    def __call__(self, title: str, description: str) -> AnalysisResult:
+    def __call__(
+        self, title: str, description: str, photos: tuple[str, ...] | list[str] = ()
+    ) -> AnalysisResult:
         try:
             response = self.client.beta.messages.create(
                 model=self.model,
@@ -55,7 +69,7 @@ class ClaudeAnalyzer:
                 system=[
                     {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
                 ],
-                messages=[{"role": "user", "content": build_user_message(title, description)}],
+                messages=[{"role": "user", "content": build_content(title, description, photos)}],
             )
         except anthropic.RateLimitError as e:
             return AnalysisResult("error", error=f"rate limited: {e.message}", model=self.model)

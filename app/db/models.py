@@ -421,6 +421,19 @@ class Digest(Base):
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class GeoCache(Base):
+    """Geocoded places (city/postcode/country), resolved once through Nominatim."""
+
+    __tablename__ = "geo_cache"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(200), unique=True)
+    country: Mapped[str] = mapped_column(String(2))
+    lat: Mapped[float | None] = mapped_column(Float)
+    lon: Mapped[float | None] = mapped_column(Float)
+    resolved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class ModelHistory(Base):
     """One row per watchlist model per day: supply, valued share and median spread."""
 
@@ -466,6 +479,7 @@ class ListingInsight(Base):
     # condition tags [{key, label, polarity, evidence}] from the rule layer (+ Claude fields)
     tags: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)
     tuv_until: Mapped[date | None] = mapped_column(Date, index=True)  # inspection valid until
+    photo_flags: Mapped[list[str] | None] = mapped_column(JSONB)  # what Claude saw in the photos
     raw: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     error: Mapped[str | None] = mapped_column(Text)
 

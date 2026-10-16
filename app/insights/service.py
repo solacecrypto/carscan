@@ -122,6 +122,9 @@ def _claude_tags(i, rule_tags: list[dict[str, Any]]) -> list[dict[str, Any]]:  #
         add("full_history", "full service history", "good")
     elif i.service_history == "none":
         add("no_history", "no service history", "bad")
+    for flag in i.photo_flags or []:
+        add("photo:" + flag.lower().replace(" ", "_")[:40], f"photo: {flag}", "bad")
+        out[-1]["evidence"] = "seen in the photos"
     for t in rule_tags:  # neutral notes from the rules survive
         if t["polarity"] == "note" and t["key"] not in {o["key"] for o in out}:
             out.append(t)
@@ -153,6 +156,7 @@ def store_result(listing: Listing, result: AnalysisResult, now: datetime) -> Lis
         ins.service_history = i.service_history
         ins.export_only = i.export_only
         ins.defects = i.defects
+        ins.photo_flags = i.photo_flags
     return ins
 
 
@@ -162,12 +166,17 @@ def analyze_pending(
     now: datetime,
     limit: int,
     listing_ids: list[int] | None = None,
+    photos_per_listing: int | None = None,
 ) -> dict[str, int]:
+    if photos_per_listing is None:
+        from app.config import get_settings
+
+        photos_per_listing = get_settings().insights_photos
     counts = {"ok": 0, "refused": 0, "error": 0}
     for listing in pending_listings(session, limit, listing_ids):
         year = listing.first_registration.year if listing.first_registration else "?"
         title = f"{listing.make} {listing.model} {listing.variant or ''} ({year})"
-        result = analyzer(title, listing.description or "")
+        result = analyzer(title, listing.description or "", listing.photos[:photos_per_listing])
         store_result(listing, result, now)
         counts[result.status] = counts.get(result.status, 0) + 1
     session.flush()

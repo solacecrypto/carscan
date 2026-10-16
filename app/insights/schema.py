@@ -40,6 +40,14 @@ class DescriptionInsight(BaseModel):
             "or needed repair; empty if none"
         )
     )
+    photo_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "What the photos show that a buyer should know: visible rust, dents, mismatched "
+            "paint or panels, warning lights on the dashboard, winter tyres, worn interior, "
+            "missing trim. Short English phrases; empty when the photos look fine or none given"
+        ),
+    )
 
 
 JSON_SCHEMA = {
@@ -53,6 +61,7 @@ JSON_SCHEMA = {
         "service_history": {"type": "string", "enum": ["full", "partial", "none", "unknown"]},
         "export_only": {"type": "boolean"},
         "defects": {"type": "array", "items": {"type": "string"}},
+        "photo_flags": {"type": "array", "items": {"type": "string"}},
     },
     "required": [
         "language",
@@ -63,6 +72,7 @@ JSON_SCHEMA = {
         "service_history",
         "export_only",
         "defects",
+        "photo_flags",
     ],
     "additionalProperties": False,
 }
@@ -76,4 +86,7 @@ distributieketting vervangen, kamkedja bytt) is valuable: report it only when th
 was done, not when it is merely recommended. Mark export_only when the car is sold only for
 export, only to traders/dealers, or explicitly without warranty for private buyers. List every
 admitted defect, noise, warning light, rust spot or needed repair as a short English phrase.
-Answer in the JSON schema you are given."""
+When photos are attached, look at them like a careful buyer: report visible rust, dents,
+scratches, mismatched paint or panel gaps, a lit warning light on the dashboard, winter tyres,
+heavy interior wear or missing trim in photo_flags. Do not repeat what the text already says,
+and do not guess from blurry images. Answer in the JSON schema you are given."""

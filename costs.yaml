@@ -112,3 +112,14 @@ repairs:
   oil_consumption: [300, 2000]  # oil consumption
   oil_leak: [200, 800]  # oil leak
   unspecified: [500, 1500]  # unspecified defects (seller says it needs work)
+
+# Pickup trip from the base location (BASE_CITY / BASE_POSTCODE in .env) to the car
+travel:
+  detour_factor: 1.25      # road km ≈ straight-line km × this
+  avg_speed_kmh: 85
+  fuel_eur_per_km: 0.16    # per km, counted for the trip there and the drive back
+  tolls_eur:               # round trip, rough
+    DE: 0
+    BE: 0
+    IT: 90
+    SE: 120

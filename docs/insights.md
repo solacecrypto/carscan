@@ -30,3 +30,10 @@ analysed/pending counts on the status page.
 **Limits**: only what the seller wrote; a missing statement is `unknown`, never a guess.
 Dealer boilerplate ("Fahrzeuge über 150.000 km nur für Export") is the main source of
 `export_only`, which is exactly the trap it is meant to flag.
+
+## Photos
+
+Up to `INSIGHTS_PHOTOS` (default 4) listing photos go with each Claude call as image URL
+blocks. The model reports what a careful buyer would notice (rust, dents, mismatched paint,
+warning lights, winter tyres, worn interior) in `photo_flags`, stored on the insight and turned
+into `photo:<flag>` tags (bad polarity). Set `INSIGHTS_PHOTOS=0` for text only.

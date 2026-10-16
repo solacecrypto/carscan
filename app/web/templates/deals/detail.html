@@ -51,7 +51,19 @@
       <button class="mt-3 btn-primary">Save</button>
     </form>
     <div class="card p-4">
-      <h2 class="font-semibold">Notes on the car</h2>
+      <h2 class="font-semibold">Pickup</h2>
+      {% if trip %}
+      <p class="mt-1 text-sm">≈ <b>{{ trip.km }} km</b> from {{ trip['from'] }}, about {{ trip.hours_one_way }} h one way · fuel + tolls ≈ <b>{{ trip.total_eur|eur }}</b></p>
+      {% else %}<p class="mt-1 text-sm text-ink-400">Location not resolved yet.</p>{% endif %}
+      {% if near_deals %}
+      <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Other open deals within 100 km</p>
+      <ul class="text-sm">{% for nd, km in near_deals %}<li><a href="/deals/{{ nd.id }}" class="underline">{{ nd.listing.make }} {{ nd.listing.model }}</a> · {{ nd.stage.value }} · {{ nd.listing.city or '' }} · {{ km }} km</li>{% endfor %}</ul>
+      {% endif %}
+      {% if near_cars %}
+      <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Positive-return cars within 50 km, worth combining</p>
+      <ul class="text-sm">{% for nc, km in near_cars %}<li><a href="/listings/{{ nc.id }}" class="underline">{{ nc.make }} {{ nc.model }} {{ nc.first_registration.year if nc.first_registration }}</a> · {{ nc.price_eur|eur }} · +{{ nc.spread_eur|eur }} · {{ nc.city or '' }} · {{ km }} km</li>{% endfor %}</ul>
+      {% endif %}
+      <h2 class="mt-4 font-semibold">Notes on the car</h2>
       {% with listing=d.listing %}{% include "listings/_notes.html" %}{% endwith %}
       <h2 class="mt-4 font-semibold">History</h2>
       <ul class="mt-2 space-y-1 text-sm">

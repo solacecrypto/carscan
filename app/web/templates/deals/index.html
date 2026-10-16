@@ -14,7 +14,7 @@
       {% for d in deals %}
       <li class="rounded-lg border border-ink-100 p-2 text-sm">
         <a href="/deals/{{ d.id }}" class="font-medium underline">{{ d.listing.make }} {{ d.listing.model }} {{ d.listing.first_registration.year if d.listing.first_registration }}</a>
-        <span class="text-ink-400">· {{ d.owner.username }} · {{ days_in_stage(d, now) }} d in stage</span>
+        <span class="text-ink-400">· {{ d.owner.username }} · {{ days_in_stage(d, now) }} d in stage{% if trips[d.id] %} · <span title="from the base, one way">≈ {{ trips[d.id].km }} km</span>{% endif %}</span>
         <div class="text-xs text-ink-600">
           ask {{ d.est_price_eur|eur }}{% if d.purchase_price_eur %} · bought {{ d.purchase_price_eur|eur }}{% endif %}
           {% if d.est_landed_cost_eur %} · est. landed {{ d.est_landed_cost_eur|eur }}{% endif %}
