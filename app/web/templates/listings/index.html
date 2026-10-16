@@ -12,7 +12,7 @@
   'gearbox': f.gearbox and true,
   'seller': f.seller_type and true,
   'country': f.country and true,
-  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.paperwork) and true,
+  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok) and true,
   'listed': (f.new_hours or f.price_dropped) and true,
   'more': (f.include_inactive or f.include_duplicates) and true,
 } %}
@@ -158,13 +158,8 @@
         </div>
       {% endcall %}
 
-      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ({'tuv': 'TÜV date mentioned', 'all': 'all papers mentioned'}[f.paperwork] if f.paperwork)]|select|join(', ')) if g.condition else '') %}
-        {{ checks([('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')]) }}
-        <div>
-          <span class="label text-xs">Paperwork mentioned in the ad</span>
-          <div class="mt-1">{{ pills('paperwork', [('', 'any'), ('tuv', 'TÜV date'), ('all', 'TÜV + Teil I + Teil II')], f.paperwork) }}</div>
-          <p class="mt-1 text-[11px] text-ink-400">Few ads list the registration parts, so "all" is strict.</p>
-        </div>
+      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ('papers ok' if f.papers_ok)]|select|join(', ')) if g.condition else '') %}
+        {{ checks([('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('papers_ok', 'hide "papers missing"'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')]) }}
       {% endcall %}
 
       {% call row('listed', 'Listed', ([({24: 'today', 168: 'this week', 720: 'this month'}.get(f.new_hours, 'last ' ~ f.new_hours ~ ' h') if f.new_hours), ('price dropped' if f.price_dropped)]|select|join(' · ')) if g.listed else '') %}

@@ -68,28 +68,10 @@ PATTERNS: list[tuple[str, str, str, str]] = [
         r"motorkontroll?leuchte|kontrollleuchte|warnleuchte|spia (motore|accesa)|storingslamp|motorlamp|motorstörning|voyant (moteur|allum[ée])",
     ),
     (
-        "papers_teil2",
-        "registration part II (Brief) mentioned",
-        "note",
-        r"fahrzeugbrief|kfz-brief|zulassungsbescheinigung teil (ii|2)\b|\bteil ii\b|\bbrief vorhanden|inschrijvingsbewijs|certificato di propriet[àa]|registreringsbevis",
-    ),
-    (
-        "papers_teil1",
-        "registration part I (Schein) mentioned",
-        "note",
-        r"fahrzeugschein|zulassungsbescheinigung teil (i|1)\b|\bteil i\b|kentekenbewijs|libretto di circolazione|carta di circolazione",
-    ),
-    (
-        "papers_coc",
-        "COC paper mentioned",
-        "note",
-        r"\bcoc\b|certificate of conformity|übereinstimmungsbescheinigung|gelijkvormigheidsattest|certificato di conformit",
-    ),
-    (
-        "tuv_report",
-        "inspection report mentioned",
-        "note",
-        r"pr[üu]fbericht|t[üu]v[- ]?bericht|hu[- ]?bericht|keuringsrapport|keuringsbewijs|certificato di revisione|besiktningsprotokoll",
+        "papers_missing",
+        "papers missing",
+        "bad",
+        r"ohne (fahrzeug)?brief|ohne papiere|ohne (fahrzeug)?schein|ohne zulassungsbescheinigung|ohne coc|(fahrzeug)?brief (fehlt|verloren|nicht vorhanden|abhanden)|papiere (fehlen|verloren|nicht vorhanden)|keine papiere|kein (fahrzeug)?brief|zonder papieren|zonder kentekenbewijs|papieren ontbreken|geen papieren|senza libretto|senza documenti|documenti mancanti|utan registreringsbevis|saknar (papper|registreringsbevis)|sans papiers|sans carte grise|no papers|without papers|missing (papers|paperwork|logbook)|no logbook|no v5",
     ),
     (
         "tuv_new",

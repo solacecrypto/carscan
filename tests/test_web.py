@@ -439,17 +439,17 @@ def test_paperwork_filter_and_box(client: TestClient, seeded: dict, db: Session)
     from app.insights.service import apply_rules
 
     row = seeded["a"]
-    row.description = "Unfallfrei. TÜV bis 06/2027. Fahrzeugbrief und Fahrzeugschein vorhanden."
+    row.description = "Unfallfrei. TÜV bis 06/2027."
     apply_rules(row, NOW)
     db.commit()
     page = client.get(f"/listings/{row.id}").text
-    assert "Paperwork" in page and "valid until 06/2027" in page and "3 of 4 mentioned" in page
+    assert "Paperwork" in page and "valid until 06/2027" in page
+    assert "Nothing about missing papers" in page
     results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
-    assert "320i" in results("/listings?paperwork=tuv")
-    assert "320i" in results("/listings?paperwork=all")
-    row.description = "Unfallfrei, TÜV bis 06/2027."
+    assert "320i" in results("/listings?papers_ok=true")
+    row.description = "TÜV bis 06/2027. Verkauf ohne Brief."
     apply_rules(row, NOW)
     db.commit()
-    assert "320i" in results("/listings?paperwork=tuv")
-    assert "No listings match" in results("/listings?paperwork=all")
-    assert "TÜV + Teil I + Teil II" in client.get("/listings?paperwork=all").text
+    assert "Seller says papers are missing" in client.get(f"/listings/{row.id}").text
+    assert "No listings match" in results("/listings?papers_ok=true")
+    assert "320i" in results("/listings")

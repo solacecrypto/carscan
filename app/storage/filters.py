@@ -26,7 +26,7 @@ FILTER_KEYS = (
     "no_export_only",
     "chain_replaced",
     "service_full",
-    "paperwork",
+    "papers_ok",
 )
 
 
@@ -51,10 +51,6 @@ def _profitable(params: Any) -> bool:
         return True
     values = [str(v).lower() for v in (raw if isinstance(raw, list) else [raw])]
     return any(v in ("1", "true", "on", "yes") for v in values)
-
-
-# tags an ad must carry for each paperwork level
-PAPERWORK_KEYS = {"tuv": {"tuv_new"}, "all": {"tuv_new", "papers_teil1", "papers_teil2"}}
 
 
 def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> dict[str, Any]:
@@ -107,8 +103,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "no_export_only": flag("no_export_only") or None,
         "chain_replaced": flag("chain_replaced") or None,
         "service_full": flag("service_full") or None,
-        # "tuv": a TÜV/inspection date or 'new' is mentioned; "all": TÜV + both registration parts
-        "paperwork": text("paperwork") if text("paperwork") in ("tuv", "all") else None,
+        "papers_ok": flag("papers_ok") or None,  # hide ads that say the papers are missing
         "price_dropped": flag("price_dropped"),
         "include_inactive": flag("include_inactive"),
         "include_duplicates": flag("include_duplicates"),
@@ -160,9 +155,9 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         return False
     if f.get("service_full") and (ins is None or ins.service_history != "full"):
         return False
-    if f.get("paperwork"):
+    if f.get("papers_ok"):
         keys = {t.get("key") for t in ((ins.tags if ins else None) or [])}
-        if not PAPERWORK_KEYS[f["paperwork"]] <= keys:
+        if "papers_missing" in keys:
             return False
     return True
 
@@ -198,12 +193,13 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
     countries = _countries(f.get("country"))
     if countries:
         stmt = stmt.where(Listing.country.in_(countries))
-    insight_keys = ("no_accident", "no_export_only", "chain_replaced", "service_full", "paperwork")
+    insight_keys = ("no_accident", "no_export_only", "chain_replaced", "service_full", "papers_ok")
     if any(f.get(k) for k in insight_keys):
         stmt = stmt.outerjoin(ListingInsight, ListingInsight.listing_id == Listing.id)
-        if f.get("paperwork"):
+        if f.get("papers_ok"):
             stmt = stmt.where(
-                ListingInsight.tags.contains([{"key": k} for k in PAPERWORK_KEYS[f["paperwork"]]])
+                (ListingInsight.tags.is_(None))
+                | (~ListingInsight.tags.contains([{"key": "papers_missing"}]))
             )
         if f.get("no_accident"):
             stmt = stmt.where(

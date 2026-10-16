@@ -409,15 +409,20 @@ def test_oil_consumption_tag_from_title_and_spaced_wording(db: Session) -> None:
 def test_paperwork_tags_and_tuv_validity() -> None:
     from app.insights.rules import extract_tags
 
-    text = (
-        "TÜV bis 06/2027, Fahrzeugbrief und Fahrzeugschein vorhanden, COC Papier dabei, "
-        "TÜV-Bericht liegt bei."
-    )
-    tags = {t.key: t for t in extract_tags(text)}
+    tags = {t.key: t for t in extract_tags("TÜV bis 06/2027, Fahrzeugbrief und Schein vorhanden.")}
     assert tags["tuv_new"].until == "06/2027"
     assert tags["tuv_new"].label == "TÜV / inspection until 06/2027"
-    assert {"papers_teil1", "papers_teil2", "papers_coc", "tuv_report"} <= set(tags)
+    assert "papers_missing" not in tags
     assert extract_tags("HU 03/28 neu")[0].until == "03/2028"
     assert extract_tags("TÜV neu bis 2028")[0].until == "12/2028"
     assert extract_tags("TÜV neu")[0].until is None
     assert extract_tags("TÜV 13/2027")[0].until is None  # not a month
+    for text in (
+        "Verkauf ohne Brief, nur für Export.",
+        "Fahrzeugbrief fehlt leider.",
+        "Wordt verkocht zonder papieren.",
+        "Vendo senza libretto.",
+        "Sold without papers, no V5.",
+    ):
+        keys = [t.key for t in extract_tags(text)]
+        assert "papers_missing" in keys, text

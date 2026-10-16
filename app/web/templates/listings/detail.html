@@ -97,30 +97,26 @@
     {% if l.description %}
     {% set tagmap = {} %}
     {% for t in ((i.tags if i else None) or []) %}{% set _ = tagmap.update({t.key: t}) %}{% endfor %}
-    {% set docs = {
-      'DE': [('tuv_new', 'TÜV certificate (Prüfbericht), paper original'), ('papers_teil1', 'Zulassungsbescheinigung Teil I (Fahrzeugschein)'), ('papers_teil2', 'Zulassungsbescheinigung Teil II (Fahrzeugbrief)'), ('papers_coc', 'COC paper (Certificate of Conformity)')],
-      'BE': [('tuv_new', 'Keuringsbewijs / contrôle technique'), ('papers_teil1', 'Inschrijvingsbewijs / certificat d’immatriculation'), ('papers_coc', 'Gelijkvormigheidsattest (COC)')],
-      'IT': [('tuv_new', 'Revisione (inspection) date'), ('papers_teil1', 'Libretto di circolazione'), ('papers_teil2', 'Certificato di proprietà'), ('papers_coc', 'Certificato di conformità (COC)')],
-      'SE': [('tuv_new', 'Besiktning (inspection) date'), ('papers_teil2', 'Registreringsbevis'), ('papers_coc', 'COC paper')],
-    } %}
-    {% set items = docs.get(l.country, docs['DE']) %}
-    {% set n_ok = items|map(attribute=0)|select('in', tagmap)|list|length %}
-    <div class="card mt-4 p-4">
-      <h2>Paperwork <span class="text-xs font-normal text-ink-300">{{ n_ok }} of {{ items|length }} mentioned in the ad</span></h2>
+    {% set tuv = tagmap.get('tuv_new') %}{% set missing = tagmap.get('papers_missing') %}
+    <div class="card mt-4 p-4 {{ 'ring-2 ring-bad-700/40' if missing }}">
+      <h2>Paperwork</h2>
       <ul class="mt-2 space-y-1.5 text-sm">
-        {% for key, label in items %}
-        {% set t = tagmap.get(key) %}
-        <li class="flex items-start gap-2">
-          <span class="mt-0.5 shrink-0 {{ 'text-good-700' if t else 'text-ink-300' }}">{{ '✓' if t else '–' }}</span>
-          <span class="min-w-0"><span class="{{ 'font-medium' if t }}">{{ label }}{% if t and t.until %} <span class="pill bg-good-100 text-good-700">valid until {{ t.until }}</span>{% endif %}</span>
-            <span class="block text-xs text-ink-400">{% if t %}“{{ t.evidence_en or t.evidence }}”{% else %}not mentioned: ask the seller before paying{% endif %}</span></span>
-        </li>
-        {% endfor %}
+        {% if missing %}
+        <li class="flex items-start gap-2"><span class="mt-0.5 shrink-0 font-bold text-bad-700">!</span>
+          <span class="min-w-0"><span class="font-semibold text-bad-700">Seller says papers are missing</span>
+            <span class="block text-xs text-ink-500">“{{ missing.evidence_en or missing.evidence }}”</span></span></li>
+        {% else %}
+        <li class="flex items-start gap-2"><span class="mt-0.5 shrink-0 text-good-700">✓</span>
+          <span class="min-w-0">Nothing about missing papers in the ad <span class="block text-xs text-ink-400">sellers must hand over the registration documents (Teil I and II in Germany); an ad that says otherwise is flagged here</span></span></li>
+        {% endif %}
+        <li class="flex items-start gap-2"><span class="mt-0.5 shrink-0 {{ 'text-good-700' if tuv else 'text-ink-300' }}">{{ '✓' if tuv else '–' }}</span>
+          <span class="min-w-0"><span class="{{ 'font-medium' if tuv }}">{{ 'TÜV / inspection' if l.country != 'DE' else 'TÜV' }}{% if tuv and tuv.until %} <span class="pill bg-good-100 text-good-700">valid until {{ tuv.until }}</span>{% elif tuv %} <span class="pill bg-good-100 text-good-700">mentioned</span>{% endif %}</span>
+            <span class="block text-xs text-ink-400">{% if tuv %}“{{ tuv.evidence_en or tuv.evidence }}”{% else %}not mentioned: ask for the date before paying{% endif %}</span></span></li>
       </ul>
       {% if l.country == 'DE' %}
-      <p class="mt-3 rounded-lg bg-brand-50 p-2.5 text-xs text-brand-800">Before handing over cash: get the physical Teil I, Teil II and the original paper TÜV report. Without the paper TÜV report the RDW will not carry over the expiry date and you pay for a Dutch APK.</p>
+      <p class="mt-3 rounded-lg bg-brand-50 p-2.5 text-xs text-brand-800">Before handing over cash: get the physical Teil I, Teil II and the original paper TÜV report (Prüfbericht). Without the paper TÜV report the RDW will not carry over the expiry date and you pay for a Dutch APK.</p>
       {% else %}
-      <p class="mt-3 rounded-lg bg-brand-50 p-2.5 text-xs text-brand-800">Before handing over cash: get the physical registration certificate(s), the inspection certificate and, if available, the COC paper. The RDW needs the originals.</p>
+      <p class="mt-3 rounded-lg bg-brand-50 p-2.5 text-xs text-brand-800">Before handing over cash: get the physical registration certificate(s) and the inspection certificate. The RDW needs the originals.</p>
       {% endif %}
     </div>
     <div class="card mt-4 p-4">
