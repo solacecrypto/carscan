@@ -1,9 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
 {% set l = listing %}
+{% set rp = l.repair_breakdown %}{% set v = l.nl_value_breakdown %}
 <a href="/listings" class="text-sm text-ink-400 hover:text-ink-700">← Listings</a>
-<div class="mt-2 grid gap-4 lg:grid-cols-5">
-  <div class="min-w-0 lg:col-span-3">
+
+{# ---------- header: what car, what it costs, what to do ---------- #}
+<div class="card mt-2 p-4 sm:p-5">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="min-w-0 sm:flex-1">
+      <h1 class="text-2xl sm:text-3xl">{{ l.make }} {{ l.model }}</h1>
+      <p class="text-sm text-ink-500">{{ l.variant or '' }}</p>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="pill bg-ink-900 text-white">{{ l.country }}</span>
+        <span class="pill bg-ink-100 text-ink-600">{{ l.source }}</span>
+        {% for chip in [l.first_registration|month if l.first_registration, l.mileage_km|km if l.mileage_km is not none, l.gearbox, (l.power_kw ~ ' kW') if l.power_kw, l.body_type, l.color] %}{% if chip %}<span class="pill bg-ink-100 text-ink-600">{{ chip }}</span>{% endif %}{% endfor %}
+        <span class="pill bg-ink-100 text-ink-500">seen {{ l.first_seen|timeago }}</span>
+        {% if not l.is_active %}<span class="pill bg-bad-700 text-white">no longer listed · last seen {{ l.last_seen|timeago }}</span>{% endif %}
+      </div>
+      {% include "listings/_insight_badges.html" %}
+      {% set vflags = (v or {}).get('flags') or [] %}
+      {% if vflags %}<div class="mt-1 flex flex-wrap gap-1">{% for fl in vflags %}<span class="pill tip bg-amber-100 text-amber-800" tabindex="0" data-tip="{{ fl.detail }}">⚠ {{ fl.label }}</span>{% endfor %}</div>{% endif %}
+    </div>
+    <div class="shrink-0 border-t border-ink-100 pt-3 text-left sm:border-0 sm:pt-0 sm:text-right">
+      <div class="text-3xl font-bold leading-none">{{ l.price_eur|eur }}</div>
+      <div class="mt-1 text-xs text-ink-400">asking price{% if l.vat_deductible %} · VAT deductible{% endif %}{% if l.previous_price_eur and l.previous_price_eur > l.price_eur %} · <span class="text-good-700">was {{ l.previous_price_eur|eur }}</span>{% endif %}</div>
+      <div class="mt-3 flex flex-wrap gap-2 sm:justify-end">
+        <a href="{{ l.url }}" target="_blank" rel="noopener" class="btn-dark">Open original ad ↗</a>
+        {% if deal %}
+        <a href="/deals/{{ deal.id }}" class="btn-primary">Deal: {{ deal.stage.value }} · {{ deal.owner.username }} →</a>
+        {% else %}
+        <form method="post" action="/deals" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="listing_id" value="{{ l.id }}">
+          <button class="btn-outline">Track as deal</button></form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="mt-3 border-t border-ink-100 pt-3">{% include "listings/_status.html" %}</div>
+</div>
+
+{# ---------- verdict strip: the four numbers that decide, plus the market grade ---------- #}
+{% set gc = {'A': 'bg-good-700 text-white', 'B': 'bg-good-100 text-good-700', 'C': 'bg-brand-100 text-brand-700', 'D': 'bg-bad-100 text-bad-700', 'E': 'bg-bad-700 text-white'} %}
+<div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+  <a href="#landed" class="card p-3 hover:ring-brand-400">
+    <div class="text-xs text-ink-400">Landed cost</div>
+    <div class="mt-0.5 text-xl font-bold">{{ l.landed_cost_eur|eur if l.landed_cost_eur else '–' }}</div>
+    <div class="text-[11px] text-ink-400">{% if rp %}incl. ≈ {{ rp.estimate|eur }} repairs{% elif l.cost_breakdown %}BPM {{ l.bpm_eur|eur }} · transport {{ l.cost_breakdown.transport_eur|eur }}{% else %}not available{% endif %}</div>
+  </a>
+  <a href="#nlvalue" class="card p-3 hover:ring-brand-400">
+    <div class="text-xs text-ink-400">NL value</div>
+    <div class="mt-0.5 text-xl font-bold">{{ l.nl_value_eur|eur if l.nl_value_eur else '–' }}</div>
+    <div class="text-[11px] text-ink-400">{% if v and v.benchmark %}{{ 'perfect' if v.benchmark.perfect else 'close' }} match on the NL market{% elif v %}median of {{ v.n }} comparables{% else %}no comparables yet{% endif %}</div>
+  </a>
+  <a href="#nlvalue" class="card p-3 hover:ring-brand-400 {{ 'bg-good-100/70' if l.spread_eur is not none and l.spread_eur > 0 else ('bg-bad-100/60' if l.spread_eur is not none) }}">
+    <div class="text-xs text-ink-500">Spread</div>
+    <div class="mt-0.5 text-xl font-bold {{ 'text-good-700' if l.spread_eur is not none and l.spread_eur > 0 else ('text-bad-700' if l.spread_eur is not none) }}">{% if l.spread_eur is not none %}{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}{% else %}–{% endif %}</div>
+    <div class="text-[11px] text-ink-500">{% if l.spread_pct is not none %}{{ l.spread_pct }}% on the landed cost{% else %}NL value minus landed cost{% endif %}</div>
+  </a>
+  <a href="#market" class="card flex items-center gap-3 p-3 hover:ring-brand-400">
+    {% if market %}<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl font-bold {{ gc[market.grade] }}">{{ market.grade }}</span>
+    <div><div class="text-xs text-ink-400">Market</div><div class="text-sm font-semibold">{{ {'A': 'Sells fast', 'B': 'Sells well', 'C': 'Average', 'D': 'Slow', 'E': 'Hard to sell'}[market.grade] }}</div><div class="text-[11px] text-ink-400">{% if market.expected_days %}≈ {{ market.expected_days }} days{% else %}{{ market.n_active }} rivals in NL{% endif %}</div></div>
+    {% else %}<div><div class="text-xs text-ink-400">Market</div><div class="text-sm text-ink-400">no data yet</div></div>{% endif %}
+  </a>
+  <a href="#pickup" class="card p-3 hover:ring-brand-400">
+    <div class="text-xs text-ink-400">Pickup</div>
+    <div class="mt-0.5 text-xl font-bold">{% if trip %}≈ {{ trip.km }} km{% else %}–{% endif %}</div>
+    <div class="text-[11px] text-ink-400">{% if trip %}{{ trip.hours_one_way }} h one way · {{ trip.total_eur|eur }} fuel + tolls{% else %}{{ (l.postcode or '') ~ ' ' ~ (l.city or '') }}{% endif %}</div>
+  </a>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-12">
+  {# ---------- left: the car itself ---------- #}
+  <div class="min-w-0 space-y-4 lg:col-span-7">
     {% if l.photos %}
     <div id="gallery" class="select-none" data-count="{{ l.photos|length }}">
       <div class="relative overflow-hidden rounded-2xl bg-ink-100 shadow-card">
@@ -80,7 +147,7 @@
     {% endif %}
     {% set i = l.insight %}
     {% if i and (i.tags or i.status == 'ok') %}
-    <div class="card mt-4 p-4">
+    <div class="card p-4">
       <h2>Condition <span class="text-xs font-normal text-ink-300">{{ 'read by Claude' if i.status == 'ok' else 'keywords in the description' }}{% if i.language %} · {{ i.language }}{% endif %}</span></h2>
       {% if i.summary %}<p class="mt-1 text-sm text-ink-700">{{ i.summary }}</p>{% endif %}
       {% set colors = {'bad': 'bg-bad-100 text-bad-700', 'good': 'bg-good-100 text-good-700', 'note': 'bg-ink-100 text-ink-600'} %}
@@ -98,12 +165,11 @@
       {% elif i.status == 'ok' and i.photo_flags is not none %}<p class="mt-2 text-xs text-ink-300">📷 Photos checked: nothing alarming.</p>{% endif %}
     </div>
     {% endif %}
-    {% with listing=l %}{% include "listings/_notes.html" %}{% endwith %}
     {% if l.description %}
     {% set tagmap = {} %}
     {% for t in ((i.tags if i else None) or []) %}{% set _ = tagmap.update({t.key: t}) %}{% endfor %}
     {% set tuv = tagmap.get('tuv_new') %}{% set missing = tagmap.get('papers_missing') %}
-    <div class="card mt-4 p-4 {{ 'ring-2 ring-bad-700/40' if missing }}">
+    <div class="card p-4 {{ 'ring-2 ring-bad-700/40' if missing }}">
       <h2>Paperwork</h2>
       <ul class="mt-2 space-y-1.5 text-sm">
         {% if missing %}
@@ -124,7 +190,7 @@
       <p class="mt-3 rounded-lg bg-brand-50 p-2.5 text-xs text-brand-800">Before handing over cash: get the physical registration certificate(s) and the inspection certificate. The RDW needs the originals.</p>
       {% endif %}
     </div>
-    <div class="card mt-4 p-4">
+    <div class="card p-4">
       <h2>Description {% if l.description_en %}<span class="text-xs font-normal text-ink-300">machine translated</span>{% endif %}</h2>
       <pre class="mt-2 whitespace-pre-wrap font-sans text-sm text-ink-700">{{ l.description_en or l.description }}</pre>
       {% if l.description_en %}
@@ -133,35 +199,29 @@
       {% endif %}
     </div>
     {% endif %}
-  </div>
-  <div class="min-w-0 space-y-4 lg:col-span-2">
-    <div class="card p-4">
-      <h1>{{ l.make }} {{ l.model }}</h1>
-      <p class="text-sm text-ink-400">{{ l.variant or '' }}</p>
-      <p class="mt-2 text-3xl font-bold">{{ l.price_eur|eur }}
-        {% if l.vat_deductible %}<span class="text-xs font-normal text-ink-400">VAT deductible</span>{% endif %}</p>
-      {% if not l.is_active %}<p class="mt-1 text-sm font-semibold text-bad-700">No longer listed (last seen {{ l.last_seen|timeago }})</p>{% endif %}
-      <div class="mt-3">{% include "listings/_status.html" %}</div>
-      <div class="mt-3">
-        {% if deal %}
-        <a href="/deals/{{ deal.id }}" class="inline-block btn-primary">Deal: {{ deal.stage.value }} · {{ deal.owner.username }} →</a>
-        {% else %}
-        <form method="post" action="/deals" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="listing_id" value="{{ l.id }}">
-          <button class="btn-outline">Track as deal</button></form>
-        {% endif %}
-      </div>
-      <a href="{{ l.url }}" target="_blank" rel="noopener"
-         class="btn-dark mt-4 w-full py-2.5">Open original ad ↗</a>
-      <div class="mt-3">{% with listing=l %}{% include "listings/_watch.html" %}{% endwith %}</div>
-      {% if l.duplicates or l.duplicate_of %}
-      <div class="mt-3 text-sm">
+    {% with listing=l %}{% include "listings/_notes.html" %}{% endwith %}
+    <div class="card p-4">{% with listing=l %}{% include "listings/_watch.html" %}{% endwith %}</div>
+    {% if l.duplicates or l.duplicate_of %}
+    <div class="card p-4 text-sm">
+      <div>
         <span class="text-ink-400">Same car on:</span>
         {% for d in l.duplicates %}<a class="ml-1 underline" href="/listings/{{ d.id }}">{{ d.source }} ({{ d.price_eur|eur }})</a>{% endfor %}
         {% if l.duplicate_of %}<a class="ml-1 underline" href="/listings/{{ l.duplicate_of.id }}">{{ l.duplicate_of.source }} ({{ l.duplicate_of.price_eur|eur }}, canonical)</a>{% endif %}
       </div>
-      {% endif %}
     </div>
-    <dl class="grid grid-cols-2 gap-x-3 gap-y-1 rounded-xl bg-white p-4 text-sm shadow">
+    {% endif %}
+    <div class="card p-4">
+      <h2 class="font-semibold">Price history</h2>
+      <ul class="mt-2 text-sm">
+        {% for h in l.price_history|reverse %}
+        <li class="flex justify-between border-b border-ink-100 py-1"><span>{{ h.seen_at.strftime('%Y-%m-%d %H:%M') }}</span><span class="font-medium">{{ h.price_eur|eur }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {# ---------- right: the numbers ---------- #}
+  <div class="min-w-0 space-y-4 lg:col-span-5">
+    <div class="card p-4"><h2>Specs</h2><dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
       {% for k, v in [('First registration', l.first_registration|month), ('Mileage', l.mileage_km|km),
                       ('Gearbox', l.gearbox), ('Fuel', l.fuel), ('Power', (l.power_kw ~ ' kW') if l.power_kw else None),
                       ('Body', l.body_type), ('Colour', l.color), ('CO₂', (l.co2_g_km ~ ' g/km') if l.co2_g_km else None),
@@ -170,8 +230,8 @@
       <dt class="text-ink-400">{{ k }}</dt><dd>{{ v or '–' }}</dd>
       {% endfor %}
       <dt class="text-ink-400">Seller</dt><dd>{{ l.seller_type.value }}{% if l.seller_name %} · <a class="underline" href="/sellers/{{ l.seller_name|urlencode }}">{{ l.seller_name }}</a>{% endif %}</dd>
-    </dl>
-    <div class="card p-4">
+    </dl></div>
+    <div id="landed" class="card p-4">
       <h2 class="font-semibold">Landed cost estimate</h2>
       {% set c = l.cost_breakdown %}
       {% if c and c.total_eur %}
@@ -210,7 +270,7 @@
       <p class="text-sm text-ink-400">Not available (missing first registration date or unsupported fuel).</p>
       {% endif %}
     </div>
-    <div class="card p-4">
+    <div id="nlvalue" class="card p-4">
       <h2 class="font-semibold">NL value &amp; spread</h2>
       {% set v = l.nl_value_breakdown %}
       {% if v %}
@@ -259,20 +319,7 @@
       <p class="text-sm text-ink-400">Not enough comparables yet (run the NL comparables searches).</p>
       {% endif %}
     </div>
-    <div class="card p-4">
-      <h2 class="font-semibold">Pickup <span class="text-xs font-normal text-ink-300">from {{ trip['from'] if trip else 'the base' }}</span></h2>
-      {% if trip %}
-      <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
-        <div><div class="text-xs text-ink-400">distance</div><div class="text-lg font-bold">≈ {{ trip.km }} km</div></div>
-        <div><div class="text-xs text-ink-400">drive, one way</div><div class="text-lg font-bold">≈ {{ trip.hours_one_way }} h</div></div>
-        <div><div class="text-xs text-ink-400">fuel + tolls</div><div class="text-lg font-bold">{{ trip.total_eur|eur }}</div></div>
-      </div>
-      <p class="mt-1 text-xs text-ink-400">Fuel {{ trip.fuel_eur|eur }} for the trip there and the drive back{% if trip.tolls_eur %}, tolls ≈ {{ trip.tolls_eur|eur }}{% endif %}. Road distance estimated from the straight line; the transport line in the landed cost already assumes a pickup.</p>
-      {% else %}
-      <p class="text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}.</p>
-      {% endif %}
-    </div>
-    <div class="card p-4">
+    <div id="market" class="card p-4">
       <h2 class="font-semibold">Market <span class="text-xs font-normal text-ink-300">how fast will it sell in NL?</span></h2>
       {% if market %}
       {% set gc = {'A': 'bg-good-700 text-white', 'B': 'bg-good-100 text-good-700', 'C': 'bg-brand-100 text-brand-700', 'D': 'bg-bad-100 text-bad-700', 'E': 'bg-bad-700 text-white'} %}
@@ -298,13 +345,18 @@
       <p class="text-sm text-ink-400">No NL market data for this model yet.</p>
       {% endif %}
     </div>
-    <div class="card p-4">
-      <h2 class="font-semibold">Price history</h2>
-      <ul class="mt-2 text-sm">
-        {% for h in l.price_history|reverse %}
-        <li class="flex justify-between border-b border-ink-100 py-1"><span>{{ h.seen_at.strftime('%Y-%m-%d %H:%M') }}</span><span class="font-medium">{{ h.price_eur|eur }}</span></li>
-        {% endfor %}
-      </ul>
+    <div id="pickup" class="card p-4">
+      <h2 class="font-semibold">Pickup <span class="text-xs font-normal text-ink-300">from {{ trip['from'] if trip else 'the base' }}</span></h2>
+      {% if trip %}
+      <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
+        <div><div class="text-xs text-ink-400">distance</div><div class="text-lg font-bold">≈ {{ trip.km }} km</div></div>
+        <div><div class="text-xs text-ink-400">drive, one way</div><div class="text-lg font-bold">≈ {{ trip.hours_one_way }} h</div></div>
+        <div><div class="text-xs text-ink-400">fuel + tolls</div><div class="text-lg font-bold">{{ trip.total_eur|eur }}</div></div>
+      </div>
+      <p class="mt-1 text-xs text-ink-400">Fuel {{ trip.fuel_eur|eur }} for the trip there and the drive back{% if trip.tolls_eur %}, tolls ≈ {{ trip.tolls_eur|eur }}{% endif %}. Road distance estimated from the straight line; the transport line in the landed cost already assumes a pickup.</p>
+      {% else %}
+      <p class="text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}.</p>
+      {% endif %}
     </div>
   </div>
 </div>

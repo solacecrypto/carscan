@@ -1,11 +1,14 @@
-<tr id="search-{{ s.id }}" class="border-b border-ink-100">
-  <td class="py-2 pr-2"><a href="/searches/{{ s.id }}/edit" class="font-medium underline">{{ s.name }}</a>
-    <div class="text-xs text-ink-400">{{ s.source }} · {{ s.role }} · every {{ s.interval_minutes }} min{% if s.role == 'deals' %} · {{ s.listings|length }} listings{% endif %}</div></td>
-  <td class="py-2 pr-2">
+<tr id="search-{{ s.id }}" class="border-t border-ink-100">
+  <td class="p-2"><a href="/searches/{{ s.id }}/edit" class="font-medium underline">{{ s.name.split(' · ', 1)[1] if ' · ' in s.name else s.name }}</a></td>
+  <td class="p-2 text-ink-600">{{ s.source }}</td>
+  <td class="p-2"><span class="pill {{ 'bg-brand-100 text-brand-800' if s.role == 'deals' else 'bg-sky-100 text-sky-800' }}">{{ s.role }}</span></td>
+  <td class="p-2 whitespace-nowrap text-ink-600">{{ s.interval_minutes }} min</td>
+  <td class="p-2 text-ink-600">{{ s.listings|length if s.role == 'deals' else '–' }}</td>
+  <td class="p-2">
     <button hx-post="/searches/{{ s.id }}/toggle/active" hx-target="#search-{{ s.id }}" hx-swap="outerHTML"
       class="rounded px-2 py-1 text-xs font-semibold {{ 'bg-good-100 text-good-700' if s.active else 'bg-ink-200 text-ink-600' }}">
       {{ 'active' if s.active else 'paused' }}</button></td>
-  <td class="py-2">
+  <td class="p-2">
     <button hx-post="/searches/{{ s.id }}/toggle/alerts_enabled" hx-target="#search-{{ s.id }}" hx-swap="outerHTML"
       class="rounded px-2 py-1 text-xs font-semibold {{ 'bg-sky-100 text-sky-800' if s.alerts_enabled else 'bg-ink-200 text-ink-600' }}">
       alerts {{ 'on' if s.alerts_enabled else 'off' }}</button></td>

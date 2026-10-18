@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="flex items-center justify-between">
-  <h1>Deals</h1>
+<div class="flex items-end justify-between gap-3">
+  <div><h1>Deals</h1><p class="text-sm text-ink-400">Cars someone is working on. Start one with “Track as deal” on a car page.</p></div>
   <a href="/deals?show_closed={{ 'false' if show_closed else 'true' }}" class="text-sm underline">{{ 'hide' if show_closed else 'show' }} sold &amp; dropped</a>
 </div>
 {% set colors = {'spotted': 'bg-ink-200', 'contacted': 'bg-amber-200', 'inspected': 'bg-orange-200', 'bought': 'bg-blue-200',

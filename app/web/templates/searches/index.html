@@ -1,11 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="flex items-center justify-between">
-  <h1>Saved searches</h1>
-  <a href="/searches/new" class="btn-primary">+ New</a>
+<div class="mb-4 flex items-end justify-between gap-3">
+  <div><h1>Saved searches</h1><p class="text-sm text-ink-400">{{ searches|length }} searches · the watchlist in models.yaml creates most of these; deals searches scan foreign sites, comparables searches the Dutch ones.</p></div>
+  <a href="/searches/new" class="btn-primary shrink-0">+ New</a>
 </div>
-<table class="mt-4 w-full card p-2 text-sm">
-  <tbody>{% for s in searches %}{% include "searches/_row.html" %}{% else %}
-  <tr><td class="p-4 text-ink-400">No saved searches yet.</td></tr>{% endfor %}</tbody>
+{% set groups = searches|groupby('source_params.model_key') %}
+{% for g in groups %}
+<h2 class="mt-5 mb-1 text-sm font-semibold uppercase tracking-wide text-ink-400">{{ (g.list[0].source_params.model_key and g.list[0].name.split(' · ')[0]) or 'hand-made' }}</h2>
+<div class="card overflow-x-auto">
+<table class="w-full text-sm">
+  <thead class="bg-ink-50 text-left text-xs uppercase text-ink-400"><tr>
+    <th class="p-2">search</th><th class="p-2">site</th><th class="p-2">role</th><th class="p-2">every</th><th class="p-2">cars</th><th class="p-2">active</th><th class="p-2">alerts</th></tr></thead>
+  <tbody>{% for s in g.list|sort(attribute='source') %}{% include "searches/_row.html" %}{% endfor %}</tbody>
 </table>
+</div>
+{% else %}
+<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">No saved searches yet.</p>
+{% endfor %}
 {% endblock %}

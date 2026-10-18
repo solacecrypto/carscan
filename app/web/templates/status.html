@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Status</h1>
-<div class="mt-4 grid gap-3 sm:grid-cols-2">
+<div class="mb-4"><h1>Status</h1><p class="text-sm text-ink-400">What the scrapers and background jobs are doing.</p></div>
+{% set pc = pipeline %}
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+  {% for label, value, note in [
+    ('cars on sale', pc.active, pc.positive ~ ' with positive return'),
+    ('valued', pc.valued, 'against ' ~ pc.comparables ~ ' NL comparables'),
+    ('ad pages read', pc.with_description, 'of ' ~ pc.active ~ ' cars'),
+    ('translated', pc.translated, 'of ' ~ pc.with_description ~ ' descriptions · ' ~ pc.translate_provider),
+    ('places geocoded', pc.geo_ok, (pc.geo_total - pc.geo_ok) ~ ' unknown'),
+    ('nightly jobs', (pc.last_snapshot.strftime('%d %b') if pc.last_snapshot else '–'), 'digest ' ~ (pc.last_digest.strftime('%d %b') if pc.last_digest else 'never')),
+  ] %}
+  <div class="card p-3"><div class="text-xs text-ink-400">{{ label }}</div><div class="text-xl font-bold">{{ value }}</div><div class="text-[11px] text-ink-400">{{ note }}</div></div>
+  {% endfor %}
+</div>
+<h2 class="mt-6 font-semibold">Sources</h2>
+<div class="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
   {% for s in sources %}
   <div class="card p-4 {{ 'opacity-60' if not s.searches }}">
     <h2 class="font-semibold">{{ s.name }}{% if not s.searches %} <span class="text-xs font-normal text-ink-400">(no active searches)</span>{% endif %}</h2>
