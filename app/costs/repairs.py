@@ -13,7 +13,16 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
-_DEFECT = r"(?:defekt|kaputt|schaden|undicht|fällig|verschlissen|muss|defect|kapot|lek|versleten|moet|rott[ao]|da sostituire|non funziona|trasig|läcker|slut|broken|failed|fault\w*|worn|needs?|leak\w*|not working|slipping|noise|due)"
+_DEFECT = (
+    r"(?:defekt|kaputt|schaden|undicht|fällig|verschlissen|muss|defect|kapot|lek|versleten|moet"
+    r"|rott[ao]|da sostituire|non funziona|trasig|läcker|slut|broken|failed|fault\w*|worn|needs?"
+    r"|leak\w*|not working|slipping|noise|due"
+    # noises: "Getriebe laut, rauscht", "motor klappert", "bak bromt", "gearbox whines"
+    r"|laut\b(?! (?:fahrzeug|papier|angabe|hersteller|tacho|vorbesitzer))|rauscht|heult|jault"
+    r"|singt|rattert|klappert|klackert|quietscht|ruckt|hakt|macht ger[äa]usche|maakt lawaai"
+    r"|bromt|huilt|rammelt|rumoroso|fa rumore|l[åa]ter illa|oljud|whin\w*|grind\w*|rattl\w*"
+    r"|howl\w*|noisy)"
+)
 
 
 def _near(subject: str, words: str = _DEFECT) -> str:

@@ -435,7 +435,7 @@ def translate_backlog(limit: int | None = None) -> dict[str, int]:
     return counts
 
 
-TRANSLATE_COOLDOWN_MINUTES = 30
+TRANSLATE_COOLDOWN_MINUTES = 20
 _TRANSLATE_COOLDOWN_UNTIL = datetime.min.replace(tzinfo=UTC)
 
 

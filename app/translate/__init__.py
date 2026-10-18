@@ -222,7 +222,7 @@ def translate_pending(
             apply_costs(row, now)  # repair patterns also read the English text
             counts["translated"] += 1
             session.commit()  # one row per transaction: never hold locks across the pauses
-            sleep(random.uniform(1.5, 4.0))
+            sleep(random.uniform(4.0, 8.0))
             counts["evidence"] += translate_evidence(row, translator)
         except (TranslateError, httpx.HTTPError) as e:
             log.warning("translate.failed", listing=row.id, provider=translator.name, error=str(e))
@@ -242,5 +242,5 @@ def translate_pending(
             counts["failed"] += 1
             return counts
         session.commit()
-        sleep(random.uniform(1.5, 4.0))
+        sleep(random.uniform(4.0, 8.0))
     return counts

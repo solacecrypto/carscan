@@ -52,7 +52,7 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
     )
     scheduler.add_job(
         translate_backlog,
-        IntervalTrigger(minutes=5, jitter=30),
+        IntervalTrigger(minutes=2, jitter=20),
         id="translate_backlog",
         max_instances=1,
         coalesce=True,

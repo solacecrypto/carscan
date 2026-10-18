@@ -45,9 +45,9 @@ PATTERNS: list[tuple[str, str, str, str]] = [
     ),
     (
         "gearbox_damage",
-        "gearbox damage",
+        "gearbox trouble",
         "bad",
-        r"getriebeschaden|getriebe defekt|cambio (rotto|guasto|da rifare)|bak(schade|kapot)|versnellingsbak (kapot|defect)|växellåd[as]?fel|bo[iî]te (hs|cass[ée])",
+        r"getriebeschaden|getriebe (defekt|kaputt|laut|rauscht|heult|jault|singt|rattert|ruckt|hakt|macht ger[äa]usche)|getriebeger[äa]usch|cambio (rotto|guasto|da rifare|rumoroso|fa rumore)|bak(schade|kapot)|versnellingsbak (kapot|defect|maakt lawaai|bromt|huilt)|växellåd[as]?fel|växellåda(n)? (låter|oljud)|bo[iî]te (hs|cass[ée]|bruyante)|gearbox (whin\w*|nois\w*|grind\w*)|transmission (whin\w*|nois\w*|grind\w*)",
     ),
     (
         "rust",
@@ -163,6 +163,10 @@ def _sentence_around(text: str, start: int, end: int) -> str:
     m = _BOUNDARY.search(text, end)
     if m:
         right = m.end()
+    if right - left > 160:  # a comma-list "sentence": quote the neighbourhood of the match
+        left = max(left, start - 70)
+        right = min(right, end + 70)
+        return "…" + re.sub(r"\s+", " ", text[left:right]).strip() + "…"
     return re.sub(r"\s+", " ", text[left:right]).strip()[:220]
 
 

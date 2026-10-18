@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # machine translation of descriptions: google (keyless, default) | deepl | off
     translate_provider: str = "google"
     deepl_api_key: SecretStr = SecretStr("")
-    translate_per_run: int = 30  # keep bursts small: the keyless endpoint blocks heavy use
+    translate_per_run: int = 6  # a trickle every 2 min: the keyless endpoint blocks bursts
 
     @field_validator("database_url")
     @classmethod

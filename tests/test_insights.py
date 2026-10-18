@@ -474,3 +474,21 @@ def test_photo_flags_become_tags_and_reach_the_claude_call(db: Session) -> None:
     row2 = _listing(db, "ph2", "Noch ein Auto.", photos=["https://x/3.jpg"])
     analyze_pending(db, fake_photos, NOW, limit=5, listing_ids=[row2.id], photos_per_listing=0)
     assert row2.insight.photo_flags == []
+
+
+def test_noisy_gearbox_is_tagged_and_long_lists_are_trimmed() -> None:
+    from app.insights.rules import extract_tags
+
+    text = (
+        "BMW 318i\n- bitte beachten, leider seit kurzem Getriebe laut, rauscht!\n"
+        "- Reifen, Kupplung, Batterie, Radlager usw. neu!\n"
+        "Ausstattung\nABS, Armlehne, Bordcomputer, CD-Spieler, ESP, Elektr. Fensterheber, "
+        "Elektr. Seitenspiegel, Isofix, Lederlenkrad, Nebelscheinwerfer, Nichtraucher-Fahrzeug, "
+        "Reifendruckkontrolle, Scheckheftgepflegt, Servolenkung, Sitzheizung, Sommerreifen, "
+        "Start/Stopp-Automatik, Traktionskontrolle, Winterreifen, Zentralverriegelung"
+    )
+    tags = {t.key: t for t in extract_tags(text)}
+    assert "gearbox_damage" in tags and "Getriebe laut" in tags["gearbox_damage"].evidence
+    ev = tags["full_history"].evidence
+    assert ev.startswith("…") and "Scheckheftgepflegt" in ev and len(ev) < 170
+    assert "gearbox_damage" in {t.key for t in extract_tags("Gearbox whines in 3rd gear")}

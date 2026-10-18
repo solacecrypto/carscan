@@ -109,3 +109,12 @@ def test_inspection_running_out_adds_the_apk_item() -> None:
     assert estimate_repairs("Top Zustand", tuv_until=date(2028, 6, 30), today=today) is None
     expired = estimate_repairs("TÜV abgelaufen", tuv_until=date(2026, 1, 31), today=today)
     assert [i["key"] for i in expired["items"]] == ["tuv_expired"]  # no double counting
+
+
+def test_noises_count_as_defects() -> None:
+    assert "gearbox" in find_items("leider seit kurzem Getriebe laut, rauscht!")
+    assert "gearbox" in find_items("De versnellingsbak maakt lawaai bij optrekken")
+    assert "gearbox" in find_items("Gearbox whines at speed")
+    assert (
+        find_items("Auspuffblende, Aktiv-Lautsprecher, Anhängerbetrieb laut Fahrzeugpapieren") == {}
+    )
