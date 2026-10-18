@@ -116,3 +116,20 @@ def test_styled_unicode_is_folded_and_rejected_text_is_skipped(db: Session) -> N
     assert counts["translated"] == 1 and counts["failed"] == 1
     assert bad.description_en == "" and good.description_en == "EN: fine text"
     assert translate_pending(db, Rejecting(), NOW, limit=5, sleep=lambda _: None)["failed"] == 0
+
+
+def test_translate_job_backs_off_after_a_block(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from app.worker import jobs
+
+    calls: list[int] = []
+
+    def fake_pending(session, translator, now, limit):  # type: ignore[no-untyped-def]
+        calls.append(1)
+        return {"translated": 0, "evidence": 0, "failed": 1}
+
+    monkeypatch.setattr("app.translate.translate_pending", fake_pending)
+    monkeypatch.setattr("app.translate.default_translator", lambda: FakeTranslator())
+    monkeypatch.setattr(jobs, "_TRANSLATE_COOLDOWN_UNTIL", jobs._TRANSLATE_COOLDOWN_UNTIL)
+    assert jobs.translate_backlog(limit=5)["failed"] == 1
+    assert jobs.translate_backlog(limit=5) == {}  # cooling down: no request made
+    assert len(calls) == 1

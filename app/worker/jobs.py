@@ -91,7 +91,7 @@ def run_saved_search(
             assert search is not None
             now = datetime.now(UTC)
             if role == "comparables":
-                items = _apply_watchlist(params, [scraper.parse(r) for r in raws])
+                items = _apply_watchlist(params, _parse_all(scraper, raws))
                 cres = upsert_comparables(s, items, search, now)
                 gone = deactivate_missing_comparables(s, search, run_started_at=started)
                 summary = RunSummary(
@@ -99,10 +99,10 @@ def run_saved_search(
                 )
                 price_changed = 0
             else:
-                items = _apply_watchlist(params, [scraper.parse(r) for r in raws])
+                items = _apply_watchlist(params, _parse_all(scraper, raws))
                 chosen = _select_for_enrichment(s, raws, items, settings.detail_min_spread_eur)
                 _enrich_new(s, scraper, client, chosen, detail_budget)
-                items = _apply_watchlist(params, [scraper.parse(r) for r in raws])
+                items = _apply_watchlist(params, _parse_all(scraper, raws))
                 result = upsert_listings(s, items, search, now)
                 stale = deactivate_missing(s, search, run_started_at=started)
                 dedup = link_duplicates(s, result.new, now)
@@ -167,6 +167,25 @@ def run_saved_search(
     finally:
         if own_client:
             client.close()
+
+
+def _parse_all(scraper: Any, raws: list[RawListing]) -> list[NormalizedListing]:
+    """Parse every ad; one unparseable ad (no price, odd markup) is skipped, not fatal.
+    The run still fails when nothing at all parses, which means the site changed."""
+    items: list[NormalizedListing] = []
+    skipped: list[str] = []
+    for raw in raws:
+        try:
+            items.append(scraper.parse(raw))
+        except ParseError as e:
+            skipped.append(f"{raw.source_listing_id}: {e}")
+    if skipped:
+        log.warning(
+            "scrape.items_skipped", source=scraper.name, count=len(skipped), first=skipped[0]
+        )
+    if raws and not items:
+        raise ParseError(f"none of {len(raws)} ads parsed; first: {skipped[0]}")
+    return items
 
 
 def _apply_watchlist(
@@ -397,16 +416,27 @@ def translate_backlog(limit: int | None = None) -> dict[str, int]:
     from app.config import get_settings
     from app.translate import default_translator, translate_pending
 
+    global _TRANSLATE_COOLDOWN_UNTIL
     translator = default_translator()
     if translator is None:
         return {}
+    now = datetime.now(UTC)
+    if now < _TRANSLATE_COOLDOWN_UNTIL:
+        return {}
     with db_session() as s:
-        counts = translate_pending(
-            s, translator, datetime.now(UTC), limit or get_settings().translate_per_run
-        )
+        counts = translate_pending(s, translator, now, limit or get_settings().translate_per_run)
+    if counts.get("failed") and not counts.get("translated"):
+        # the provider turned us away (302 to a captcha, 429): give it a rest instead of
+        # knocking every five minutes, which only prolongs the block
+        _TRANSLATE_COOLDOWN_UNTIL = now + timedelta(minutes=TRANSLATE_COOLDOWN_MINUTES)
+        log.warning("translate.cooldown", minutes=TRANSLATE_COOLDOWN_MINUTES)
     if any(counts.values()):
         log.info("translate.backlog", **counts)
     return counts
+
+
+TRANSLATE_COOLDOWN_MINUTES = 30
+_TRANSLATE_COOLDOWN_UNTIL = datetime.min.replace(tzinfo=UTC)
 
 
 def geocode_backlog_job(limit: int = 30) -> dict[str, int]:

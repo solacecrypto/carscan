@@ -128,3 +128,30 @@ def test_due_order_is_fair_and_interrupted_runs_close(db: Session) -> None:
     db.commit()
     r = db.scalar(select(ScrapeRun).where(ScrapeRun.error.isnot(None)))
     assert r is not None and r.status is ScrapeStatus.failed and "interrupted" in (r.error or "")
+
+
+def test_one_unparseable_ad_does_not_fail_the_run() -> None:
+    from datetime import UTC, datetime
+
+    import pytest
+
+    from app.normalize import RawListing
+    from app.scrapers import ParseError, get_scraper
+    from app.worker.jobs import _parse_all
+
+    scraper = get_scraper("marktplaats")
+    now = datetime.now(UTC)
+
+    def ad(sid: str, cents: int) -> RawListing:
+        data = {"itemId": sid, "title": "BMW 320i", "priceInfo": {"priceCents": cents}}
+        data.update({"attributes": [], "location": {}})
+        return RawListing(
+            source="marktplaats", source_listing_id=sid, url="u", fetched_at=now, data=data
+        )
+
+    good, bad = ad("m1", 500_000), ad("m2", 0)
+    items = _parse_all(scraper, [good, bad])
+    assert [i.source_listing_id for i in items] == ["m1"]
+    with pytest.raises(ParseError):
+        _parse_all(scraper, [bad])
+    assert _parse_all(scraper, []) == []
