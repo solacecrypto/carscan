@@ -85,7 +85,11 @@ def apply_value(row: Listing, comps: list[Comp], cfg: ValuationConfig) -> ValueE
 
 
 def recompute_values(
-    session: Session, now: datetime, active_only: bool = True, model_key: str | None = None
+    session: Session,
+    now: datetime,
+    active_only: bool = True,
+    model_key: str | None = None,
+    batch_commit: int | None = None,
 ) -> int:
     """Re-value listings; ``model_key`` limits it to one watchlist model (a scrape run only
     changes that model's cars or comparables). Rows are taken in id order so concurrent
@@ -101,5 +105,7 @@ def recompute_values(
     for row in session.scalars(stmt):
         apply_value(row, comps, cfg)
         n += 1
+        if batch_commit and n % batch_commit == 0:
+            session.commit()  # the CLI runs next to the worker: keep lock windows short
     session.flush()
     return n

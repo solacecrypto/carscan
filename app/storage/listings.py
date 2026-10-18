@@ -91,7 +91,9 @@ def apply_costs(row: Listing, today: datetime) -> None:
     row.cost_version = lc.config_version
 
 
-def recompute_costs(session: Session, now: datetime, only_stale: bool = False) -> int:
+def recompute_costs(
+    session: Session, now: datetime, only_stale: bool = False, batch_commit: int | None = None
+) -> int:
     """Recompute every listing (or only those computed with an older costs.yaml version)."""
     stmt = select(Listing).order_by(Listing.id)
     if only_stale:
@@ -101,6 +103,8 @@ def recompute_costs(session: Session, now: datetime, only_stale: bool = False) -
     for row in session.scalars(stmt):
         apply_costs(row, now)
         n += 1
+        if batch_commit and n % batch_commit == 0:
+            session.commit()  # the CLI runs next to the worker: keep lock windows short
     session.flush()
     return n
 

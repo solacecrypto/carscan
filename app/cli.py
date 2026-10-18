@@ -525,6 +525,10 @@ def doctor() -> None:
     raise typer.Exit(code=0 if ok else 1)
 
 
+def _chunks(ids: list[int], size: int) -> list[list[int]]:
+    return [ids[i : i + size] for i in range(0, len(ids), size)]
+
+
 @app.command("normalize")
 def normalize_cmd() -> None:
     """Backfill canonical colour and body type on stored listings and comparables from raw."""
@@ -548,13 +552,21 @@ def normalize_cmd() -> None:
     hints = _model_bodies()
     n = c = 0
     with db_session() as s:
-        for row in s.scalars(select(Listing).order_by(Listing.id)):
-            row.color = color_from_raw(row) or row.color
-            row.body_type = canonical_body(row.body_type, hints.get(row.model_key or ""))
-            n += 1
-        for comp in s.scalars(select(Comparable).order_by(Comparable.id)):
-            comp.body_type = canonical_body(comp.body_type, hints.get(comp.model_key or ""))
-            c += 1
+        lids = list(s.scalars(select(Listing.id).order_by(Listing.id)))
+        cids = list(s.scalars(select(Comparable.id).order_by(Comparable.id)))
+    for chunk in _chunks(lids, 300):
+        with db_session() as s:
+            for row in s.scalars(select(Listing).where(Listing.id.in_(chunk)).order_by(Listing.id)):
+                row.color = color_from_raw(row) or row.color
+                row.body_type = canonical_body(row.body_type, hints.get(row.model_key or ""))
+                n += 1
+    for chunk in _chunks(cids, 300):
+        with db_session() as s:
+            for comp in s.scalars(
+                select(Comparable).where(Comparable.id.in_(chunk)).order_by(Comparable.id)
+            ):
+                comp.body_type = canonical_body(comp.body_type, hints.get(comp.model_key or ""))
+                c += 1
     typer.echo(f"normalized {n} listings and {c} comparables")
 
 
@@ -618,9 +630,18 @@ def insights_rules() -> None:
     now = datetime.now(UTC)
     n = 0
     with db_session() as s:
-        for row in s.scalars(_select(Listing).where(Listing.description.isnot(None))):
-            if apply_rules(row, now) is not None:
-                n += 1
+        ids = list(
+            s.scalars(
+                _select(Listing.id).where(Listing.description.isnot(None)).order_by(Listing.id)
+            )
+        )
+    for chunk in _chunks(ids, 200):  # short transactions: the worker keeps running meanwhile
+        with db_session() as s:
+            for row in s.scalars(
+                _select(Listing).where(Listing.id.in_(chunk)).order_by(Listing.id)
+            ):
+                if apply_rules(row, now) is not None:
+                    n += 1
     typer.echo(f"tagged {n} listings")
 
 
@@ -698,7 +719,7 @@ def values_recompute() -> None:
     from app.valuation import recompute_values
 
     with db_session() as s:
-        n = recompute_values(s, datetime.now(UTC))
+        n = recompute_values(s, datetime.now(UTC), batch_commit=500)
     typer.echo(f"recomputed {n} listings")
 
 
@@ -756,7 +777,7 @@ def costs_recompute(
     from app.storage import recompute_costs
 
     with db_session() as s:
-        n = recompute_costs(s, datetime.now(UTC), only_stale=only_stale)
+        n = recompute_costs(s, datetime.now(UTC), only_stale=only_stale, batch_commit=500)
     typer.echo(f"recomputed {n} listings")
 
 

@@ -118,3 +118,10 @@ def test_noises_count_as_defects() -> None:
     assert (
         find_items("Auspuffblende, Aktiv-Lautsprecher, Anhängerbetrieb laut Fahrzeugpapieren") == {}
     )
+
+
+def test_rust_free_is_not_rust() -> None:
+    assert find_items("allgemeiner guter Zustand, Karosserie rostfrei") == {}
+    assert find_items("body is rust-free, interior clean") == {}
+    assert find_items("Carrosserie roestvrij") == {}
+    assert "rust" in find_items("Rost an der Heckklappe")

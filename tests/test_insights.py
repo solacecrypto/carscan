@@ -492,3 +492,10 @@ def test_noisy_gearbox_is_tagged_and_long_lists_are_trimmed() -> None:
     ev = tags["full_history"].evidence
     assert ev.startswith("…") and "Scheckheftgepflegt" in ev and len(ev) < 170
     assert "gearbox_damage" in {t.key for t in extract_tags("Gearbox whines in 3rd gear")}
+
+
+def test_rust_free_is_not_tagged_as_rust() -> None:
+    from app.insights.rules import extract_tags
+
+    assert "rust" not in {t.key for t in extract_tags("Karosserie rostfrei, rust-free body")}
+    assert "rust" in {t.key for t in extract_tags("Rost an den Radläufen")}

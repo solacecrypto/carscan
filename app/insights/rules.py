@@ -53,7 +53,7 @@ PATTERNS: list[tuple[str, str, str, str]] = [
         "rust",
         "rust",
         "bad",
-        r"\brost\b|\brostig|\broest\b|\bruggine\b|\brost(ig|angrepp)|\brouille",
+        r"\brost\b(?![- ]?frei)|\brostig|\broest\b(?![- ]?vrij)|\bruggine\b(?! assente)|\brost(ig|angrepp)|\brouille|\brust(y|ed)?\b(?![- ]?free)",
     ),
     (
         "oil_consumption",

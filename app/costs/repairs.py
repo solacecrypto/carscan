@@ -71,7 +71,7 @@ ITEMS: tuple[RepairItem, ...] = (
     RepairItem("steering", "power steering", 400, 1000,
         _near("servolenkung|lenkung|stuurbekrachtiging|servosterzo|servostyrning|power steering|steering", _DEFECT + r"|schwerg[äa]ngig|heavy|non funziona")),
     RepairItem("rust", "rust", 300, 1500,
-        r"\brost\b|rostig|durchrostung|rostl[öo]cher|\broest\b|roestplekken|doorgeroest|ruggine|rostskador|rostangrepp|\brust(?:y|ed)?\b|corrosion"),
+        r"\brost\b(?![- ]?frei)|rostig|durchrostung|rostl[öo]cher|\broest\b(?![- ]?vrij)|roestplekken|doorgeroest|ruggine(?! assente)|rostskador|rostangrepp|\brust(?:y|ed)?\b(?![- ]?free)|corrosion(?![- ]?free)"),
     RepairItem("body_damage", "bodywork damage", 200, 1500,
         r"unfallschaden|hagelschaden|blechschaden|karosserieschaden|beulen?\b|kratzer|schade aan|deuk|krassen|plaatschade|carrozzeria danneggiata|ammaccat|bucklor|pl[åa]tskador|\bdents?\b|scratches|body damage|bumper damage|accident damage"),
     RepairItem("airbag", "airbag fault", 300, 800,
@@ -96,6 +96,7 @@ ITEMS: tuple[RepairItem, ...] = (
 )  # fmt: skip
 
 # "kein Rost", "no rust" … and parts that were just renewed: "neue Stoßdämpfer", "new clutch"
+_NO_RUST = re.compile(r"rostfrei|rost-frei|roestvrij|rust[- ]?free|senza ruggine|rostfri\b", re.I)
 _NEGATION = re.compile(
     r"(?:\bkein\w*|\bohne|\bgeen|\bzonder|\bno\b|\bsenza|\binga\b|\bingen\b|\bnot\b|\bwithout|\bnicht|\bniet"
     r"|\bneue?[rnsm]?\b|\bnieuwe?\b|\bnuov[oaie]\b|\bny[a]?\b|\bnew\b|\berneuert\w*|\bvervangen|\bsostituit\w*|\breplaced)"
