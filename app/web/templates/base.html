@@ -34,8 +34,8 @@
       .panel select.input option { @apply text-ink-900; }
       .check { @apply flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/10; }
       .check input { @apply h-4 w-4 rounded border-ink-300 text-brand-500 focus:ring-brand-400; }
-      .btn { @apply inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition; }
-      .btn-primary { @apply btn bg-brand-500 text-ink-950 hover:bg-brand-400; }
+      .btn { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold transition active:scale-[.98]; }
+      .btn-primary { @apply btn bg-brand-500 text-ink-950 shadow-sm hover:bg-brand-400; }
       .btn-dark { @apply btn bg-ink-900 text-white hover:bg-ink-700; }
       .btn-ghost { @apply btn bg-ink-100 text-ink-700 hover:bg-ink-200; }
       .btn-outline { @apply btn border border-ink-300 text-ink-700 hover:border-ink-500; }
@@ -48,6 +48,14 @@
       .kv dt { @apply text-ink-400; }
       h1 { @apply text-2xl font-bold tracking-tight text-ink-900; }
       h2 { @apply font-semibold text-ink-900; }
+      /* inside a card a heading is a quiet label: the content is the point */
+      .card > h2, .card > div > h2 { @apply text-[11.5px] font-semibold uppercase tracking-wider text-ink-500; }
+      .card > h2 span, .card > div > h2 span { @apply normal-case tracking-normal; }
+      table thead th { @apply text-[11px] font-semibold uppercase tracking-wider text-ink-400; }
+      tbody tr:nth-child(even) { @apply bg-ink-50/60; }
+      a.underline { @apply decoration-ink-300 underline-offset-2 hover:decoration-ink-700; }
+      ::-webkit-scrollbar { height: 6px; width: 6px; }
+      ::-webkit-scrollbar-thumb { @apply rounded-full bg-ink-200; }
     }
   </style>
   <script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
@@ -55,16 +63,20 @@
 <body class="min-h-full bg-ink-50 text-ink-900 antialiased" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
   {% if user %}
   <nav class="sticky top-0 z-20 border-b border-white/10 bg-ink-950/95 text-ink-100 backdrop-blur">
-    <div class="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto whitespace-nowrap px-3 py-2 text-sm [scrollbar-width:none]">
-      <a href="/listings" class="mr-2 flex shrink-0 items-center gap-2 font-bold tracking-tight text-white">
-        <span class="inline-block h-6 w-6 rounded-md bg-brand-500"></span><span class="hidden sm:inline">Car Scanner</span></a>
+    <div class="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto whitespace-nowrap px-3 py-2 text-sm [scrollbar-width:none] sm:px-4">
+      <a href="/listings" class="mr-3 flex shrink-0 items-center gap-2 font-bold tracking-tight text-white">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 text-ink-950">
+          <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2-5h14l2 5M4 13h16v5H4zM7 18v2M17 18v2"/><path d="M7 15.5h.01M17 15.5h.01"/></svg>
+        </span><span class="hidden sm:inline">Car Scanner</span></a>
       {% set path = request.url.path %}
       {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/models', 'Models'), ('/digest', 'Digest'), ('/searches', 'Searches'), ('/calibration', 'Calibration'), ('/status', 'Status')] %}
-      <a href="{{ href }}" class="shrink-0 rounded-lg px-3 py-1.5 {{ 'bg-white/10 text-white' if path.startswith(href) or (href == '/listings' and path == '/') else 'text-ink-300 hover:bg-white/5 hover:text-white' }}">{{ text }}</a>
+      {% set on = path.startswith(href) or (href == '/listings' and (path == '/' or path.startswith('/sellers'))) %}
+      <a href="{{ href }}" class="relative shrink-0 rounded-lg px-3 py-1.5 {{ 'text-white' if on else 'text-ink-300 hover:bg-white/5 hover:text-white' }}">{{ text }}{% if on %}<span class="absolute inset-x-3 -bottom-2 h-0.5 rounded-full bg-brand-500"></span>{% endif %}</a>
       {% endfor %}
-      <form method="post" action="/logout" class="ml-auto shrink-0">
+      <form method="post" action="/logout" class="ml-auto flex shrink-0 items-center gap-2">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button class="whitespace-nowrap rounded-lg px-2 py-1.5 text-xs text-ink-400 hover:text-white" title="{{ user.username }}">log out</button>
+        <span class="hidden text-xs text-ink-400 sm:inline">{{ user.username }}</span>
+        <button class="whitespace-nowrap rounded-lg border border-white/10 px-2 py-1 text-xs text-ink-300 hover:border-white/30 hover:text-white">log out</button>
       </form>
     </div>
   </nav>

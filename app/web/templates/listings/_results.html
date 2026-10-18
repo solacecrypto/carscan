@@ -3,8 +3,8 @@
   <p class="mb-3 text-sm text-ink-400">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for l in listings %}
-    <article class="card group transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }}">
-      <a href="/listings/{{ l.id }}" class="relative block overflow-hidden rounded-t-2xl">
+    <article class="card group overflow-visible border-t-4 transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }} {{ 'border-good-700' if l.spread_eur is not none and l.spread_eur > 0 else ('border-bad-700/70' if l.spread_eur is not none else 'border-ink-200') }}">
+      <a href="/listings/{{ l.id }}" class="relative block overflow-hidden rounded-t-xl">
         {% if l.photos %}
         <img src="{{ l.photos[0] }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover">
         {% else %}
@@ -24,7 +24,7 @@
           <a href="/listings/{{ l.id }}" class="min-w-0 font-semibold leading-tight">{{ l.make }} {{ l.model }}
             <span class="block truncate text-xs font-normal text-ink-400" title="{{ l.variant or '' }}">{{ l.variant or '' }}</span></a>
           <div class="shrink-0 text-right">
-            <div class="text-lg font-bold">{{ l.price_eur|eur }}</div>
+            <div class="text-lg font-bold tracking-tight">{{ l.price_eur|eur }}</div>
             {% if l.previous_price_eur and l.previous_price_eur > l.price_eur %}<div class="text-xs text-good-700">was {{ l.previous_price_eur|eur }}</div>{% endif %}
           </div>
         </div>
