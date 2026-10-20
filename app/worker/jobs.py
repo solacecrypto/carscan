@@ -402,7 +402,14 @@ def run_all_active_searches(
     todo = [i for i in ids if not source_cooling(sources.get(i, ""), now)]
     if len(todo) < len(ids):
         log.info("scrape.skipped_cooling", count=len(ids) - len(todo))
-    return [run_saved_search(i, detail_budget=detail_budget) for i in todo]
+    from app.health import beat
+
+    beat("scrape_due", True, detail={"due": len(todo)})  # alive, even when nothing is due
+    out = []
+    for i in todo:
+        out.append(run_saved_search(i, detail_budget=detail_budget))
+        beat("scrape_due", True)  # a pass can take an hour: beat per search, not per pass
+    return out
 
 
 def run_due_searches() -> list[RunSummary]:
