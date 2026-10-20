@@ -77,7 +77,7 @@
       {% if unread_notifications is defined %}{% with unread=unread_notifications %}{% include "notifications/_bell.html" %}{% endwith %}{% endif %}
       <form method="post" action="/logout" class="flex shrink-0 items-center gap-2">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <span class="hidden text-xs text-ink-400 sm:inline">{{ user.username }}</span>
+        <a href="/account" class="hidden rounded-lg px-2 py-1 text-xs text-ink-300 hover:text-white sm:inline" title="account">{{ user.username }}</a>
         <button class="whitespace-nowrap rounded-lg border border-white/10 px-2 py-1 text-xs text-ink-300 hover:border-white/30 hover:text-white">log out</button>
       </form>
     </div>

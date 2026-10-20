@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4"><h1>Account</h1><p class="text-sm text-ink-400">Signed in as <b>{{ user.username }}</b>{% if user.is_admin %} · admin{% endif %}.</p></div>
+{% if msg %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">{{ msg }}</div>{% endif %}
+{% if err %}<div class="mb-4 rounded-xl bg-bad-100 px-4 py-3 text-sm text-bad-700">{{ err }}</div>{% endif %}
+<div class="grid gap-4 lg:grid-cols-2">
+  <form method="post" action="/account/password" class="card space-y-3 p-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>Change password</h2>
+    <label class="label block text-xs">Current password<input type="password" name="current" class="input" autocomplete="current-password" required></label>
+    <label class="label block text-xs">New password (8+ characters)<input type="password" name="new" class="input" autocomplete="new-password" minlength="8" required></label>
+    <label class="label block text-xs">Repeat new password<input type="password" name="repeat" class="input" autocomplete="new-password" minlength="8" required></label>
+    <button class="btn-primary">Change password</button>
+  </form>
+  <div class="card space-y-3 p-4">
+    <h2>Telegram</h2>
+    <p class="text-sm text-ink-600">Handle on file: <b>{{ '@' ~ user.telegram_username if user.telegram_username else 'none' }}</b>. It links your Claim / Pass presses in the group to your account.</p>
+    {% if user.is_admin %}<p class="text-sm"><a href="/users" class="underline">Manage users →</a></p>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -596,3 +596,52 @@ def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Ses
     assert db.get(Subscription, sub.id).active is False
     client.post(f"/wanted/{sub.id}/delete", data={"csrf_token": token})
     assert db.query(Subscription).count() == 0
+
+
+def test_account_and_user_management(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.db import User
+    from app.web.security import verify_password
+
+    me = seeded["user"]
+    token = _csrf(client.get("/account").text)
+    r = client.post(
+        "/account/password",
+        data={"current": "wrong", "new": "newpass123", "repeat": "newpass123", "csrf_token": token},
+    )
+    assert r.status_code == 400 and "current password is wrong" in r.text
+    r = client.post(
+        "/account/password",
+        data={
+            "current": "pw12345678",
+            "new": "newpass123",
+            "repeat": "newpass123",
+            "csrf_token": token,
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    db.expire_all()
+    assert verify_password("newpass123", db.get(User, me.id).password_hash)
+
+    assert client.get("/users").status_code == 403  # not an admin yet
+    me.is_admin = True
+    db.commit()
+    page = client.get("/users").text
+    assert "Add a user" in page and "(you)" in page
+    r = client.post(
+        "/users",
+        data={"username": "pat", "password": "patpass123", "csrf_token": token, "is_admin": ""},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    pat = db.scalar(select(User).where(User.username == "pat"))
+    assert pat is not None and not pat.is_admin
+    client.post(f"/users/{pat.id}/reset", data={"password": "another123", "csrf_token": token})
+    db.expire_all()
+    assert verify_password("another123", db.get(User, pat.id).password_hash)
+    client.post(f"/users/{pat.id}/toggle_admin", data={"csrf_token": token})
+    db.expire_all()
+    assert db.get(User, pat.id).is_admin
+    assert client.post(f"/users/{me.id}/delete", data={"csrf_token": token}).status_code == 400
+    client.post(f"/users/{pat.id}/delete", data={"csrf_token": token})
+    assert db.scalar(select(User).where(User.username == "pat")) is None

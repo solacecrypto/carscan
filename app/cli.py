@@ -64,11 +64,13 @@ def users_create(
     with db_session() as s:
         if s.scalar(select(User).where(User.username == username)):
             raise typer.BadParameter(f"user {username!r} already exists")
+        first = s.scalar(select(User.id)) is None  # the first account is the admin
         s.add(
             User(
                 username=username,
                 password_hash=hash_password(password),
                 telegram_username=telegram_username.lstrip("@") if telegram_username else None,
+                is_admin=first,
             )
         )
     typer.echo(f"created user {username}")
