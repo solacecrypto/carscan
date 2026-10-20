@@ -24,6 +24,7 @@ KINDS = {
     "wanted": "new car for a wanted model",
     "note": "note on a starred car",
     "claimed": "someone claimed a starred car",
+    "system": "system health",
 }
 
 
@@ -55,6 +56,15 @@ def push(
                 Notification.user_id == user_id,
                 Notification.kind == kind,
                 Notification.listing_id == listing.id,
+                Notification.read_at.is_(None),
+            )
+        )
+    elif kind == "system":
+        existing = session.scalar(
+            select(Notification).where(
+                Notification.user_id == user_id,
+                Notification.kind == kind,
+                Notification.title == title,
                 Notification.read_at.is_(None),
             )
         )

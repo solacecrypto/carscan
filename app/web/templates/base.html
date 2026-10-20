@@ -83,6 +83,12 @@
     </div>
   </nav>
   {% endif %}
+  {% if health_issues %}
+  {% set errs = health_issues|selectattr('severity', 'equalto', 'error')|list %}
+  <a href="/status" class="block {{ 'bg-bad-700' if errs else 'bg-brand-500' }} px-3 py-2 text-center text-sm font-semibold {{ 'text-white' if errs else 'text-ink-950' }}">
+    ⚠ {{ health_issues[0].title }}{% if health_issues|length > 1 %} · and {{ health_issues|length - 1 }} more{% endif %} · see status
+  </a>
+  {% endif %}
   <main class="mx-auto max-w-7xl px-3 py-5 sm:px-4">
     {% block content %}{% endblock %}
   </main>

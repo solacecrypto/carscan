@@ -512,6 +512,35 @@ def digest_job(send: bool = True) -> int:
     return digest_id
 
 
+_KNOWN_ISSUES: set[str] = set()
+
+
+def health_job() -> list[str]:
+    """Every 5 min: evaluate the health rules; a newly appeared issue goes to every user as a
+    notification and to the admin chat. Resolved issues are logged."""
+    from app.db.models import User
+    from app.health import check
+    from app.notify import push
+
+    now = datetime.now(UTC)
+    with db_session() as s:
+        issues = check(s, now)
+        keys = {i.key for i in issues}
+        new = [i for i in issues if i.key not in _KNOWN_ISSUES]
+        if new:
+            users = list(s.scalars(select(User.id)))
+            for i in new:
+                log.error("health.issue", key=i.key, title=i.title, detail=i.detail)
+                for uid in users:
+                    push(s, uid, "system", f"⚠ {i.title}", i.detail, now, url="/status")
+                notify_admin(f"[health] {i.title}: {i.detail}")
+        for key in _KNOWN_ISSUES - keys:
+            log.info("health.resolved", key=key)
+        _KNOWN_ISSUES.clear()
+        _KNOWN_ISSUES.update(keys)
+    return sorted(keys)
+
+
 def snapshot_models_job() -> int:
     """Nightly: one history row per watchlist model (supply, valued share, median spread)."""
     from app.market.history import snapshot_models

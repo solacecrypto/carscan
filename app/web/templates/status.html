@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="mb-4"><h1>Status</h1><p class="text-sm text-ink-400">What the scrapers and background jobs are doing.</p></div>
+{% if issues %}
+<div class="mb-4 space-y-2">
+  {% for i in issues %}
+  <div class="rounded-xl px-4 py-3 text-sm {{ 'bg-bad-100 text-bad-700' if i.severity == 'error' else 'bg-brand-100 text-brand-800' }}"><b>{{ i.title }}</b> · {{ i.detail }}</div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700"><b>All clear.</b> Scrape loop, sources and background jobs are running.</div>
+{% endif %}
 {% set pc = pipeline %}
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
   {% for label, value, note in [
@@ -34,6 +43,15 @@
   <h2 class="font-semibold">Description analysis (Claude)</h2>
   {% if insights.enabled %}<p>{{ insights.analysed }} of {{ insights.with_description }} active listings with a description analysed.</p>
   {% else %}<p class="text-brand-700">Disabled: set ANTHROPIC_API_KEY in .env to enable.</p>{% endif %}
+</div>
+<h2 class="mt-6 font-semibold">Background jobs</h2>
+<div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+  {% for h in heartbeats %}
+  <div class="card p-3 {{ 'ring-2 ring-bad-700/40' if h.last_error }}"><div class="font-medium">{{ h.job }}</div>
+    <div class="text-xs text-ink-500">last run {{ h.last_run_at|timeago }} · last ok {{ h.last_ok_at|timeago }}</div>
+    {% if h.detail %}<div class="text-[11px] text-ink-400">{% for k, v in h.detail.items() %}{{ k }}={{ v }} {% endfor %}</div>{% endif %}
+    {% if h.last_error %}<div class="mt-1 break-words text-[11px] text-bad-700">{{ h.last_error[:160] }}</div>{% endif %}</div>
+  {% else %}<p class="text-xs text-ink-400">No heartbeats yet (the worker writes them).</p>{% endfor %}
 </div>
 <h2 class="mt-6 font-semibold">Recent runs</h2>
 <div class="mt-2 overflow-x-auto card">

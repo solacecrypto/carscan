@@ -15,12 +15,14 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import Settings, get_settings
+from app.health import with_heartbeat
 from app.logging import configure_logging
 from app.worker.jobs import (
     analyze_backlog,
     digest_job,
     enrich_backlog,
     geocode_backlog_job,
+    health_job,
     run_due_searches,
     snapshot_models_job,
     translate_backlog,
@@ -35,7 +37,7 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
     # One job only: max_instances=1 keeps a long pass from overlapping with the next tick.
     # (A separate start-up job would run concurrently with it and double-run searches.)
     scheduler.add_job(
-        run_due_searches,
+        with_heartbeat("scrape_due")(run_due_searches),
         IntervalTrigger(minutes=min(5, interval_minutes), jitter=30),
         id="scrape_due",
         max_instances=1,
@@ -44,28 +46,28 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         next_run_time=datetime.now(UTC),
     )
     scheduler.add_job(
-        analyze_backlog,
+        with_heartbeat("insights")(analyze_backlog),
         IntervalTrigger(minutes=10, jitter=60),
         id="insights_backlog",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        translate_backlog,
+        with_heartbeat("translate")(translate_backlog),
         IntervalTrigger(minutes=2, jitter=20),
         id="translate_backlog",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        geocode_backlog_job,
+        with_heartbeat("geocode")(geocode_backlog_job),
         IntervalTrigger(minutes=5, jitter=30),
         id="geocode_backlog",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        digest_job,
+        with_heartbeat("digest")(digest_job),
         CronTrigger(hour=7, minute=0, timezone="Europe/Amsterdam"),
         id="digest",
         max_instances=1,
@@ -73,7 +75,7 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         misfire_grace_time=3600,
     )
     scheduler.add_job(
-        snapshot_models_job,
+        with_heartbeat("snapshot")(snapshot_models_job),
         CronTrigger(hour=2, minute=30, timezone="UTC"),
         id="models_snapshot",
         max_instances=1,
@@ -81,7 +83,14 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         misfire_grace_time=3600,
     )
     scheduler.add_job(
-        enrich_backlog,
+        health_job,
+        IntervalTrigger(minutes=5, jitter=20),
+        id="health",
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        with_heartbeat("enrich")(enrich_backlog),
         IntervalTrigger(minutes=15, jitter=60),
         id="detail_backlog",
         max_instances=1,

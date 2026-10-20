@@ -7,6 +7,7 @@ from app.db import (
     Comparable,
     Digest,
     GeoCache,
+    Heartbeat,
     Listing,
     ListingInsight,
     ModelHistory,
@@ -14,6 +15,7 @@ from app.db import (
     ScrapeRun,
     ScrapeStatus,
 )
+from app.health import check
 from app.scrapers import all_scrapers
 from app.web.deps import DB, CurrentUser
 from app.web.templating import templates
@@ -122,6 +124,8 @@ def status_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "last_snapshot": last_snapshot,
         "translate_provider": get_settings().translate_provider,
     }
+    issues = check(db)
+    heartbeats = list(db.scalars(select(Heartbeat).order_by(Heartbeat.job)))
     runs = list(db.scalars(select(ScrapeRun).order_by(ScrapeRun.started_at.desc()).limit(30)))
     searches = {s.id: s.name for s in db.scalars(select(SavedSearch))}
     return templates.TemplateResponse(
@@ -134,5 +138,7 @@ def status_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
             "searches": searches,
             "insights": insights,
             "pipeline": pipeline,
+            "issues": issues,
+            "heartbeats": heartbeats,
         },
     )

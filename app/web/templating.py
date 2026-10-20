@@ -54,12 +54,34 @@ def _unread(user: object) -> int | None:
         return None
 
 
+_HEALTH_CACHE: dict[str, object] = {"at": None, "issues": []}
+
+
+def _health_issues() -> list[object]:
+    """Health banner for every full page; recomputed at most once a minute per process."""
+    from app.db import db_session
+    from app.health import check
+
+    now = datetime.now(UTC)
+    at = _HEALTH_CACHE["at"]
+    if at is not None and (now - at).total_seconds() < 60:  # type: ignore[operator]
+        return _HEALTH_CACHE["issues"]  # type: ignore[return-value]
+    try:
+        with db_session() as s:
+            issues = list(check(s, now))
+    except Exception:  # noqa: BLE001 - the banner must never break a page
+        issues = []
+    _HEALTH_CACHE["at"], _HEALTH_CACHE["issues"] = now, issues
+    return issues
+
+
 def _context(request: Request) -> dict[str, object]:
     user = getattr(request.state, "user", None)
     htmx = bool(request.headers.get("HX-Request"))
     ctx: dict[str, object] = {"csrf_token": csrf_token(request), "user": user, "is_htmx": htmx}
     if user is not None and not htmx:
         ctx["unread_notifications"] = _unread(user)
+        ctx["health_issues"] = _health_issues()
     return ctx
 
 

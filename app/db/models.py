@@ -409,6 +409,18 @@ class ListingNote(Base):
     user: Mapped[User] = relationship()
 
 
+class Heartbeat(Base):
+    """Last run / last success per worker job (see app.health)."""
+
+    __tablename__ = "heartbeats"
+
+    job: Mapped[str] = mapped_column(String(40), primary_key=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_ok_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    detail: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+
+
 class Notification(Base):
     """One in-app notification for one user (see app.notify)."""
 
