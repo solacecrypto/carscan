@@ -19,6 +19,7 @@ from app.health import with_heartbeat
 from app.logging import configure_logging
 from app.worker.jobs import (
     analyze_backlog,
+    backup_job,
     digest_job,
     enrich_backlog,
     geocode_backlog_job,
@@ -70,6 +71,14 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         with_heartbeat("digest")(digest_job),
         CronTrigger(hour=7, minute=0, timezone="Europe/Amsterdam"),
         id="digest",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
+    )
+    scheduler.add_job(
+        with_heartbeat("backup")(backup_job),
+        CronTrigger(hour=3, minute=30, timezone="UTC"),
+        id="backup",
         max_instances=1,
         coalesce=True,
         misfire_grace_time=3600,

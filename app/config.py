@@ -31,7 +31,15 @@ class Settings(BaseSettings):
     # machine translation of descriptions: google (keyless, default) | deepl | off
     translate_provider: str = "google"
     deepl_api_key: SecretStr = SecretStr("")
-    translate_per_run: int = 6  # a trickle every 2 min: the keyless endpoint blocks bursts
+    translate_per_run: int = 6
+    # nightly database dumps (docs/backups.md); the bucket is optional
+    backup_dir: str = "/srv/backups"
+    backup_s3_bucket: str = ""
+    backup_s3_endpoint: str = ""
+    backup_s3_region: str = ""
+    backup_s3_access_key: str = ""
+    backup_s3_secret_key: SecretStr = SecretStr("")
+    backup_s3_prefix: str = "carscan"  # a trickle every 2 min: the keyless endpoint blocks bursts
 
     @field_validator("database_url")
     @classmethod

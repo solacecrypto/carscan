@@ -541,6 +541,15 @@ def health_job() -> list[str]:
     return sorted(keys)
 
 
+def backup_job() -> dict[str, str | int]:
+    """Nightly pg_dump to BACKUP_DIR (and the bucket when configured)."""
+    from app import backup
+
+    info = backup.nightly()
+    log.info("backup.nightly", **info)
+    return info
+
+
 def snapshot_models_job() -> int:
     """Nightly: one history row per watchlist model (supply, valued share, median spread)."""
     from app.market.history import snapshot_models

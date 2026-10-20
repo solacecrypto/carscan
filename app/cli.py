@@ -572,6 +572,50 @@ def normalize_cmd() -> None:
     typer.echo(f"normalized {n} listings and {c} comparables")
 
 
+backup = typer.Typer(help="database backups (pg_dump)")
+app.add_typer(backup, name="backup")
+
+
+@backup.command("create")
+def backup_create(
+    directory: str = typer.Option("", help="where to write (default BACKUP_DIR)"),
+    upload: bool = typer.Option(False, "--upload", help="also copy to the S3 bucket"),
+) -> None:
+    """Dump the database now (compressed custom format)."""
+    from pathlib import Path
+
+    from app import backup as bk
+
+    path = bk.create(Path(directory) if directory else None)
+    typer.echo(f"{path} ({path.stat().st_size // 1024} KB)")
+    if upload:
+        typer.echo(f"uploaded as {bk.upload(path)}")
+
+
+@backup.command("list")
+def backup_list() -> None:
+    from app import backup as bk
+
+    for name, size in bk.listing():
+        typer.echo(f"{name}  {size // 1024} KB")
+
+
+@backup.command("restore")
+def backup_restore(
+    path: str,
+    yes: bool = typer.Option(False, "--yes", help="skip the confirmation"),
+) -> None:
+    """Restore a dump into DATABASE_URL. Overwrites the tables it contains."""
+    from pathlib import Path
+
+    from app import backup as bk
+
+    if not yes and not typer.confirm(f"Overwrite the current database with {path}?"):
+        raise typer.Abort()
+    bk.restore(Path(path))
+    typer.echo("restored")
+
+
 geo = typer.Typer(help="places and pickup distances")
 app.add_typer(geo, name="geo")
 
