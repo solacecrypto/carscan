@@ -2,14 +2,17 @@
 
 from datetime import UTC, datetime
 from statistics import median
+from typing import Any
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.db import Digest, Listing, ListingNote, Watch
+from app.db import Digest, Listing, ListingNote, Notification, Subscription, Watch
+from app.notify import KINDS, push, unread_count
 from app.web.deps import DB, CurrentUser, csrf_protect
+from app.web.routes.listings import _models
 from app.web.templating import templates
 
 router = APIRouter()
@@ -62,6 +65,161 @@ def watch_listing(
     return _back(request, listing, "listings/_watch.html")
 
 
+@router.post("/listings/{listing_id}/star", dependencies=[Depends(csrf_protect)])
+def star_listing(request: Request, db: DB, user: CurrentUser, listing_id: int) -> HTMLResponse:
+    """Toggle the star; a star is a Watch row (price-drop alerts) without a target."""
+    listing = _listing(db, listing_id)
+    mine = next((w for w in listing.watches if w.user_id == user.id), None)
+    if mine is None:
+        listing.watches.append(Watch(user=user, created_at=datetime.now(UTC)))
+    else:
+        db.delete(mine)
+        listing.watches.remove(mine)
+    db.flush()
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            request,
+            "listings/_star.html",
+            {
+                "l": listing,
+                "starred_ids": {listing.id} if mine is None else set(),
+                "size": request.query_params.get("size", ""),
+            },
+        )
+    return RedirectResponse(f"/listings/{listing.id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/favorites", response_class=HTMLResponse)
+def favorites_page(request: Request, db: DB, user: CurrentUser) -> RedirectResponse:
+    return RedirectResponse("/listings?starred=true&profitable=false&include_inactive=true")
+
+
+@router.get("/notifications", response_class=HTMLResponse)
+def notifications_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
+    rows = list(
+        db.scalars(
+            select(Notification)
+            .where(Notification.user_id == user.id)
+            .options(selectinload(Notification.listing))
+            .order_by(Notification.read_at.is_(None).desc(), Notification.created_at.desc())
+            .limit(100)
+        )
+    )
+    subs = list(
+        db.scalars(
+            select(Subscription)
+            .where(Subscription.user_id == user.id)
+            .order_by(Subscription.created_at)
+        )
+    )
+    return templates.TemplateResponse(
+        request,
+        "notifications/index.html",
+        {
+            "title": "Notifications",
+            "rows": rows,
+            "unread": unread_count(db, user.id),
+            "subscriptions": subs,
+            "kinds": KINDS,
+            "models": _models(),
+        },
+    )
+
+
+@router.get("/notifications/bell", response_class=HTMLResponse)
+def notifications_bell(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request, "notifications/_bell.html", {"unread": unread_count(db, user.id)}
+    )
+
+
+@router.post("/notifications/read", dependencies=[Depends(csrf_protect)])
+def notifications_read(
+    request: Request, db: DB, user: CurrentUser, notification_id: str = Form("")
+) -> RedirectResponse:
+    """Mark one (by id) or all notifications read."""
+    now = datetime.now(UTC)
+    stmt = select(Notification).where(
+        Notification.user_id == user.id, Notification.read_at.is_(None)
+    )
+    if notification_id.isdigit():
+        stmt = stmt.where(Notification.id == int(notification_id))
+    for n in db.scalars(stmt):
+        n.read_at = now
+    db.flush()
+    return RedirectResponse("/notifications", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/notifications/{notification_id}/open")
+def notification_open(db: DB, user: CurrentUser, notification_id: int) -> RedirectResponse:
+    n = db.get(Notification, notification_id)
+    if n is None or n.user_id != user.id:
+        raise HTTPException(404)
+    n.read_at = n.read_at or datetime.now(UTC)
+    db.flush()
+    return RedirectResponse(n.url or "/notifications", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/wanted", dependencies=[Depends(csrf_protect)])
+def wanted_create(
+    request: Request,
+    db: DB,
+    user: CurrentUser,
+    name: str = Form(""),
+    model_key: list[str] = Form([]),  # noqa: B008
+    query: str = Form(""),
+    country: list[str] = Form([]),  # noqa: B008
+    max_price: str = Form(""),
+    max_km: str = Form(""),
+    year_min: str = Form(""),
+    min_spread: str = Form(""),
+    positive_only: str = Form(""),
+) -> RedirectResponse:
+    def num(v: str) -> int | None:
+        v = v.replace(".", "").strip()
+        return int(v) if v.isdigit() else None
+
+    criteria: dict[str, Any] = {
+        k: v
+        for k, v in {
+            "model_keys": [m for m in model_key if m],
+            "query": query.strip(),
+            "countries": [c for c in country if c],
+            "max_price": num(max_price),
+            "max_km": num(max_km),
+            "year_min": num(year_min),
+            "min_spread": num(min_spread),
+            "positive_only": positive_only == "true",
+        }.items()
+        if v
+    }
+    if not criteria:
+        raise HTTPException(400, "give at least one criterion")
+    label = name.strip() or (
+        ", ".join(criteria.get("model_keys", [])) or criteria.get("query") or "any model"
+    )
+    db.add(
+        Subscription(user=user, name=label[:120], criteria=criteria, created_at=datetime.now(UTC))
+    )
+    db.flush()
+    return RedirectResponse("/notifications#wanted", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/wanted/{sub_id}/{action}", dependencies=[Depends(csrf_protect)])
+def wanted_action(db: DB, user: CurrentUser, sub_id: int, action: str) -> RedirectResponse:
+    sub = db.get(Subscription, sub_id)
+    if sub is None or sub.user_id != user.id:
+        raise HTTPException(404)
+    if action == "delete":
+        db.delete(sub)
+    elif action == "toggle":
+        sub.active = not sub.active
+    else:
+        raise HTTPException(400)
+    db.flush()
+    return RedirectResponse("/notifications#wanted", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.post("/listings/{listing_id}/notes", dependencies=[Depends(csrf_protect)])
 def add_note(
     request: Request, db: DB, user: CurrentUser, listing_id: int, text: str = Form("")
@@ -69,7 +227,19 @@ def add_note(
     listing = _listing(db, listing_id)
     text = text.strip()
     if text:
-        listing.notes.append(ListingNote(user=user, text=text[:2000], created_at=datetime.now(UTC)))
+        now = datetime.now(UTC)
+        listing.notes.append(ListingNote(user=user, text=text[:2000], created_at=now))
+        for w in listing.watches:  # tell the others who starred this car
+            if w.user_id != user.id:
+                push(
+                    db,
+                    w.user_id,
+                    "note",
+                    f"{user.username} on {listing.make} {listing.model}: {text[:80]}",
+                    "a car you starred",
+                    now,
+                    listing,
+                )
         db.flush()
     return _back(request, listing, "listings/_notes.html")
 

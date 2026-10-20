@@ -409,6 +409,43 @@ class ListingNote(Base):
     user: Mapped[User] = relationship()
 
 
+class Notification(Base):
+    """One in-app notification for one user (see app.notify)."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    title: Mapped[str] = mapped_column(String(200))
+    body: Mapped[str | None] = mapped_column(Text)
+    listing_id: Mapped[int | None] = mapped_column(
+        ForeignKey("listings.id", ondelete="CASCADE"), index=True
+    )
+    url: Mapped[str | None] = mapped_column(String(300))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    listing: Mapped[Listing | None] = relationship()
+
+
+class Subscription(Base):
+    """A model (or any criteria) a user wants to hear about when a new car appears."""
+
+    __tablename__ = "subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(120))
+    criteria: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_hit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    hits: Mapped[int] = mapped_column(Integer, default=0)
+
+    user: Mapped[User] = relationship()
+
+
 class Digest(Base):
     """One morning digest per day: structured items plus the Telegram text."""
 

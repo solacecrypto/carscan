@@ -25,6 +25,7 @@
       <div class="text-3xl font-bold leading-none">{{ l.price_eur|eur }}</div>
       <div class="mt-1 text-xs text-ink-400">asking price{% if l.vat_deductible %} · VAT deductible{% endif %}{% if l.previous_price_eur and l.previous_price_eur > l.price_eur %} · <span class="text-good-700">was {{ l.previous_price_eur|eur }}</span>{% endif %}</div>
       <div class="mt-3 flex flex-wrap gap-2 sm:justify-end">
+        {% with size='lg' %}{% include "listings/_star.html" %}{% endwith %}
         <a href="{{ l.url }}" target="_blank" rel="noopener" class="btn-dark">Open original ad ↗</a>
         {% if deal %}
         <a href="/deals/{{ deal.id }}" class="btn-primary">Deal: {{ deal.stage.value }} · {{ deal.owner.username }} →</a>

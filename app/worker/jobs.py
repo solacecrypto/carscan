@@ -19,6 +19,7 @@ from app.db.models import Digest, Listing, SavedSearch
 from app.insights import analyze_pending, default_analyzer
 from app.normalize import NormalizedListing, RawListing
 from app.normalize.attrs import canonical_body
+from app.notify import favorite_events, spread_events, starred_spreads, subscription_events
 from app.scrapers import BlockedError, ParseError, PoliteClient, ScrapeError, get_scraper
 from app.storage import (
     deactivate_missing,
@@ -108,7 +109,9 @@ def run_saved_search(
                 dedup = link_duplicates(s, result.new, now)
                 if dedup.linked:
                     log.info("scrape.dedup", linked=dedup.linked, checked=dedup.checked)
+                spreads_before = starred_spreads(s, params.get("model_key"))
                 recompute_values(s, now, model_key=params.get("model_key"))
+                spread_events(s, spreads_before, now)
                 analyzer = default_analyzer() if insights_budget else None
                 if analyzer and result.new:
                     floor = settings.insights_min_spread_eur
@@ -121,6 +124,10 @@ def run_saved_search(
                     log.info("scrape.insights", candidates=len(ids), **counts)
                 alerts = queue_alerts(s, search, result, now)
                 alerts += check_watches(s, result, stale, now)
+                notified = favorite_events(s, result, stale, now)
+                notified += subscription_events(s, result.new, now)
+                if notified:
+                    log.info("notify.events", count=notified)
                 summary = RunSummary(
                     run_id,
                     ScrapeStatus.ok,
@@ -133,7 +140,9 @@ def run_saved_search(
                 price_changed = len(result.price_dropped) + len(result.price_raised)
             if role == "comparables":
                 # new NL prices only move the values of this model's cars
+                spreads_before = starred_spreads(s, params.get("model_key"))
                 recompute_values(s, now, model_key=params.get("model_key"))
+                spread_events(s, spreads_before, now)
             run = s.get(ScrapeRun, run_id)
             assert run is not None
             run.finished_at = now

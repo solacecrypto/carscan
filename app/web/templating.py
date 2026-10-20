@@ -40,12 +40,27 @@ def timeago(value: datetime | None) -> str:
     return f"{s // 86400} d ago"
 
 
+def _unread(user: object) -> int | None:
+    """Unread notifications for the bell in the nav; one cheap count per full page."""
+    if user is None:
+        return None
+    from app.db import db_session
+    from app.notify import unread_count
+
+    try:
+        with db_session() as s:
+            return unread_count(s, user.id)  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 - the bell must never break a page
+        return None
+
+
 def _context(request: Request) -> dict[str, object]:
-    return {
-        "csrf_token": csrf_token(request),
-        "user": getattr(request.state, "user", None),
-        "is_htmx": bool(request.headers.get("HX-Request")),
-    }
+    user = getattr(request.state, "user", None)
+    htmx = bool(request.headers.get("HX-Request"))
+    ctx: dict[str, object] = {"csrf_token": csrf_token(request), "user": user, "is_htmx": htmx}
+    if user is not None and not htmx:
+        ctx["unread_notifications"] = _unread(user)
+    return ctx
 
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR, context_processors=[_context])

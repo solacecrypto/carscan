@@ -20,6 +20,7 @@ class UpsertResult:
     price_raised: list[Listing] = field(default_factory=list)
     unchanged: int = 0
     reactivated: int = 0
+    reactivated_listings: list[Listing] = field(default_factory=list)
 
     @property
     def seen(self) -> int:
@@ -143,6 +144,7 @@ def upsert_listings(
         if not row.is_active:
             row.is_active = True
             result.reactivated += 1
+            result.reactivated_listings.append(row)
         if saved_search not in row.saved_searches:
             row.saved_searches.append(saved_search)
         row.last_seen = now

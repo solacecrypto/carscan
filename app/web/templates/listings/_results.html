@@ -3,7 +3,7 @@
   <p class="mb-3 text-sm text-ink-400">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for l in listings %}
-    <article class="card group overflow-visible border-t-4 transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }} {{ 'border-good-700' if l.spread_eur is not none and l.spread_eur > 0 else ('border-bad-700/70' if l.spread_eur is not none else 'border-ink-200') }}">
+    <article class="card group relative overflow-visible border-t-4 transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }} {{ 'border-good-700' if l.spread_eur is not none and l.spread_eur > 0 else ('border-bad-700/70' if l.spread_eur is not none else 'border-ink-200') }}">
       <a href="/listings/{{ l.id }}" class="relative block overflow-hidden rounded-t-xl">
         {% if l.photos %}
         <img src="{{ l.photos[0] }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover">
@@ -19,6 +19,7 @@
         <div class="absolute bottom-2 right-2 rounded-lg px-2 py-1 text-sm font-bold shadow {{ 'bg-good-100 text-good-700' if l.spread_eur > 0 else 'bg-white/90 text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}</div>
         {% endif %}
       </a>
+      <div class="absolute right-2 top-2">{% with size='' %}{% include "listings/_star.html" %}{% endwith %}</div>
       <div class="space-y-1.5 p-3.5">
         <div class="flex items-start justify-between gap-2">
           <a href="/listings/{{ l.id }}" class="min-w-0 font-semibold leading-tight">{{ l.make }} {{ l.model }}

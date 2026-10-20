@@ -15,7 +15,7 @@
   'country': f.country and true,
   'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok or f.tuv_min_months) and true,
   'listed': (f.new_hours or f.price_dropped) and true,
-  'more': (f.include_inactive or f.include_duplicates) and true,
+  'more': (f.include_inactive or f.include_duplicates or f.starred) and true,
 } %}
 {# "positive return only" is on by default, so it only counts as a change when turned off #}
 {% set n_active = (g.values()|select|list|length) - (1 if (g.return and f.profitable and not f.spread_min) else 0) + (0 if f.profitable else 1) %}
@@ -187,8 +187,8 @@
         {{ checks([('price_dropped', 'price dropped')]) }}
       {% endcall %}
 
-      {% call row('more', 'More', ([('gone' if f.include_inactive), ('duplicates' if f.include_duplicates)]|select|join(', ')) if g.more else '') %}
-        {{ checks([('include_inactive', 'include gone cars'), ('include_duplicates', 'include duplicates')]) }}
+      {% call row('more', 'More', ([('my stars' if f.starred), ('gone' if f.include_inactive), ('duplicates' if f.include_duplicates)]|select|join(', ')) if g.more else '') %}
+        {{ checks([('starred', 'only cars I starred'), ('include_inactive', 'include gone cars'), ('include_duplicates', 'include duplicates')]) }}
       {% endcall %}
 
       <noscript><div class="p-3"><button class="btn-primary w-full">Apply</button></div></noscript>

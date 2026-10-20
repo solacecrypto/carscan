@@ -32,6 +32,7 @@ FILTER_KEYS = (
     "tuv_min_months",
     "color",
     "body",
+    "starred",
 )
 
 
@@ -111,6 +112,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "chain_replaced": flag("chain_replaced") or None,
         "service_full": flag("service_full") or None,
         "papers_ok": flag("papers_ok") or None,  # hide ads that say the papers are missing
+        "starred": flag("starred") or None,  # only my starred cars (joined in the route)
         "tuv_min_months": num("tuv_min_months"),  # inspection valid for at least this long
         "price_dropped": flag("price_dropped"),
         "include_inactive": flag("include_inactive"),

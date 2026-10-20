@@ -6,11 +6,12 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import selectinload
 
-from app.db import Alert, AlertStatus, Comparable, Listing
+from app.db import Alert, AlertStatus, Comparable, Listing, Watch
 from app.deals import get_deal_for_listing, sync_from_alert_status
 from app.deals.calibration import model_accuracy
 from app.market import market_for_listing
 from app.normalize.attrs import BODIES, COLORS
+from app.notify import push
 from app.storage.filters import apply_sql, parse_filters
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -43,6 +44,8 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
     except ValueError:
         page = 1
     stmt = _filtered_stmt(f)
+    if f.get("starred"):
+        stmt = stmt.join(Watch, (Watch.listing_id == Listing.id) & (Watch.user_id == user.id))
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
     rows = list(
         db.scalars(
@@ -73,6 +76,7 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "bodies": BODIES,
         "colors": COLORS,
         "swatches": SWATCHES,
+        "starred_ids": set(db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))),
     }
     if request.headers.get("HX-Request"):
         resp = templates.TemplateResponse(request, "listings/_results.html", ctx)
@@ -190,6 +194,7 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "deal": get_deal_for_listing(db, listing.id),
             "market": market_for_listing(db, listing, datetime.now(UTC)),
             "trip": _trip(db, listing),
+            "starred_ids": {w.listing_id for w in listing.watches if w.user_id == user.id},
         },
     )
 
@@ -239,6 +244,18 @@ def listing_set_status(
         if alert.telegram_message_id:
             alert.message_synced = False  # the worker edits the Telegram message
     sync_from_alert_status(db, listing.id, new_status.value, user, now)
+    if new_status in (AlertStatus.claimed, AlertStatus.contacted):
+        for w in listing.watches:
+            if w.user_id != user.id:
+                push(
+                    db,
+                    w.user_id,
+                    "claimed",
+                    f"{user.username} marked {listing.make} {listing.model} as {new_status.value}",
+                    "a car you starred",
+                    now,
+                    listing,
+                )
     db.flush()
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse(request, "listings/_status.html", {"listing": listing})

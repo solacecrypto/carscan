@@ -12,17 +12,21 @@ from app.db.models import (
     ListingInsight,
     ListingNote,
     ModelHistory,
+    Notification,
     PriceHistory,
     SavedSearch,
     ScrapeRun,
     ScrapeStatus,
     SellerType,
+    Subscription,
     User,
     Watch,
 )
 
 __all__ = [
     "Digest",
+    "Notification",
+    "Subscription",
     "GeoCache",
     "ListingNote",
     "Watch",

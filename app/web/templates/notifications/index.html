@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+  <div><h1>Notifications</h1><p class="text-sm text-ink-400">Price moves, disappearances and notes on the cars you starred, and new cars for the models you want.</p></div>
+  {% if unread %}
+  <form method="post" action="/notifications/read"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn-ghost">Mark all {{ unread }} read</button></form>
+  {% endif %}
+</div>
+<div class="grid gap-4 lg:grid-cols-5">
+  <div class="min-w-0 lg:col-span-3">
+    {% set icons = {'price_down': '🔻', 'price_up': '🔺', 'target': '🎯', 'gone': '🚫', 'back': '↩️', 'spread_up': '📈', 'spread_down': '📉', 'wanted': '🆕', 'note': '📝', 'claimed': '🙋'} %}
+    {% if not rows %}<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">Nothing yet. Star cars with ☆ on their cards, and add the models you want on the right.</p>{% endif %}
+    <ul class="space-y-2">
+      {% for n in rows %}
+      <li class="card flex items-start gap-3 p-3 {{ 'ring-2 ring-brand-300' if not n.read_at }}">
+        <span class="mt-0.5 text-lg leading-none">{{ icons.get(n.kind, '•') }}</span>
+        {% if n.listing and n.listing.photos %}<img src="{{ n.listing.photos[0] }}" alt="" loading="lazy" class="h-12 w-16 shrink-0 rounded-lg object-cover">{% endif %}
+        <div class="min-w-0 flex-1">
+          <a href="/notifications/{{ n.id }}/open" class="block font-medium {{ 'text-ink-900' if not n.read_at else 'text-ink-600' }}">{{ n.title }}</a>
+          {% if n.body %}<div class="text-xs text-ink-500">{{ n.body }}</div>{% endif %}
+          <div class="text-[11px] text-ink-400">{{ kinds.get(n.kind, n.kind) }} · {{ n.created_at|timeago }}</div>
+        </div>
+        {% if not n.read_at %}<form method="post" action="/notifications/read"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="notification_id" value="{{ n.id }}"><button class="text-xs text-ink-400 underline">read</button></form>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="wanted" class="min-w-0 space-y-4 lg:col-span-2">
+    <div class="card p-4">
+      <h2>Wanted models <span class="text-xs font-normal text-ink-400">you are told when a new car matches</span></h2>
+      <ul class="mt-2 space-y-2 text-sm">
+        {% for sub in subscriptions %}
+        <li class="rounded-lg border border-ink-100 p-2 {{ 'opacity-60' if not sub.active }}">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-medium">{{ sub.name }}</span>
+            <span class="flex gap-2 text-xs">
+              <form method="post" action="/wanted/{{ sub.id }}/toggle"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="underline">{{ 'pause' if sub.active else 'resume' }}</button></form>
+              <form method="post" action="/wanted/{{ sub.id }}/delete"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="text-bad-700 underline">delete</button></form>
+            </span>
+          </div>
+          <div class="text-xs text-ink-500">
+            {% set c = sub.criteria %}
+            {% for part in [(c.model_keys|join(', ') if c.model_keys), ('"' ~ c.query ~ '"' if c.query), (c.countries|join('/') if c.countries), ('≤ € ' ~ c.max_price if c.max_price), ('≤ ' ~ c.max_km ~ ' km' if c.max_km), ('from ' ~ c.year_min if c.year_min), ('spread ≥ € ' ~ c.min_spread if c.min_spread), ('positive return' if c.positive_only)] %}{% if part %}{{ part }}{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}
+            · {{ sub.hits }} hit{{ '' if sub.hits == 1 else 's' }}{% if sub.last_hit_at %}, last {{ sub.last_hit_at|timeago }}{% endif %}
+          </div>
+        </li>
+        {% else %}<li class="text-xs text-ink-300">None yet.</li>{% endfor %}
+      </ul>
+    </div>
+    <form method="post" action="/wanted" class="card space-y-3 p-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <h2>Add a wanted model</h2>
+      <label class="label block text-xs">Name <span class="font-normal text-ink-400">(optional)</span><input type="text" name="name" class="input" placeholder="e.g. cheap Golf VII"></label>
+      <div>
+        <span class="label text-xs">Watchlist models</span>
+        <div class="mt-1 flex flex-wrap gap-1.5">
+          {% for key, label in models %}
+          <label class="cursor-pointer"><input type="checkbox" name="model_key" value="{{ key }}" class="peer sr-only"><span class="pill inline-block border border-ink-200 px-3 py-1.5 text-xs text-ink-600 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ label }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+      <label class="label block text-xs">Or any words in make / model / variant<input type="text" name="query" class="input" placeholder="e.g. Golf GTI, or 330i Touring"></label>
+      <div>
+        <span class="label text-xs">Countries</span>
+        <div class="mt-1 flex flex-wrap gap-1.5">
+          {% for c in ['DE', 'BE', 'IT', 'SE'] %}
+          <label class="cursor-pointer"><input type="checkbox" name="country" value="{{ c }}" class="peer sr-only"><span class="pill inline-block border border-ink-200 px-3 py-1.5 text-xs text-ink-600 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ c }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="label block text-xs">Max price €<input type="number" name="max_price" step="100" class="input"></label>
+        <label class="label block text-xs">Max km<input type="number" name="max_km" step="1000" class="input"></label>
+        <label class="label block text-xs">Year from<input type="number" name="year_min" class="input" placeholder="2010"></label>
+        <label class="label block text-xs">Spread at least €<input type="number" name="min_spread" step="100" class="input"></label>
+      </div>
+      <label class="check !px-0"><input type="checkbox" name="positive_only" value="true" checked> positive return only</label>
+      <button class="btn-primary w-full">Add</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

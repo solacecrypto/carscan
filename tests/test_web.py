@@ -500,14 +500,14 @@ def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, d
     row.seller_name = "Auto Müller"
     db.commit()
     page = client.get(f"/listings/{row.id}").text
-    assert "Watch this car" in page and "No notes yet" in page and 'href="/sellers/Auto%20M' in page
+    assert "Starred by" in page and "No notes yet" in page and 'href="/sellers/Auto%20M' in page
     token = _csrf(page)
     r = client.post(
         f"/listings/{row.id}/watch",
         data={"target_price_eur": "5.500", "action": "watch", "csrf_token": token},
         headers={"HX-Request": "true"},
     )
-    assert r.status_code == 200 and "Update" in r.text and "to € 5.500 or below" in r.text
+    assert r.status_code == 200 and "Update target" in r.text and "€ 5.500 or below" in r.text
     assert db.query(Watch).filter_by(listing_id=row.id).one().target_price_eur == 5500
     r = client.post(
         f"/listings/{row.id}/watch",
@@ -541,3 +541,58 @@ def test_color_and_body_filters(client: TestClient, seeded: dict, db: Session) -
     page = client.get("/listings?color=black").text
     assert 'name="color" value="black" class="peer sr-only" checked' in page
     assert "Body and colour" in page
+
+
+def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.db import Notification, Subscription, Watch
+    from app.notify import push
+
+    row = seeded["a"]
+    token = _csrf(client.get(f"/listings/{row.id}").text)
+    r = client.post(
+        f"/listings/{row.id}/star", data={"csrf_token": token}, headers={"HX-Request": "true"}
+    )
+    assert r.status_code == 200 and 'aria-pressed="true"' in r.text
+    assert db.query(Watch).filter_by(listing_id=row.id, user_id=seeded["user"].id).count() == 1
+    page = client.get("/listings?starred=true&profitable=false").text
+    assert "320i" in page.split('id="results"')[1] and "only cars I starred" in page
+    r = client.get("/favorites", follow_redirects=False)
+    assert r.status_code == 307 and "starred=true" in r.headers["location"]
+    r = client.post(
+        f"/listings/{row.id}/star", data={"csrf_token": token}, headers={"HX-Request": "true"}
+    )
+    assert 'aria-pressed="false"' in r.text and db.query(Watch).count() == 0
+
+    push(db, seeded["user"].id, "price_down", "BMW 320i: € 7.000 → € 6.500", "DE", NOW, row)
+    db.commit()
+    page = client.get("/listings").text
+    assert 'id="bell"' in page and ">1</span>" in page
+    page = client.get("/notifications").text
+    assert "€ 7.000 → € 6.500" in page and "Mark all 1 read" in page
+    n = db.query(Notification).one()
+    r = client.get(f"/notifications/{n.id}/open", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == f"/listings/{row.id}"
+    db.expire_all()
+    assert db.get(Notification, n.id).read_at is not None
+    assert ">1</span>" not in client.get("/listings").text
+
+    r = client.post(
+        "/wanted",
+        data={
+            "csrf_token": token,
+            "name": "cheap E90",
+            "model_key": "bmw-3er-e90",
+            "max_price": "8.000",
+            "positive_only": "true",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    sub = db.query(Subscription).one()
+    assert sub.criteria == {"model_keys": ["bmw-3er-e90"], "max_price": 8000, "positive_only": True}
+    assert "cheap E90" in client.get("/notifications").text
+    client.post(f"/wanted/{sub.id}/toggle", data={"csrf_token": token})
+    db.expire_all()
+    assert db.get(Subscription, sub.id).active is False
+    client.post(f"/wanted/{sub.id}/delete", data={"csrf_token": token})
+    assert db.query(Subscription).count() == 0
