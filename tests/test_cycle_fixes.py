@@ -182,4 +182,8 @@ def test_blocked_source_cools_down(db: Session, monkeypatch) -> None:  # type: i
         "autoscout24_de", now
     )
     assert not jobs.source_cooling("kleinanzeigen", now + timedelta(hours=3))  # expired
+    # the loop itself skips the cooling source and still runs the others
+    monkeypatch.setattr(jobs, "run_saved_search", lambda i, detail_budget=40: i)
+    assert jobs.run_all_active_searches(due_only=True) == [s2.id]
     jobs._SOURCE_COOLDOWN.clear()
+    assert sorted(jobs.run_all_active_searches(due_only=False)) == sorted([s1.id, s2.id])

@@ -358,9 +358,10 @@ def run_all_active_searches(
     now = datetime.now(UTC)
     with db_session() as s:
         ids = due_search_ids(s, now, due_only)
-        sources = dict(
-            s.execute(select(SavedSearch.id, SavedSearch.source).where(SavedSearch.id.in_(ids)))
-        )
+        rows = s.execute(
+            select(SavedSearch.id, SavedSearch.source).where(SavedSearch.id.in_(ids))
+        ).all()
+        sources = {sid: src for sid, src in rows}
     todo = [i for i in ids if not source_cooling(sources.get(i, ""), now)]
     if len(todo) < len(ids):
         log.info("scrape.skipped_cooling", count=len(ids) - len(todo))
