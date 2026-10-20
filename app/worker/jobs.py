@@ -29,7 +29,7 @@ from app.storage import (
     upsert_listings,
 )
 from app.valuation import load_comps, recompute_values
-from app.valuation.engine import Target, ValuationConfig, estimate_value
+from app.valuation.engine import Target, ValuationConfig, engine_token, estimate_value
 
 log = structlog.get_logger()
 
@@ -208,14 +208,51 @@ def _apply_watchlist(
 ) -> list[NormalizedListing]:
     """Stamp the watchlist's canonical make and model key on every parsed listing."""
     make, key = params.get("make_label"), params.get("model_key")
-    hint = _model_bodies().get(key) if key else None
     for it in items:
         if make:
             it.make = make
         if key:
-            it.model_key = key
-        it.body_type = canonical_body(it.body_type, hint)
+            it.model_key = _generation_for(key, it)
+        it.body_type = canonical_body(it.body_type, _model_bodies().get(it.model_key or ""))
     return items
+
+
+def _generation_for(key: str, it: NormalizedListing) -> str | None:
+    """Sites without a generation filter (Kleinanzeigen, Automobile.it) return every 3er or
+    Golf: pick the watchlist model whose years cover the registration, preferring the
+    search's own model, then a sibling of the same make with a shared motor."""
+    year = it.first_registration.year if it.first_registration else None
+    models = _models_by_key()
+    own = models.get(key)
+    if year is None or own is None:
+        return key
+    lo, hi = own["years"]
+    if lo <= year <= hi:
+        return key
+    motor = engine_token(it.variant, it.model)
+    for m in models.values():
+        if m["key"] == key or m.get("make") != own.get("make"):
+            continue
+        ylo, yhi = m["years"]
+        shared = motor and any(engine_token(x) == motor for x in m.get("motors") or [])
+        if ylo <= year <= yhi and shared:
+            return m["key"]
+    return None  # a generation we do not track: valued by model name only
+
+
+_MODELS_CACHE: dict[str, dict[str, Any]] | None = None
+
+
+def _models_by_key() -> dict[str, dict[str, Any]]:
+    global _MODELS_CACHE
+    if _MODELS_CACHE is None:
+        from app.watchlist import load_models
+
+        try:
+            _MODELS_CACHE = {m["key"]: m for m in load_models()}
+        except FileNotFoundError:
+            _MODELS_CACHE = {}
+    return _MODELS_CACHE
 
 
 _BODIES_CACHE: dict[str, list[str]] | None = None

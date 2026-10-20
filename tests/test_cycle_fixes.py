@@ -187,3 +187,36 @@ def test_blocked_source_cools_down(db: Session, monkeypatch) -> None:  # type: i
     assert jobs.run_all_active_searches(due_only=True) == [s2.id]
     jobs._SOURCE_COOLDOWN.clear()
     assert sorted(jobs.run_all_active_searches(due_only=False)) == sorted([s1.id, s2.id])
+
+
+def test_generation_stamping_by_registration_year() -> None:
+    from datetime import date
+
+    from app.normalize import NormalizedListing
+    from app.worker.jobs import _apply_watchlist
+
+    def car(year: int, variant: str) -> NormalizedListing:
+        return NormalizedListing(
+            source="kleinanzeigen", source_listing_id=variant, url="", make="BMW", model="",
+            variant=variant, price_eur=5000, seller_type="dealer", country="DE",
+            first_registration=date(year, 6, 1),
+        )  # fmt: skip
+
+    from app.worker import jobs
+
+    def model(key: str, years: list[int], motors: list[str]) -> dict:  # type: ignore[type-arg]
+        return {"key": key, "make": "BMW", "years": years, "motors": motors}
+
+    jobs._MODELS_CACHE = {  # independent of models.yaml on disk
+        "bmw-3er-e90": model("bmw-3er-e90", [2008, 2014], ["318i", "320i"]),
+        "bmw-3er-f30": model("bmw-3er-f30", [2012, 2015], ["316i", "320i"]),
+    }
+    params = {"make_label": "BMW", "model_key": "bmw-3er-e90"}
+    cars = [car(2010, "BMW 320i Touring"), car(2015, "BMW 320i Touring"), car(2003, "BMW 320i")]
+    try:
+        e90, f30, old = _apply_watchlist(params, cars)
+    finally:
+        jobs._MODELS_CACHE = None
+    assert e90.model_key == "bmw-3er-e90"
+    assert f30.model_key == "bmw-3er-f30"  # sibling with the same motor and fitting years
+    assert old.model_key is None  # a generation we do not track

@@ -5,6 +5,7 @@
 {# which filter groups carry a value: drives the accent bar, the open state and the counter #}
 {% set g = {
   'brand': (f.make or selected_models) and true,
+  'q': f.q and true,
   'price': (f.price_min or f.price_max or f.landed_max) and true,
   'return': (f.profitable or f.spread_min or true) and true,
   'year': (f.year_min or f.year_max) and true,
@@ -95,6 +96,10 @@
           Filters
         </span>
         <a href="/listings" class="text-sm font-semibold {{ 'text-brand-400 hover:text-brand-300' if active else 'text-ink-500' }}">Reset filters</a>
+      </div>
+      <div class="px-3 pb-3">
+        <input type="search" name="q" value="{{ f.q or '' }}" placeholder="Search words: GTI, Touring, Xenon, Dortmund…" class="input !mt-0 !rounded-xl"
+               hx-get="/listings" hx-trigger="keyup changed delay:400ms, search" hx-target="#results" hx-swap="outerHTML" hx-include="#filters" hx-push-url="true">
       </div>
 
       {% call row('brand', 'Brand and model', ((f.make or [])|join(', ')) ~ ((' · ' if f.make and selected_models) ~ (selected_models|length ~ ' model' ~ ('' if selected_models|length == 1 else 's') if selected_models else '')) if g.brand else '') %}

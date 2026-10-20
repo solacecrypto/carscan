@@ -16,7 +16,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import Settings, get_settings
 from app.health import with_heartbeat
-from app.logging import configure_logging
+from app.logging import configure_logging, configure_sentry
 from app.worker.jobs import (
     analyze_backlog,
     backup_job,
@@ -150,6 +150,7 @@ def idle_forever() -> None:
 def main() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
+    configure_sentry("worker")
     scheduler = build_scheduler(settings.scrape_interval_minutes)
     scheduler.start()
     log.info(

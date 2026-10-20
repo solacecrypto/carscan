@@ -243,3 +243,17 @@ def test_web_deal_flow(db: Session) -> None:
     deal = db.scalar(select(Deal))
     assert deal is not None and deal.stage is DealStage.bought  # already past contacted: unchanged
     assert db.scalar(select(Alert)).status is AlertStatus.contacted  # type: ignore[union-attr]
+
+
+def test_pickup_checklist(db: Session) -> None:
+    from app.deals import checklist_for, create_deal
+
+    u = User(username="c", password_hash="x")
+    db.add(u)
+    deal = create_deal(db, _listing(db, sid="chk"), u, NOW)
+    items = checklist_for(deal)
+    assert [k for k, _l, _d in items][:3] == ["teil1", "teil2", "tuv"] and not any(
+        d for *_, d in items
+    )
+    deal.checklist = {"teil1": True, "tuv": True}
+    assert [d for *_, d in checklist_for(deal)][:3] == [True, False, True]

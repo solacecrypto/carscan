@@ -18,3 +18,16 @@ def configure_logging(level: str = "INFO") -> None:
         wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(level.upper())),
         logger_factory=structlog.PrintLoggerFactory(),
     )
+
+
+def configure_sentry(role: str) -> bool:
+    """Send unhandled errors (and logged errors) to Sentry when SENTRY_DSN is set."""
+    from app.config import get_settings
+
+    dsn = get_settings().sentry_dsn
+    if not dsn:
+        return False
+    import sentry_sdk
+
+    sentry_sdk.init(dsn=dsn, environment=role, traces_sample_rate=0.0, send_default_pii=False)
+    return True

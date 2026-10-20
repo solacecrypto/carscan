@@ -3,6 +3,7 @@ from app.deals.service import (
     ACTUAL_FIELDS,
     DATE_FIELDS,
     STAGE_ORDER,
+    checklist_for,
     create_deal,
     days_in_stage,
     get_deal_for_listing,
@@ -12,6 +13,7 @@ from app.deals.service import (
 )
 
 __all__ = [
+    "checklist_for",
     "model_accuracy",
     "ACTUAL_FIELDS",
     "DATE_FIELDS",

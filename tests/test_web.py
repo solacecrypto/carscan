@@ -669,3 +669,13 @@ def test_push_routes_and_static_assets(client: TestClient, seeded: dict, db: Ses
     assert client.get("/sw.js").headers["service-worker-allowed"] == "/"
     assert client.get("/static/manifest.webmanifest").status_code == 200
     assert client.get("/static/icon-192.png").headers["content-type"] == "image/png"
+
+
+def test_free_text_search(client: TestClient, seeded: dict, db: Session) -> None:
+    row = seeded["a"]
+    row.variant, row.description_en = "320i Touring Xenon", "full history, two keys"
+    db.commit()
+    results = lambda url: client.get(url).text.split('id="results"')[1]  # noqa: E731
+    assert "320i" in results("/listings?q=touring+xenon")
+    assert "320i" in results("/listings?q=two+keys")
+    assert "No listings match" in results("/listings?q=cabrio")

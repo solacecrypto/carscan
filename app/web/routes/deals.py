@@ -12,6 +12,7 @@ from app.deals import (
     DATE_FIELDS,
     STAGE_ORDER,
     calibrate,
+    checklist_for,
     create_deal,
     days_in_stage,
     set_stage,
@@ -128,6 +129,7 @@ def deal_detail(request: Request, db: DB, user: CurrentUser, deal_id: int) -> HT
             "title": f"Deal · {deal.listing.make} {deal.listing.model}",
             "deal": deal,
             "trip": _trip(db, deal.listing),
+            "checklist": checklist_for(deal),
             "near_deals": [(by_listing[x.id], km) for x, km in near_deals if x.id in by_listing],
             "near_cars": near_cars,
             "stages": STAGE_ORDER,
@@ -164,6 +166,19 @@ def deal_set_stage(
         money = f" for € {amount:,}".replace(",", ".") if amount else ""
         notify_group(f"{'🛒' if verb == 'bought' else '💰'} {user.username} {verb} {car}{money}")
     return RedirectResponse(f"/deals/{deal_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/deals/{deal_id}/checklist", dependencies=[Depends(csrf_protect)])
+async def deal_checklist(
+    request: Request, db: DB, user: CurrentUser, deal_id: int
+) -> RedirectResponse:
+    deal = _load(db, deal_id)
+    form = await request.form()
+    ticked = {k for k, _label, _d in checklist_for(deal) if form.get(k) == "on"}
+    deal.checklist = {k: True for k in ticked}
+    deal.updated_at = datetime.now(UTC)
+    db.flush()
+    return RedirectResponse(f"/deals/{deal_id}#checklist", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/deals/{deal_id}/actuals", response_class=HTMLResponse)

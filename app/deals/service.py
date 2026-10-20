@@ -130,5 +130,60 @@ def sync_from_alert_status(
         set_stage(deal, DealStage.dropped, user, now, note="via alert status")
 
 
+# what to have in hand before money changes hands; per country where the papers differ
+CHECKLIST = {
+    "DE": [
+        ("teil1", "Zulassungsbescheinigung Teil I (Fahrzeugschein)"),
+        ("teil2", "Zulassungsbescheinigung Teil II (Fahrzeugbrief)"),
+        ("tuv", "Original paper TÜV report (Prüfbericht) — RDW needs it for the APK date"),
+        ("coc", "COC paper (Certificate of Conformity), if the seller has it"),
+        ("keys", "All keys (two) and the radio/code card"),
+        ("service", "Service booklet and invoices"),
+        ("vin", "VIN on the car matches the papers"),
+        ("km", "Odometer matches the ad and the TÜV report"),
+        ("contract", "Signed sales contract (Kaufvertrag) with seller ID details"),
+        ("plates", "Export plates / insurance arranged for the drive home"),
+    ],
+    "BE": [
+        ("inschrijving", "Inschrijvingsbewijs / certificat d'immatriculation"),
+        ("keuring", "Keuringsbewijs (second-hand inspection certificate)"),
+        ("coc", "Gelijkvormigheidsattest (COC)"),
+        ("carpass", "Car-Pass (official mileage history)"),
+        ("keys", "All keys and the radio/code card"),
+        ("service", "Service booklet and invoices"),
+        ("vin", "VIN on the car matches the papers"),
+        ("contract", "Signed sales contract with seller ID details"),
+        ("plates", "Transit plates / insurance arranged"),
+    ],
+    "IT": [
+        ("libretto", "Libretto di circolazione"),
+        ("proprieta", "Certificato di proprietà"),
+        ("revisione", "Last revisione certificate"),
+        ("coc", "Certificato di conformità (COC)"),
+        ("keys", "All keys and the radio/code card"),
+        ("service", "Tagliandi (service history)"),
+        ("vin", "VIN on the car matches the papers"),
+        ("contract", "Signed sales contract with seller ID details"),
+        ("plates", "Export plates / insurance arranged"),
+    ],
+    "SE": [
+        ("regbevis", "Registreringsbevis (both parts)"),
+        ("besiktning", "Besiktning protocol"),
+        ("coc", "COC paper, if available"),
+        ("keys", "All keys and the radio/code card"),
+        ("service", "Service history"),
+        ("vin", "VIN on the car matches the papers"),
+        ("contract", "Signed sales contract with seller ID details"),
+        ("plates", "Export plates / insurance arranged"),
+    ],
+}
+
+
+def checklist_for(deal: Deal) -> list[tuple[str, str, bool]]:
+    items = CHECKLIST.get(deal.listing.country, CHECKLIST["DE"])
+    done = deal.checklist or {}
+    return [(key, label, bool(done.get(key))) for key, label in items]
+
+
 def days_in_stage(deal: Deal, now: datetime) -> int:
     return (now - deal.stage_changed_at).days

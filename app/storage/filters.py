@@ -33,6 +33,7 @@ FILTER_KEYS = (
     "color",
     "body",
     "starred",
+    "q",
 )
 
 
@@ -113,6 +114,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "service_full": flag("service_full") or None,
         "papers_ok": flag("papers_ok") or None,  # hide ads that say the papers are missing
         "starred": flag("starred") or None,  # only my starred cars (joined in the route)
+        "q": text("q") or None,  # free words over make, model, variant, city, description
         "tuv_min_months": num("tuv_min_months"),  # inspection valid for at least this long
         "price_dropped": flag("price_dropped"),
         "include_inactive": flag("include_inactive"),
@@ -169,6 +171,15 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         keys = {t.get("key") for t in ((ins.tags if ins else None) or [])}
         if "papers_missing" in keys:
             return False
+    if f.get("q"):
+        hay = " ".join(
+            str(p)
+            for p in (listing.make, listing.model, listing.variant, listing.city,
+                      listing.description_en, listing.description)
+            if p
+        ).lower()  # fmt: skip
+        if not all(w in hay for w in f["q"].lower().split()):
+            return False
     if f.get("color") and listing.color not in f["color"]:
         return False
     if f.get("body") and listing.body_type not in f["body"]:
@@ -217,6 +228,20 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
     countries = _countries(f.get("country"))
     if countries:
         stmt = stmt.where(Listing.country.in_(countries))
+    if f.get("q"):
+        hay = func.lower(
+            func.concat_ws(
+                " ",
+                Listing.make,
+                Listing.model,
+                Listing.variant,
+                Listing.city,
+                Listing.description_en,
+                Listing.description,
+            )
+        )
+        for word in f["q"].lower().split()[:6]:
+            stmt = stmt.where(hay.contains(word, autoescape=True))
     if f.get("color"):
         stmt = stmt.where(Listing.color.in_(f["color"]))
     if f.get("body"):

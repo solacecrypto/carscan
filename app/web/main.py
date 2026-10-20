@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.db import User, get_sessionmaker
-from app.logging import configure_logging
+from app.logging import configure_logging, configure_sentry
 from app.web.deps import LoginRequired, login_required_handler
 from app.web.routes import account, auth, deals, extras, listings, models, searches, status
 from app.web.templating import STATIC_DIR, TEMPLATES_DIR
@@ -14,6 +14,7 @@ from app.web.templating import STATIC_DIR, TEMPLATES_DIR
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
+    configure_sentry("web")
     problems = settings.check_production_secrets()
     if problems:
         raise RuntimeError("refusing to start with placeholder secrets: " + "; ".join(problems))

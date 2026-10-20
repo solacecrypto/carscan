@@ -296,6 +296,7 @@ class Deal(Base):
         _enum(DealStage, "deal_stage"), default=DealStage.spotted
     )
     notes: Mapped[str | None] = mapped_column(Text)
+    checklist: Mapped[dict[str, Any] | None] = mapped_column(JSONB)  # pickup items ticked
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     stage_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

@@ -51,7 +51,15 @@
       <button class="mt-3 btn-primary">Save</button>
     </form>
     <div class="card p-4">
-      <h2 class="font-semibold">Pickup</h2>
+      <h2 class="font-semibold" id="checklist">Pickup checklist <span class="text-xs font-normal text-ink-400">{{ checklist|selectattr(2)|list|length }} of {{ checklist|length }}</span></h2>
+      <form method="post" action="/deals/{{ d.id }}/checklist" class="mt-2 space-y-1 text-sm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        {% for key, label, done in checklist %}
+        <label class="check !px-1 {{ 'text-ink-400 line-through' if done }}"><input type="checkbox" name="{{ key }}" {{ 'checked' if done }}> {{ label }}</label>
+        {% endfor %}
+        <button class="btn-outline mt-2 !py-1.5 !text-xs">Save checklist</button>
+      </form>
+      <h2 class="mt-4 font-semibold">Pickup</h2>
       {% if trip %}
       <p class="mt-1 text-sm">≈ <b>{{ trip.km }} km</b> from {{ trip['from'] }}, about {{ trip.hours_one_way }} h one way · fuel + tolls ≈ <b>{{ trip.total_eur|eur }}</b></p>
       {% else %}<p class="mt-1 text-sm text-ink-400">Location not resolved yet.</p>{% endif %}
