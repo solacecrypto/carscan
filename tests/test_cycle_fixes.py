@@ -155,3 +155,31 @@ def test_one_unparseable_ad_does_not_fail_the_run() -> None:
     with pytest.raises(ParseError):
         _parse_all(scraper, [bad])
     assert _parse_all(scraper, []) == []
+
+
+def test_blocked_source_cools_down(db: Session, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from datetime import UTC, datetime, timedelta
+
+    import httpx
+
+    from app.scrapers import PoliteClient
+    from app.worker import jobs
+
+    u = User(username="b", password_hash="x")
+    s1 = SavedSearch(name="ka", owner=u, source="kleinanzeigen", source_params={"make": "bmw"})
+    s2 = SavedSearch(name="as", owner=u, source="autoscout24_de", source_params={"path": "/x"})
+    db.add_all([u, s1, s2])
+    db.commit()
+    jobs._SOURCE_COOLDOWN.clear()
+    client = PoliteClient(
+        transport=httpx.MockTransport(lambda r: httpx.Response(403, text="gesperrt")),
+        sleep=lambda _: None,
+    )
+    summary = jobs.run_saved_search(s1.id, client=client)
+    assert summary.status is ScrapeStatus.failed and "403" in (summary.error or "")
+    now = datetime.now(UTC)
+    assert jobs.source_cooling("kleinanzeigen", now) and not jobs.source_cooling(
+        "autoscout24_de", now
+    )
+    assert not jobs.source_cooling("kleinanzeigen", now + timedelta(hours=3))  # expired
+    jobs._SOURCE_COOLDOWN.clear()

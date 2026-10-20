@@ -172,6 +172,12 @@ def run_saved_search(
             else "FAILED"
         )
         notify_admin(f"[{source}] {kind} while running '{name}': {err}")
+        if isinstance(e, BlockedError):
+            # a blocked site stays blocked for a while: stop knocking, it only prolongs the ban
+            _SOURCE_COOLDOWN[source] = datetime.now(UTC) + timedelta(
+                minutes=SOURCE_COOLDOWN_MINUTES
+            )
+            log.warning("scrape.source_cooldown", source=source, minutes=SOURCE_COOLDOWN_MINUTES)
         return RunSummary(run_id, ScrapeStatus.failed, error=err)
     finally:
         if own_client:
@@ -332,12 +338,33 @@ def cleanup_interrupted_runs(session: Session, now: datetime, max_age_minutes: i
     return len(stale)
 
 
+SOURCE_COOLDOWN_MINUTES = 120
+_SOURCE_COOLDOWN: dict[str, datetime] = {}
+
+
+def source_cooling(source: str, now: datetime) -> bool:
+    until = _SOURCE_COOLDOWN.get(source)
+    if until is None:
+        return False
+    if now >= until:
+        del _SOURCE_COOLDOWN[source]
+        return False
+    return True
+
+
 def run_all_active_searches(
     detail_budget: int = DETAIL_FETCH_BUDGET, due_only: bool = False
 ) -> list[RunSummary]:
+    now = datetime.now(UTC)
     with db_session() as s:
-        ids = due_search_ids(s, datetime.now(UTC), due_only)
-    return [run_saved_search(i, detail_budget=detail_budget) for i in ids]
+        ids = due_search_ids(s, now, due_only)
+        sources = dict(
+            s.execute(select(SavedSearch.id, SavedSearch.source).where(SavedSearch.id.in_(ids)))
+        )
+    todo = [i for i in ids if not source_cooling(sources.get(i, ""), now)]
+    if len(todo) < len(ids):
+        log.info("scrape.skipped_cooling", count=len(ids) - len(todo))
+    return [run_saved_search(i, detail_budget=detail_budget) for i in todo]
 
 
 def run_due_searches() -> list[RunSummary]:
