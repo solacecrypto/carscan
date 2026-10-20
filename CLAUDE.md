@@ -136,6 +136,18 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Reliability round (2026-10-20)
+
+Stars + in-app notifications + wanted models (`app/notify`, `notifications`, `subscriptions`,
+bell in the nav, `/favorites`, `/notifications`); health (`app/health`, `heartbeats`, banner,
+5-min `health_job`, per-source canary rules, two-hour source cooldown after a block);
+backups (`app/backup.py`, nightly 03:30 UTC, `carscan backup create/list/restore`, optional
+`BACKUP_S3_*`, Postgres 18 client in the image, `docs/backups.md`); accounts (`/account`,
+admins `/users`, `users.is_admin`); web push (`app/push.py`, `carscan push keygen`,
+`VAPID_*`, `app/web/static` manifest + service worker, `docs/notifications.md`); generation
+stamping by registration year (`_generation_for`); free-text search `q`; per-country pickup
+checklist on deals (`deals.checklist`); optional Sentry (`SENTRY_DSN`).
+
 ## Additions round (2026-10-16)
 
 Ten features, all live: TÜV validity as a date (`listing_insights.tuv_until`, filter
