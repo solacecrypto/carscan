@@ -15,6 +15,7 @@ from app.db.models import (
     ModelHistory,
     Notification,
     PriceHistory,
+    PushSubscription,
     SavedSearch,
     ScrapeRun,
     ScrapeStatus,
@@ -27,6 +28,7 @@ from app.db.models import (
 __all__ = [
     "Digest",
     "Notification",
+    "PushSubscription",
     "Subscription",
     "GeoCache",
     "Heartbeat",

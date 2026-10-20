@@ -5,15 +5,22 @@ from statistics import median
 from typing import Any
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.db import Digest, Listing, ListingNote, Notification, Subscription, Watch
+from app.db import Digest, Listing, ListingNote, Notification, PushSubscription, Subscription, Watch
 from app.notify import KINDS, push, unread_count
+from app.push import enabled as push_enabled
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.routes.listings import _models
-from app.web.templating import templates
+from app.web.templating import STATIC_DIR, templates
 
 router = APIRouter()
 
@@ -242,6 +249,53 @@ def add_note(
                 )
         db.flush()
     return _back(request, listing, "listings/_notes.html")
+
+
+@router.get("/push/key")
+def push_key(user: CurrentUser) -> PlainTextResponse:
+    from app.config import get_settings
+
+    return PlainTextResponse(get_settings().vapid_public_key if push_enabled() else "")
+
+
+@router.post("/push/subscribe", dependencies=[Depends(csrf_protect)])
+async def push_subscribe(request: Request, db: DB, user: CurrentUser) -> JSONResponse:
+    data = await request.json()
+    endpoint, keys = data.get("endpoint"), data.get("keys") or {}
+    if not endpoint or "p256dh" not in keys or "auth" not in keys:
+        raise HTTPException(400, "bad subscription")
+    sub = db.scalar(select(PushSubscription).where(PushSubscription.endpoint == endpoint))
+    if sub is None:
+        sub = PushSubscription(endpoint=endpoint, created_at=datetime.now(UTC))
+        db.add(sub)
+    sub.user_id, sub.keys, sub.failures = user.id, keys, 0
+    sub.user_agent = (request.headers.get("user-agent") or "")[:200]
+    db.flush()
+    return JSONResponse({"ok": True})
+
+
+@router.post("/push/unsubscribe", dependencies=[Depends(csrf_protect)])
+async def push_unsubscribe(request: Request, db: DB, user: CurrentUser) -> JSONResponse:
+    data = await request.json()
+    sub = db.scalar(
+        select(PushSubscription).where(
+            PushSubscription.endpoint == data.get("endpoint"), PushSubscription.user_id == user.id
+        )
+    )
+    if sub is not None:
+        db.delete(sub)
+        db.flush()
+    return JSONResponse({"ok": True})
+
+
+@router.get("/sw.js", include_in_schema=False)
+def service_worker() -> FileResponse:
+    """Served from the root so the worker's scope covers the whole site."""
+    return FileResponse(
+        STATIC_DIR / "sw.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
 
 
 @router.get("/sellers/{name}", response_class=HTMLResponse)

@@ -645,3 +645,27 @@ def test_account_and_user_management(client: TestClient, seeded: dict, db: Sessi
     assert client.post(f"/users/{me.id}/delete", data={"csrf_token": token}).status_code == 400
     client.post(f"/users/{pat.id}/delete", data={"csrf_token": token})
     assert db.scalar(select(User).where(User.username == "pat")) is None
+
+
+def test_push_routes_and_static_assets(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.db import PushSubscription
+
+    assert client.get("/push/key").text == ""  # no keys configured in tests
+    token = _csrf(client.get("/account").text)
+    page = client.get("/account").text
+    assert 'id="push-enable"' in page and 'rel="manifest"' in page
+    r = client.post(
+        "/push/subscribe",
+        json={"endpoint": "https://push.example/abc", "keys": {"p256dh": "k", "auth": "a"}},
+        headers={"X-CSRF-Token": token},
+    )
+    assert r.status_code == 200 and db.query(PushSubscription).count() == 1
+    r = client.post(
+        "/push/unsubscribe",
+        json={"endpoint": "https://push.example/abc"},
+        headers={"X-CSRF-Token": token},
+    )
+    assert r.status_code == 200 and db.query(PushSubscription).count() == 0
+    assert client.get("/sw.js").headers["service-worker-allowed"] == "/"
+    assert client.get("/static/manifest.webmanifest").status_code == 200
+    assert client.get("/static/icon-192.png").headers["content-type"] == "image/png"

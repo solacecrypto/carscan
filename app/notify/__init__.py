@@ -7,11 +7,15 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
+import structlog
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.models import Listing, Notification, Subscription, Watch
+from app.push import send_to_user
 from app.storage.listings import UpsertResult
+
+log = structlog.get_logger()
 
 KINDS = {
     "price_down": "price drop on a starred car",
@@ -71,6 +75,17 @@ def push(
     if existing is not None:
         existing.title, existing.body, existing.created_at = title, body, now
         return existing
+    try:
+        send_to_user(
+            session,
+            user_id,
+            title,
+            body,
+            url or (f"/listings/{listing.id}" if listing else None),
+            kind,
+        )
+    except Exception as e:  # noqa: BLE001 - never let a push problem break the event
+        log.warning("push.error", error=str(e)[:200])
     n = Notification(
         user_id=user_id,
         kind=kind,

@@ -410,6 +410,20 @@ class ListingNote(Base):
     user: Mapped[User] = relationship()
 
 
+class PushSubscription(Base):
+    """One browser/device subscribed to web push for one user."""
+
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    endpoint: Mapped[str] = mapped_column(Text, unique=True)
+    keys: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    user_agent: Mapped[str | None] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    failures: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class Heartbeat(Base):
     """Last run / last success per worker job (see app.health)."""
 

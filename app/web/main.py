@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
@@ -7,7 +8,7 @@ from app.db import User, get_sessionmaker
 from app.logging import configure_logging
 from app.web.deps import LoginRequired, login_required_handler
 from app.web.routes import account, auth, deals, extras, listings, models, searches, status
-from app.web.templating import TEMPLATES_DIR
+from app.web.templating import STATIC_DIR, TEMPLATES_DIR
 
 
 def create_app() -> FastAPI:
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(models.router)
     app.include_router(extras.router)
     app.include_router(account.router)
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     assert TEMPLATES_DIR.exists()
     return app
 

@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     translate_provider: str = "google"
     deepl_api_key: SecretStr = SecretStr("")
     translate_per_run: int = 6
+    # web push (docs/notifications.md): generate with `carscan push keygen`
+    vapid_public_key: str = ""
+    vapid_private_key: SecretStr = SecretStr("")
+    vapid_contact: str = ""  # an email address the push services may contact
     # nightly database dumps (docs/backups.md); the bucket is optional
     backup_dir: str = "/srv/backups"
     backup_s3_bucket: str = ""

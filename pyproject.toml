@@ -23,6 +23,7 @@ dependencies = [
     "structlog>=24",
     "pyyaml>=6",
     "anthropic>=1.13",
+    "pywebpush>=2.0",
 ]
 
 [project.optional-dependencies]

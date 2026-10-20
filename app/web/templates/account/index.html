@@ -13,6 +13,13 @@
     <button class="btn-primary">Change password</button>
   </form>
   <div class="card space-y-3 p-4">
+    <h2>Push notifications</h2>
+    <p class="text-sm text-ink-600">Get the bell's notifications on this phone or computer even when the site is closed. On an iPhone, first add the site to the home screen (Share → Add to Home Screen), then enable it from there.</p>
+    <button type="button" id="push-enable" class="btn-primary">Enable on this device</button>
+    <p id="push-status" class="text-xs text-ink-400">…</p>
+    <script src="/static/push.js" defer></script>
+  </div>
+  <div class="card space-y-3 p-4">
     <h2>Telegram</h2>
     <p class="text-sm text-ink-600">Handle on file: <b>{{ '@' ~ user.telegram_username if user.telegram_username else 'none' }}</b>. It links your Claim / Pass presses in the group to your account.</p>
     {% if user.is_admin %}<p class="text-sm"><a href="/users" class="underline">Manage users →</a></p>{% endif %}

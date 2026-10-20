@@ -7,6 +7,7 @@ from jinja2 import Undefined
 
 from app.web.deps import csrf_token
 
+STATIC_DIR = Path(__file__).parent / "static"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 

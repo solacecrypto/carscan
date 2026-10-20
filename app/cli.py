@@ -572,6 +572,19 @@ def normalize_cmd() -> None:
     typer.echo(f"normalized {n} listings and {c} comparables")
 
 
+push = typer.Typer(help="web push")
+app.add_typer(push, name="push")
+
+
+@push.command("keygen")
+def push_keygen() -> None:
+    """Print a fresh VAPID key pair to put in .env (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)."""
+    from app.push import keygen
+
+    pub, priv = keygen()
+    typer.echo(f"VAPID_PUBLIC_KEY={pub}\nVAPID_PRIVATE_KEY={priv}\nVAPID_CONTACT=you@example.com")
+
+
 backup = typer.Typer(help="database backups (pg_dump)")
 app.add_typer(backup, name="backup")
 
