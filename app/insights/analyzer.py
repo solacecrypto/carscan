@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-import anthropic
 import structlog
 
 from app.insights.schema import JSON_SCHEMA, SYSTEM_PROMPT, DescriptionInsight
@@ -50,6 +49,9 @@ def build_user_message(title: str, description: str) -> str:
 
 class ClaudeAnalyzer:
     def __init__(self, api_key: str, model: str = "claude-opus-5-5") -> None:
+        import anthropic  # imported here: the SDK is heavy and unused without a key
+
+        self.anthropic = anthropic
         self.client = anthropic.Anthropic(api_key=api_key, max_retries=3, timeout=60.0)
         self.model = model
 
@@ -71,13 +73,13 @@ class ClaudeAnalyzer:
                 ],
                 messages=[{"role": "user", "content": build_content(title, description, photos)}],
             )
-        except anthropic.RateLimitError as e:
+        except self.anthropic.RateLimitError as e:
             return AnalysisResult("error", error=f"rate limited: {e.message}", model=self.model)
-        except anthropic.APIStatusError as e:
+        except self.anthropic.APIStatusError as e:
             return AnalysisResult(
                 "error", error=f"HTTP {e.status_code}: {e.message}", model=self.model
             )
-        except anthropic.APIConnectionError as e:
+        except self.anthropic.APIConnectionError as e:
             return AnalysisResult("error", error=f"connection: {e}", model=self.model)
         if response.stop_reason == "refusal":
             cat = response.stop_details.category if response.stop_details else None

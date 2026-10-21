@@ -10,6 +10,7 @@ import time
 from datetime import UTC, datetime
 
 import structlog
+from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -34,7 +35,10 @@ log = structlog.get_logger()
 
 def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
     """Every few minutes, run the searches whose own interval has elapsed."""
-    scheduler = BackgroundScheduler(timezone="UTC")
+    # three threads are plenty: one long scrape pass plus the small background jobs
+    scheduler = BackgroundScheduler(
+        timezone="UTC", executors={"default": ThreadPoolExecutor(max_workers=3)}
+    )
     # One job only: max_instances=1 keeps a long pass from overlapping with the next tick.
     # (A separate start-up job would run concurrently with it and double-run searches.)
     scheduler.add_job(

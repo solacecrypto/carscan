@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     domain: str = "localhost"
     log_level: str = "INFO"
     scrape_interval_minutes: int = 30
+    # web | worker | all (scheduler inside the web process: one container instead of two)
+    role: str = "web"
+    # every search interval is multiplied by this; 1 = as configured, 4 = a quiet, dormant site
+    scrape_interval_factor: float = 1.0
     # phase 6: Claude pass over descriptions; off when the key is empty
     anthropic_api_key: SecretStr = SecretStr("")
     claude_model: str = "claude-opus-5-5"

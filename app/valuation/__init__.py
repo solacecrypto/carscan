@@ -29,8 +29,13 @@ __all__ = [
 ]
 
 
-def load_comps(session: Session) -> list[Comp]:
-    rows = session.scalars(select(Comparable).where(Comparable.is_active.is_(True)))
+def load_comps(session: Session, model_key: str | None = None) -> list[Comp]:
+    """Active comparables as engine inputs; limited to one model when the pass is scoped,
+    which keeps a per-run recompute to a few hundred rows instead of all of them."""
+    stmt = select(Comparable).where(Comparable.is_active.is_(True))
+    if model_key:
+        stmt = stmt.where(Comparable.model_key == model_key)
+    rows = session.scalars(stmt)
     return [
         Comp(
             id=r.id,
@@ -95,7 +100,7 @@ def recompute_values(
     changes that model's cars or comparables). Rows are taken in id order so concurrent
     recomputes never deadlock each other."""
     cfg = ValuationConfig.from_mapping(get_cost_config().valuation)
-    comps = load_comps(session)
+    comps = load_comps(session, model_key)
     stmt = select(Listing).order_by(Listing.id)
     if active_only:
         stmt = stmt.where(Listing.is_active.is_(True))

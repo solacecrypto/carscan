@@ -1,6 +1,8 @@
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 CARSCAN_CONFIG_DIR=/srv
+# fewer malloc arenas: a threaded Python process otherwise grows with every thread
+ENV MALLOC_ARENA_MAX=2
 WORKDIR /srv
 
 # pg_dump / pg_restore matching the managed Postgres (18) for the nightly backups

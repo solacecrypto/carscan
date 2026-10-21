@@ -1,3 +1,4 @@
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
@@ -44,6 +45,25 @@ def create_app() -> FastAPI:
         same_site="lax",
         https_only=secure,
     )
+
+    if settings.role == "all":
+        # one container: the scheduler runs inside the web process (Telegram polling needs
+        # its own loop and stays with ROLE=worker)
+        from app.worker.main import build_scheduler
+
+        scheduler = build_scheduler(settings.scrape_interval_minutes)
+
+        @app.on_event("startup")
+        def _start_scheduler() -> None:
+            scheduler.start()
+            if settings.telegram_enabled:
+                structlog.get_logger().warning(
+                    "telegram.not_polling", hint="ROLE=all does not poll Telegram; use ROLE=worker"
+                )
+
+        @app.on_event("shutdown")
+        def _stop_scheduler() -> None:
+            scheduler.shutdown(wait=False)
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> dict[str, str]:

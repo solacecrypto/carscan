@@ -336,6 +336,12 @@ def _enrich_new(
         fetched += 1
 
 
+def _interval_factor() -> float:
+    from app.config import get_settings
+
+    return max(0.1, float(get_settings().scrape_interval_factor))
+
+
 def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]:
     """Active searches whose interval has elapsed, longest-waiting first. Never-run searches go
     before all others, comparables first so a new model has NL prices before its cars arrive."""
@@ -347,11 +353,8 @@ def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]
             .order_by(ScrapeRun.started_at.desc())
             .limit(1)
         )
-        if (
-            due_only
-            and last is not None
-            and last > now - timedelta(minutes=search.interval_minutes)
-        ):
+        interval = timedelta(minutes=search.interval_minutes * _interval_factor())
+        if due_only and last is not None and last > now - interval:
             continue
         candidates.append((last, search.role == "comparables", search.id))
     candidates.sort(key=lambda t: (t[0] is not None, t[0] is None and not t[1], t[0] or now, t[2]))
