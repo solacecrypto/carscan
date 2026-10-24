@@ -43,7 +43,7 @@ def _run(db: Session, search: SavedSearch, days_ago: int) -> None:
 def test_prune_trims_old_rows_only(db: Session) -> None:
     live = _car(db, "live", None)
     fresh = _car(db, "fresh", 5)
-    old = _car(db, "old", 45)
+    old = _car(db, "old", 10)
     u = User(username="m", password_hash="x")
     s = SavedSearch(name="s", owner=u, source="autoscout24_de")
     db.add_all([u, s])
@@ -76,6 +76,7 @@ def test_prune_trims_old_rows_only(db: Session) -> None:
         "comparables_trimmed": 1,
         "runs_deleted": 1,
         "notifications_deleted": 1,
+        "details_slimmed": 0,
     }
     db.expire_all()
     assert old.raw == {} and old.photos == ["a"]
@@ -104,3 +105,25 @@ def test_dormant_mode_keeps_only_weekly_comparables(db: Session, monkeypatch) ->
     assert due_search_ids(db, NOW + timedelta(days=6), True) == [comps.id]
     monkeypatch.setattr("app.config.get_settings", lambda: settings(False))
     assert sorted(due_search_ids(db, NOW, True)) == sorted([deals.id, comps.id])
+
+
+def test_prune_slims_old_ad_page_json(db: Session) -> None:
+    from app.scrapers.autoscout24_de import slim_detail
+
+    fat = {
+        "id": "1",
+        "vehicle": {"make": "BMW", "bodyColorRaw": "Black", "rawData": {"huge": "x" * 500}},
+        "prices": {"public": {"priceRaw": 5000}},
+        "tracking": {"junk": "y" * 500},
+        "seo": {"more": "z"},
+        "description": "Nice car",
+    }
+    slim = slim_detail(fat)
+    assert set(slim) == {"id", "vehicle", "prices", "description"}
+    assert "rawData" not in slim["vehicle"] and slim["vehicle"]["bodyColorRaw"] == "Black"
+    row = _car(db, "fat", None)
+    row.raw = {"search": {}, "detail": fat}
+    db.commit()
+    assert prune(db, NOW)["details_slimmed"] == 1
+    db.expire_all()
+    assert "tracking" not in row.raw["detail"] and prune(db, NOW)["details_slimmed"] == 0

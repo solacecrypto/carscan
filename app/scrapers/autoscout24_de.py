@@ -106,6 +106,19 @@ def _is_private(d: dict[str, Any]) -> bool:
     return (d.get("seller") or {}).get("type") == "PrivateSeller"
 
 
+DETAIL_KEYS = ("id", "status", "vehicle", "prices", "seller", "location", "images", "description")
+
+
+def slim_detail(detail: dict[str, Any]) -> dict[str, Any]:
+    """Keep only what parse() reads from an ad page. The full page JSON is ~10x larger
+    (tracking, SEO, duplicated raw/formatted blocks) and was the bulk of the database."""
+    out = {k: detail[k] for k in DETAIL_KEYS if k in detail}
+    veh = out.get("vehicle")
+    if isinstance(veh, dict) and "rawData" in veh:
+        out["vehicle"] = {k: v for k, v in veh.items() if k != "rawData"}
+    return out
+
+
 def _scrub_listing(d: dict[str, Any]) -> dict[str, Any]:
     out = scrub(d, private=_is_private(d))
     if isinstance(out.get("description"), str):
@@ -194,7 +207,7 @@ class AutoScout24DE:
         details = pp.get("listingDetails")
         if not details:
             raise ParseError("pageProps.listingDetails missing on detail page")
-        return _scrub_listing(details)
+        return slim_detail(_scrub_listing(details))
 
     # ---- parse ------------------------------------------------------------------------
     def parse(self, raw: RawListing) -> NormalizedListing:

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.db.models import Comparable, Listing, Notification, ScrapeRun
 
 log = structlog.get_logger()
-INACTIVE_DAYS = 30
+INACTIVE_DAYS = 7
 RUNS_DAYS = 90
 NOTIFICATIONS_DAYS = 30
 
@@ -24,6 +24,7 @@ def prune(session: Session, now: datetime, batch: int = 500) -> dict[str, int]:
         "comparables_trimmed": 0,
         "runs_deleted": 0,
         "notifications_deleted": 0,
+        "details_slimmed": 0,
     }
 
     # listings gone for a month: drop the raw blob (the biggest column) and all but one photo
@@ -52,6 +53,23 @@ def prune(session: Session, now: datetime, batch: int = 500) -> dict[str, int]:
             comp.photos = comp.photos[:1]
             counts["comparables_trimmed"] += 1
         session.commit()
+
+    # ad-page JSON stored before slim_detail existed: shrink it in place
+    from app.scrapers.autoscout24_de import DETAIL_KEYS, slim_detail
+
+    stmt_s = (
+        select(Listing)
+        .where(Listing.source.like("autoscout24_%"), Listing.raw.has_key("detail"))
+        .order_by(Listing.id)
+    )
+    for row in session.scalars(stmt_s.execution_options(yield_per=200)):
+        det = row.raw.get("detail") or {}
+        if set(det) - set(DETAIL_KEYS) or "rawData" in (det.get("vehicle") or {}):
+            row.raw = {**row.raw, "detail": slim_detail(det)}
+            counts["details_slimmed"] = counts.get("details_slimmed", 0) + 1
+            if counts["details_slimmed"] % batch == 0:
+                session.commit()
+    session.commit()
 
     res = session.execute(
         delete(ScrapeRun).where(ScrapeRun.started_at < now - timedelta(days=RUNS_DAYS))
