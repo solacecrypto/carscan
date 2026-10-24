@@ -57,19 +57,21 @@ def prune(session: Session, now: datetime, batch: int = 500) -> dict[str, int]:
     # ad-page JSON stored before slim_detail existed: shrink it in place
     from app.scrapers.autoscout24_de import DETAIL_KEYS, slim_detail
 
-    stmt_s = (
-        select(Listing)
-        .where(Listing.source.like("autoscout24_%"), Listing.raw.has_key("detail"))
-        .order_by(Listing.id)
+    ids = list(
+        session.scalars(
+            select(Listing.id)
+            .where(Listing.source.like("autoscout24_%"), Listing.raw.has_key("detail"))
+            .order_by(Listing.id)
+        )
     )
-    for row in session.scalars(stmt_s.execution_options(yield_per=200)):
-        det = row.raw.get("detail") or {}
-        if set(det) - set(DETAIL_KEYS) or "rawData" in (det.get("vehicle") or {}):
-            row.raw = {**row.raw, "detail": slim_detail(det)}
-            counts["details_slimmed"] = counts.get("details_slimmed", 0) + 1
-            if counts["details_slimmed"] % batch == 0:
-                session.commit()
-    session.commit()
+    for i in range(0, len(ids), batch):  # id chunks: a commit would close a server cursor
+        chunk = ids[i : i + batch]
+        for row in session.scalars(select(Listing).where(Listing.id.in_(chunk))):
+            det = row.raw.get("detail") or {}
+            if set(det) - set(DETAIL_KEYS) or "rawData" in (det.get("vehicle") or {}):
+                row.raw = {**row.raw, "detail": slim_detail(det)}
+                counts["details_slimmed"] += 1
+        session.commit()
 
     res = session.execute(
         delete(ScrapeRun).where(ScrapeRun.started_at < now - timedelta(days=RUNS_DAYS))
