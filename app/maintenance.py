@@ -73,6 +73,23 @@ def prune(session: Session, now: datetime, batch: int = 500) -> dict[str, int]:
                 counts["details_slimmed"] += 1
         session.commit()
 
+    # Automobile.it search blobs stored before slim_search existed
+    from app.scrapers.automobile_it import slim_search
+
+    ids = list(
+        session.scalars(
+            select(Listing.id).where(Listing.source == "automobile_it").order_by(Listing.id)
+        )
+    )
+    for i in range(0, len(ids), batch):
+        for row in session.scalars(select(Listing).where(Listing.id.in_(ids[i : i + batch]))):
+            search = row.raw.get("search") or {}
+            pics = search.get("pictures") or []
+            if "imageRules" in search or any(len(p.get("sizes") or {}) > 1 for p in pics):
+                row.raw = {**row.raw, "search": slim_search(search)}
+                counts["details_slimmed"] += 1
+        session.commit()
+
     res = session.execute(
         delete(ScrapeRun).where(ScrapeRun.started_at < now - timedelta(days=RUNS_DAYS))
     )

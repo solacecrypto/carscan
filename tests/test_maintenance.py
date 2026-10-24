@@ -127,3 +127,19 @@ def test_prune_slims_old_ad_page_json(db: Session) -> None:
     assert prune(db, NOW)["details_slimmed"] == 1
     db.expire_all()
     assert "tracking" not in row.raw["detail"] and prune(db, NOW)["details_slimmed"] == 0
+
+
+def test_automobile_it_search_blob_is_slimmed() -> None:
+    from app.scrapers.automobile_it import slim_search
+
+    d = {
+        "id": 1,
+        "title": "BMW 118i",
+        "formattedPrice": "€ 5.000",
+        "pictures": [{"sizes": {"S": {"href": "s"}, "XL": {"href": "xl"}}, "meta": "x" * 300}],
+        "imageRules": {"junk": "y" * 200},
+        "googleRating": 4.5,
+    }
+    slim = slim_search(d)
+    assert slim["pictures"] == [{"sizes": {"XL": {"href": "xl"}}}]
+    assert "imageRules" not in slim and "googleRating" not in slim and slim["title"] == "BMW 118i"

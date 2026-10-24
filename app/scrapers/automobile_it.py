@@ -57,6 +57,25 @@ def build_search_url(params: dict[str, Any], page: int) -> str:
     return f"{ORIGIN}{params['path']}?{urlencode(query)}"
 
 
+SEARCH_KEYS = (
+    "id", "url", "title", "shortDescription", "formattedPrice", "details", "location",
+    "sellerType", "dealerName", "imageUrls",
+)  # fmt: skip
+
+
+def slim_search(d: dict[str, Any]) -> dict[str, Any]:
+    """The search item carries ~10 KB of picture variants per car; keep the XL links only."""
+    out = {k: d[k] for k in SEARCH_KEYS if k in d}
+    pics = []
+    for p in d.get("pictures") or []:
+        href = ((p.get("sizes") or {}).get("XL") or {}).get("href")
+        if href:
+            pics.append({"sizes": {"XL": {"href": href}}})
+    if pics:
+        out["pictures"] = pics
+    return out
+
+
 class AutomobileIt:
     name = "automobile_it"
     country = "IT"
@@ -190,7 +209,7 @@ class AutomobileIt:
             city=loc.group(1) if loc else d.get("location"),
             photos=[u for u in images if u][:20],
             description=(raw.detail or {}).get("description") or d.get("shortDescription") or None,
-            raw={"search": d, "detail": raw.detail, "year_only": month is None}
+            raw={"search": slim_search(d), "detail": raw.detail, "year_only": month is None}
             if raw.detail
             else {"search": d, "year_only": month is None},
         )
