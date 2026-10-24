@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     role: str = "web"
     # every search interval is multiplied by this; 1 = as configured, 4 = a quiet, dormant site
     scrape_interval_factor: float = 1.0
+    # dormant: no foreign scraping, NL comparables at most weekly, no translation / geocoding /
+    # page fetching / digest; flip back to resume (every search is then overdue and reruns)
+    dormant: bool = False
     # phase 6: Claude pass over descriptions; off when the key is empty
     anthropic_api_key: SecretStr = SecretStr("")
     claude_model: str = "claude-opus-5-5"

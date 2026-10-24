@@ -342,6 +342,15 @@ def _interval_factor() -> float:
     return max(0.1, float(get_settings().scrape_interval_factor))
 
 
+def dormant() -> bool:
+    from app.config import get_settings
+
+    return bool(get_settings().dormant)
+
+
+DORMANT_COMPARABLES_MINUTES = 7 * 24 * 60
+
+
 def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]:
     """Active searches whose interval has elapsed, longest-waiting first. Never-run searches go
     before all others, comparables first so a new model has NL prices before its cars arrive."""
@@ -353,7 +362,12 @@ def due_search_ids(session: Session, now: datetime, due_only: bool) -> list[int]
             .order_by(ScrapeRun.started_at.desc())
             .limit(1)
         )
-        interval = timedelta(minutes=search.interval_minutes * _interval_factor())
+        minutes = search.interval_minutes * _interval_factor()
+        if dormant():
+            if search.role != "comparables":
+                continue  # no foreign scraping while dormant
+            minutes = max(minutes, DORMANT_COMPARABLES_MINUTES)
+        interval = timedelta(minutes=minutes)
         if due_only and last is not None and last > now - interval:
             continue
         candidates.append((last, search.role == "comparables", search.id))
@@ -437,6 +451,8 @@ def enrich_backlog(
     settings = get_settings()
     floor = settings.detail_min_spread_eur
     counts = {"fetched": 0, "gone": 0, "skipped": 0}
+    if dormant():
+        return counts
     with db_session() as s:
         stmt = (
             select(Listing)
@@ -497,6 +513,8 @@ def enrich_backlog(
 
 def translate_backlog(limit: int | None = None) -> dict[str, int]:
     """Catch-up pass: English text for descriptions that have none yet."""
+    if dormant():
+        return {}
     from app.config import get_settings
     from app.translate import default_translator, translate_pending
 
@@ -525,6 +543,8 @@ _TRANSLATE_COOLDOWN_UNTIL = datetime.min.replace(tzinfo=UTC)
 
 def geocode_backlog_job(limit: int = 30) -> dict[str, int]:
     """Resolve the places of active cars through Nominatim, a few per run, cached forever."""
+    if dormant():
+        return {}
     from app.config import get_settings
     from app.geo import geocode_backlog
 
@@ -540,6 +560,8 @@ def geocode_backlog_job(limit: int = 30) -> dict[str, int]:
 
 def digest_job(send: bool = True) -> int:
     """Morning digest: build, store, and post to the group when Telegram is configured."""
+    if dormant():
+        return 0
     from app.alerts import notify_group
     from app.config import get_settings
     from app.digest import store_digest
@@ -588,6 +610,14 @@ def health_job() -> list[str]:
     return sorted(keys)
 
 
+def prune_job() -> dict[str, int]:
+    """Weekly: trim raw data of long-gone cars, drop old runs and notifications."""
+    from app.maintenance import prune
+
+    with db_session() as s:
+        return prune(s, datetime.now(UTC))
+
+
 def backup_job() -> dict[str, str | int]:
     """Nightly pg_dump to BACKUP_DIR (and the bucket when configured)."""
     from app import backup
@@ -609,6 +639,8 @@ def snapshot_models_job() -> int:
 
 def analyze_backlog(limit: int | None = None) -> dict[str, int]:
     """Catch-up pass: listings that still lack a current insight (older ones, budget overflow)."""
+    if dormant():
+        return {}
     from app.config import get_settings
 
     analyzer = default_analyzer()

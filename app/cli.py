@@ -572,6 +572,19 @@ def normalize_cmd() -> None:
     typer.echo(f"normalized {n} listings and {c} comparables")
 
 
+@app.command("prune")
+def prune_cmd() -> None:
+    """Trim raw data of cars gone 30+ days, delete runs older than 90 days (weekly job)."""
+    from datetime import UTC, datetime
+
+    from app.db import db_session
+    from app.maintenance import prune
+
+    with db_session() as s:
+        counts = prune(s, datetime.now(UTC))
+    typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
+
+
 push = typer.Typer(help="web push")
 app.add_typer(push, name="push")
 

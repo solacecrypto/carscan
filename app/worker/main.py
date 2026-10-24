@@ -25,6 +25,7 @@ from app.worker.jobs import (
     enrich_backlog,
     geocode_backlog_job,
     health_job,
+    prune_job,
     run_due_searches,
     snapshot_models_job,
     translate_backlog,
@@ -75,6 +76,14 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         with_heartbeat("digest")(digest_job),
         CronTrigger(hour=7, minute=0, timezone="Europe/Amsterdam"),
         id="digest",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
+    )
+    scheduler.add_job(
+        with_heartbeat("prune")(prune_job),
+        CronTrigger(day_of_week="sun", hour=4, minute=0, timezone="UTC"),
+        id="prune",
         max_instances=1,
         coalesce=True,
         misfire_grace_time=3600,

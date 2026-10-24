@@ -89,6 +89,18 @@ def check(session: Session, now: datetime | None = None) -> list[Issue]:
     now = now or datetime.now(UTC)
     beats = {h.job: h for h in session.scalars(select(Heartbeat))}
     issues: list[Issue] = []
+    from app.config import get_settings
+
+    if get_settings().dormant:
+        return [
+            Issue(
+                "dormant",
+                "warning",
+                "Dormant mode",
+                "no foreign scraping, NL comparables weekly, background jobs paused "
+                "(DORMANT=false to resume)",
+            )
+        ]
 
     # 1. the scrape loop itself
     active = (
