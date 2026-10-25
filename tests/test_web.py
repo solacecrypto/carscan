@@ -178,7 +178,7 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     assert (
         client.get("/listings?include_duplicates=true&profitable=false").text.count("<article") == 2
     )
-    assert "Same car on:" in client.get(f"/listings/{dup.id}").text
+    assert "also on" in client.get(f"/listings/{dup.id}").text
     assert "No listings match" in client.get("/listings?price_max=5000").text
     assert "landed ≈ € 7.700" in client.get("/listings?landed_max=8000&sort=landed_asc").text
     assert "No listings match" in client.get("/listings?landed_max=7000").text

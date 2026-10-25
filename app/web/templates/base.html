@@ -58,6 +58,12 @@
       /* inside a card a heading is a quiet label: the content is the point */
       .card > h2, .card > div > h2 { @apply text-[11.5px] font-semibold uppercase tracking-wider text-ink-500; }
       .card > h2 span, .card > div > h2 span { @apply normal-case tracking-normal; }
+      /* collapsible card: the summary row shows the label and the key figure */
+      .fold > summary { @apply flex cursor-pointer select-none list-none items-center justify-between gap-3; }
+      .fold > summary::-webkit-details-marker { display: none; }
+      .fold > summary::after { content: ""; @apply ml-1 h-2 w-2 shrink-0 rotate-45 border-b-2 border-r-2 border-ink-300 transition; }
+      .fold[open] > summary::after { @apply -rotate-[135deg]; }
+      .fold-value { @apply ml-auto text-sm font-semibold text-ink-800; }
       table thead th { @apply text-[11px] font-semibold uppercase tracking-wider text-ink-400; }
       tbody tr:nth-child(even) { @apply bg-ink-50/60; }
       a.underline { @apply decoration-ink-300 underline-offset-2 hover:decoration-ink-700; }

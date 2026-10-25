@@ -1,9 +1,5 @@
 {% set mine = (listing.watches|selectattr('user_id', 'equalto', user.id)|list|first) if user else none %}
 <div id="watch-{{ listing.id }}" class="text-sm">
-  <div class="flex items-center justify-between gap-2">
-    <h2>Starred by</h2>
-    <span class="text-xs text-ink-400">{{ listing.watches|map(attribute='user.username')|join(', ') or 'nobody yet' }}</span>
-  </div>
   <p class="mt-1 text-xs text-ink-500">A star gets you a notification when the price moves, the ad disappears or comes back, the spread crosses zero, or someone adds a note or claims the car.</p>
   <form hx-post="/listings/{{ listing.id }}/watch" hx-target="#watch-{{ listing.id }}" hx-swap="outerHTML" method="post" action="/listings/{{ listing.id }}/watch" class="mt-2 flex flex-wrap items-end gap-2">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

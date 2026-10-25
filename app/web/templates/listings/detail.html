@@ -15,6 +15,8 @@
         <span class="pill bg-ink-100 text-ink-600">{{ l.source }}</span>
         {% for chip in [l.first_registration|month if l.first_registration, l.mileage_km|km if l.mileage_km is not none, l.gearbox, (l.power_kw ~ ' kW') if l.power_kw, l.body_type, l.color] %}{% if chip %}<span class="pill bg-ink-100 text-ink-600">{{ chip }}</span>{% endif %}{% endfor %}
         <span class="pill bg-ink-100 text-ink-500">seen {{ l.first_seen|timeago }}</span>
+        {% for d in l.duplicates %}<a href="/listings/{{ d.id }}" class="pill bg-brand-100 text-brand-800 hover:bg-brand-200">also on {{ d.source }} · {{ d.price_eur|eur }}</a>{% endfor %}
+        {% if l.duplicate_of %}<a href="/listings/{{ l.duplicate_of.id }}" class="pill bg-brand-100 text-brand-800 hover:bg-brand-200">also on {{ l.duplicate_of.source }} · {{ l.duplicate_of.price_eur|eur }}</a>{% endif %}
         {% if not l.is_active %}<span class="pill bg-bad-700 text-white">no longer listed · last seen {{ l.last_seen|timeago }}</span>{% endif %}
       </div>
       {% include "listings/_insight_badges.html" %}
@@ -69,6 +71,14 @@
   </a>
 </div>
 
+<script>
+  // a verdict tile opens the folded box it points at
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]'); if (!a) return;
+    const t = document.getElementById(a.getAttribute('href').slice(1));
+    if (t && t.tagName === 'DETAILS') t.open = true;
+  });
+</script>
 <div class="mt-4 grid gap-4 lg:grid-cols-12">
   {# ---------- left: the car itself ---------- #}
   <div class="min-w-0 space-y-4 lg:col-span-7">
@@ -194,24 +204,16 @@
     {% with listing=l, translate_error=None %}{% include "listings/_description.html" %}{% endwith %}
     {% endif %}
     {% with listing=l %}{% include "listings/_notes.html" %}{% endwith %}
-    <div class="card p-4">{% with listing=l %}{% include "listings/_watch.html" %}{% endwith %}</div>
-    {% if l.duplicates or l.duplicate_of %}
-    <div class="card p-4 text-sm">
-      <div>
-        <span class="text-ink-400">Same car on:</span>
-        {% for d in l.duplicates %}<a class="ml-1 underline" href="/listings/{{ d.id }}">{{ d.source }} ({{ d.price_eur|eur }})</a>{% endfor %}
-        {% if l.duplicate_of %}<a class="ml-1 underline" href="/listings/{{ l.duplicate_of.id }}">{{ l.duplicate_of.source }} ({{ l.duplicate_of.price_eur|eur }}, canonical)</a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    <div class="card p-4">
-      <h2 class="font-semibold">Price history</h2>
+    <details class="card fold p-4"><summary><h2>Starred by</h2><span class="fold-value">{{ l.watches|map(attribute='user.username')|join(', ') or 'nobody yet' }}</span></summary>
+      <div class="mt-2">{% with listing=l %}{% include "listings/_watch.html" %}{% endwith %}</div></details>
+    <details class="card fold p-4" {{ 'open' if l.price_history|length > 1 }}>
+      <summary><h2>Price history</h2><span class="fold-value">{{ l.price_history|length }} entr{{ 'y' if l.price_history|length == 1 else 'ies' }}</span></summary>
       <ul class="mt-2 text-sm">
         {% for h in l.price_history|reverse %}
         <li class="flex justify-between border-b border-ink-100 py-1"><span>{{ h.seen_at.strftime('%Y-%m-%d %H:%M') }}</span><span class="font-medium">{{ h.price_eur|eur }}</span></li>
         {% endfor %}
       </ul>
-    </div>
+    </details>
   </div>
   {# ---------- right: the numbers ---------- #}
   <div class="min-w-0 space-y-4 lg:col-span-5">
@@ -225,12 +227,12 @@
       {% endfor %}
       <dt class="text-ink-400">Seller</dt><dd>{{ l.seller_type.value }}{% if l.seller_name %} · <a class="underline" href="/sellers/{{ l.seller_name|urlencode }}">{{ l.seller_name }}</a>{% endif %}</dd>
     </dl></div>
-    <div id="landed" class="card p-4">
-      <h2 class="font-semibold">Landed cost estimate</h2>
+    <details id="landed" class="card fold p-4">
+      <summary><h2>Landed cost estimate</h2><span class="fold-value">{{ l.landed_cost_eur|eur if l.landed_cost_eur else '–' }}</span></summary>
       {% set c = l.cost_breakdown %}
       {% if c and c.total_eur %}
       {% set rp = l.repair_breakdown %}
-      <p class="text-2xl font-bold">{{ l.landed_cost_eur|eur }}{% if rp %} <span class="text-sm font-normal text-ink-400">incl. ≈ {{ rp.estimate|eur }} repairs</span>{% endif %}</p>
+      <p class="mt-2 text-2xl font-bold">{{ l.landed_cost_eur|eur }}{% if rp %} <span class="text-sm font-normal text-ink-400">incl. ≈ {{ rp.estimate|eur }} repairs</span>{% endif %}</p>
       <dl class="mt-2 grid grid-cols-2 gap-y-1 text-sm">
         <dt class="text-ink-400">Purchase</dt><dd>{{ c.purchase_eur|eur }}</dd>
         <dt class="text-ink-400">Transport ({{ l.country }})</dt><dd>{{ c.transport_eur|eur }}</dd>
@@ -263,12 +265,12 @@
       {% else %}
       <p class="text-sm text-ink-400">Not available (missing first registration date or unsupported fuel).</p>
       {% endif %}
-    </div>
-    <div id="nlvalue" class="card p-4">
-      <h2 class="font-semibold">NL value &amp; spread</h2>
+    </details>
+    <details id="nlvalue" class="card fold p-4" open>
+      <summary><h2>NL value &amp; spread</h2><span class="fold-value">{% if l.spread_eur is not none %}<span class="{{ 'text-good-700' if l.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}</span>{% else %}–{% endif %}</span></summary>
       {% set v = l.nl_value_breakdown %}
       {% if v %}
-      <p class="text-2xl font-bold">{{ l.nl_value_eur|eur }}
+      <p class="mt-2 text-2xl font-bold">{{ l.nl_value_eur|eur }}
         {% if l.spread_eur is not none %}<span class="ml-2 text-lg {{ 'text-good-700' if l.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} · {{ l.spread_pct }}%</span>{% endif %}</p>
       {% if v.flags %}
       <ul class="mt-2 space-y-1 text-sm">
@@ -299,22 +301,27 @@
       {% endif %}
       {% if nearest %}
       {% set close_ids = v.nearest|selectattr('close')|map(attribute='id')|list %}
-      <ul class="mt-2 divide-y divide-ink-100 text-sm">
-        {% for c in nearest %}
+      {% macro comp_row(c) -%}
         <li class="flex items-center justify-between gap-2 py-1 {{ 'font-semibold' if b and c.id == b.id }}">
           <a href="{{ c.url }}" target="_blank" rel="noopener" class="truncate underline">{% if b and c.id == b.id %}★ {% elif c.id in close_ids %}≈ {% endif %}{{ c.variant or (c.make ~ ' ' ~ c.model) }}</a>
           <span class="whitespace-nowrap text-ink-600">{{ c.first_registration.year if c.first_registration }} · {{ c.mileage_km|km }}{% if c.gearbox %} · {{ c.gearbox }}{% endif %} · <b>{{ c.price_eur|eur }}</b> <span class="text-xs text-ink-300">{{ c.source }}</span></span>
         </li>
-        {% endfor %}
+      {%- endmacro %}
+      <ul class="mt-2 divide-y divide-ink-100 text-sm">
+        {% for c in nearest[:4] %}{{ comp_row(c) }}{% endfor %}
       </ul>
+      {% if nearest|length > 4 %}
+      <details class="mt-1 text-sm"><summary class="cursor-pointer text-xs font-semibold text-ink-400">show all {{ nearest|length }} comparables</summary>
+        <ul class="divide-y divide-ink-100">{% for c in nearest[4:] %}{{ comp_row(c) }}{% endfor %}</ul></details>
+      {% endif %}
       <p class="mt-1 text-[11px] text-ink-300">★ benchmark · ≈ close match</p>
       {% endif %}
       {% else %}
       <p class="text-sm text-ink-400">Not enough comparables yet (run the NL comparables searches).</p>
       {% endif %}
-    </div>
-    <div id="market" class="card p-4">
-      <h2 class="font-semibold">Market <span class="text-xs font-normal text-ink-300">how fast will it sell in NL?</span></h2>
+    </details>
+    <details id="market" class="card fold p-4">
+      <summary><h2>Market <span class="text-xs font-normal text-ink-300">how fast will it sell in NL?</span></h2><span class="fold-value">{% if market %}{{ market.grade }} · {{ {'A': 'sells fast', 'B': 'sells well', 'C': 'average', 'D': 'slow', 'E': 'hard to sell'}[market.grade] }}{% else %}–{% endif %}</span></summary>
       {% if market %}
       {% set gc = {'A': 'bg-good-700 text-white', 'B': 'bg-good-100 text-good-700', 'C': 'bg-brand-100 text-brand-700', 'D': 'bg-bad-100 text-bad-700', 'E': 'bg-bad-700 text-white'} %}
       <div class="mt-2 flex items-center gap-3">
@@ -378,9 +385,9 @@
       {% else %}
       <p class="mt-1 text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}. Places are geocoded a few minutes after a car appears.</p>
       {% endif %}
-    </div>
-    <div id="pickup" class="card p-4">
-      <h2 class="font-semibold">Pickup <span class="text-xs font-normal text-ink-300">from {{ trip['from'] if trip else 'the base' }}</span></h2>
+    </details>
+    <details id="pickup" class="card fold p-4">
+      <summary><h2>Pickup <span class="text-xs font-normal text-ink-300">from {{ trip['from'] if trip else 'the base' }}</span></h2><span class="fold-value">{% if trip %}≈ {{ trip.km }} km · {{ trip.total_eur|eur }}{% else %}–{% endif %}</span></summary>
       {% if trip %}
       <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
         <div><div class="text-xs text-ink-400">distance</div><div class="text-lg font-bold">≈ {{ trip.km }} km</div></div>
@@ -391,7 +398,7 @@
       {% else %}
       <p class="text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}.</p>
       {% endif %}
-    </div>
+    </details>
   </div>
 </div>
 {% endblock %}
