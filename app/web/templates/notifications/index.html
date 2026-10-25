@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-  <div><h1>Notifications</h1><p class="text-sm text-ink-400">Price moves, disappearances and notes on the cars you starred, and new cars for the models you want.</p></div>
+  <div><h1>Notifications</h1><p class="text-sm text-ink-400">Price moves, disappearances and notes on your favorite cars, and new cars for the models you want.</p></div>
   {% if unread %}
   <form method="post" action="/notifications/read"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn-ghost">Mark all {{ unread }} read</button></form>
   {% endif %}

@@ -43,6 +43,8 @@ def _listing(db: DB, listing_id: int) -> Listing:
 def _back(request: Request, listing: Listing, partial: str) -> HTMLResponse:
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse(request, partial, {"listing": listing})
+    if "/favorites" in request.headers.get("referer", ""):
+        return RedirectResponse("/favorites", status_code=status.HTTP_303_SEE_OTHER)
     return RedirectResponse(f"/listings/{listing.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -94,12 +96,117 @@ def star_listing(request: Request, db: DB, user: CurrentUser, listing_id: int) -
                 "size": request.query_params.get("size", ""),
             },
         )
+    if "/favorites" in request.headers.get("referer", ""):
+        return RedirectResponse("/favorites", status_code=status.HTTP_303_SEE_OTHER)
     return RedirectResponse(f"/listings/{listing.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
+FAVORITE_SHOWS = ("all", "active", "gone", "drops", "profitable", "target")
+FAVORITE_SORTS = ("starred", "drop", "spread", "price")
+
+
+def _price_when_starred(listing: Listing, at: datetime) -> int:
+    """The asking price at the moment the star was set, from the price history."""
+    before = [h.price_eur for h in listing.price_history if h.seen_at <= at]
+    if before:
+        return before[-1]
+    return listing.price_history[0].price_eur if listing.price_history else listing.price_eur
+
+
 @router.get("/favorites", response_class=HTMLResponse)
-def favorites_page(request: Request, db: DB, user: CurrentUser) -> RedirectResponse:
-    return RedirectResponse("/listings?starred=true&profitable=false&include_inactive=true")
+def favorites_page(
+    request: Request, db: DB, user: CurrentUser, show: str = "all", sort: str = "starred"
+) -> HTMLResponse:
+    """The user's favorite cars with what changed since they were starred."""
+    from app.db import Deal
+
+    show = show if show in FAVORITE_SHOWS else "all"
+    sort = sort if sort in FAVORITE_SORTS else "starred"
+    watches = list(
+        db.scalars(
+            select(Watch)
+            .where(Watch.user_id == user.id)
+            .options(
+                selectinload(Watch.listing).selectinload(Listing.price_history),
+                selectinload(Watch.listing).selectinload(Listing.watches).selectinload(Watch.user),
+                selectinload(Watch.listing).selectinload(Listing.insight),
+                selectinload(Watch.listing).selectinload(Listing.notes),
+            )
+            .order_by(Watch.created_at.desc())
+        )
+    )
+    deals = {
+        d.listing_id: d
+        for d in db.scalars(
+            select(Deal).where(Deal.listing_id.in_([w.listing_id for w in watches]))
+        )
+    }
+    rows: list[dict[str, Any]] = []
+    for w in watches:
+        x = w.listing
+        then = _price_when_starred(x, w.created_at)
+        rows.append(
+            {
+                "w": w,
+                "l": x,
+                "price_then": then,
+                "change": x.price_eur - then,
+                "deal": deals.get(x.id),
+                "others": [v.user.username for v in x.watches if v.user_id != user.id],
+            }
+        )
+    active = [r for r in rows if r["l"].is_active]
+    drops = [r for r in rows if r["change"] < 0]
+    spreads = [r["l"].spread_eur for r in active if r["l"].spread_eur is not None]
+    stats = {
+        "total": len(rows),
+        "active": len(active),
+        "gone": len(rows) - len(active),
+        "drops": len(drops),
+        "saved_eur": -sum(r["change"] for r in drops),
+        "rises": sum(1 for r in rows if r["change"] > 0),
+        "profitable": sum(1 for r in active if (r["l"].spread_eur or 0) > 0),
+        "avg_spread_eur": round(sum(spreads) / len(spreads)) if spreads else None,
+        "targets": sum(1 for r in rows if r["w"].target_price_eur),
+        "targets_hit": sum(
+            1
+            for r in rows
+            if r["w"].target_price_eur and r["l"].price_eur <= r["w"].target_price_eur
+        ),
+        "deals": sum(1 for r in rows if r["deal"]),
+    }
+    if show == "active":
+        rows = active
+    elif show == "gone":
+        rows = [r for r in rows if not r["l"].is_active]
+    elif show == "drops":
+        rows = drops
+    elif show == "profitable":
+        rows = [r for r in active if (r["l"].spread_eur or 0) > 0]
+    elif show == "target":
+        rows = [r for r in rows if r["w"].target_price_eur]
+    if sort == "drop":
+        rows.sort(key=lambda r: r["change"])
+    elif sort == "spread":
+        rows.sort(
+            key=lambda r: r["l"].spread_eur if r["l"].spread_eur is not None else -(10**9),
+            reverse=True,
+        )
+    elif sort == "price":
+        rows.sort(key=lambda r: r["l"].price_eur)
+    return templates.TemplateResponse(
+        request,
+        "favorites/index.html",
+        {
+            "title": "Favorites",
+            "rows": rows,
+            "stats": stats,
+            "show": show,
+            "sort": sort,
+            "shows": FAVORITE_SHOWS,
+            "starred_ids": {w.listing_id for w in watches},
+        },
+    )
 
 
 @router.get("/notifications", response_class=HTMLResponse)

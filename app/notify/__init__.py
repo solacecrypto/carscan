@@ -1,4 +1,4 @@
-"""In-app notifications: what changed on the cars you starred, and new cars that match the
+"""In-app notifications: what changed on your favorite cars, and new cars that match the
 models you said you are looking for. Rows live in ``notifications``; the bell in the nav
 polls the unread count. Telegram stays for the group alerts."""
 
@@ -18,16 +18,16 @@ from app.storage.listings import UpsertResult
 log = structlog.get_logger()
 
 KINDS = {
-    "price_down": "price drop on a starred car",
-    "price_up": "price rise on a starred car",
-    "target": "starred car reached your target price",
-    "gone": "starred car is gone",
-    "back": "starred car is back",
-    "spread_up": "starred car turned profitable",
-    "spread_down": "starred car no longer profitable",
+    "price_down": "price drop on a favorite car",
+    "price_up": "price rise on a favorite car",
+    "target": "favorite car reached your target price",
+    "gone": "favorite car is gone",
+    "back": "favorite car is back",
+    "spread_up": "favorite car turned profitable",
+    "spread_down": "favorite car no longer profitable",
     "wanted": "new car for a wanted model",
-    "note": "note on a starred car",
-    "claimed": "someone claimed a starred car",
+    "note": "note on a favorite car",
+    "claimed": "someone claimed a favorite car",
     "deal": "one of your deals needs attention",
     "system": "system health",
 }
@@ -111,7 +111,7 @@ def favorite_events(
     now: datetime,
     actor_id: int | None = None,
 ) -> int:
-    """After a scrape run: price moves, disappearances and returns of starred cars."""
+    """After a scrape run: price moves, disappearances and returns of favorite cars."""
     n = 0
     for listing, old in result.price_dropped:
         for w in _stars(listing):
@@ -172,7 +172,7 @@ def favorite_events(
 
 
 def starred_spreads(session: Session, model_key: str | None) -> dict[int, int | None]:
-    """Spread of every starred car (of one model) before a valuation pass."""
+    """Spread of every favorite car (of one model) before a valuation pass."""
     stmt = select(Listing.id, Listing.spread_eur).join(Watch, Watch.listing_id == Listing.id)
     if model_key:
         stmt = stmt.where(Listing.model_key == model_key)
@@ -180,7 +180,7 @@ def starred_spreads(session: Session, model_key: str | None) -> dict[int, int | 
 
 
 def spread_events(session: Session, before: dict[int, int | None], now: datetime) -> int:
-    """After a valuation pass: starred cars that crossed zero either way."""
+    """After a valuation pass: favorite cars that crossed zero either way."""
     if not before:
         return 0
     n = 0

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+{% set st = stats %}
+<div class="flex flex-wrap items-end justify-between gap-3">
+  <div><h1>Favorites</h1><p class="text-sm text-ink-400">Cars you follow. You get a notification when the price moves, the ad goes or comes back, or the spread crosses zero.</p></div>
+  <form method="get" action="/favorites" class="flex items-center gap-2 text-sm">
+    <input type="hidden" name="show" value="{{ show }}">
+    <select name="sort" class="input !mt-0 !w-auto !py-1.5" onchange="this.form.submit()">
+      {% for key, label in [('starred', 'recently added'), ('drop', 'biggest price drop'), ('spread', 'highest spread'), ('price', 'lowest price')] %}
+      <option value="{{ key }}" {{ 'selected' if key == sort }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+  {% for label, value, sub, tone in [
+    ('Favorites', st.total, st.active ~ ' still for sale' ~ (', ' ~ st.gone ~ ' gone' if st.gone), ''),
+    ('Price drops', st.drops, (st.saved_eur|eur) ~ ' lower than when added' if st.drops else 'none since you added them', 'good' if st.drops else ''),
+    ('Positive return', st.profitable, ('avg spread ' ~ st.avg_spread_eur|eur) if st.avg_spread_eur is not none else 'no NL value yet', 'good' if st.profitable else ''),
+    ('Targets', st.targets, (st.targets_hit ~ ' reached') if st.targets else 'set one on a car page', 'good' if st.targets_hit else '')] %}
+  <div class="card p-3">
+    <div class="label">{{ label }}</div>
+    <div class="mt-1 text-xl font-bold tracking-tight {{ 'text-good-700' if tone == 'good' }}">{{ value }}</div>
+    <div class="text-[11px] text-ink-400">{{ sub }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="mt-5 flex flex-wrap gap-1.5 text-xs">
+  {% for key, label in [('all', 'all'), ('active', 'for sale'), ('gone', 'gone'), ('drops', 'price dropped'), ('profitable', 'positive return'), ('target', 'with target')] %}
+  <a href="/favorites?show={{ key }}&sort={{ sort }}" class="pill !px-3 !py-1 {{ 'bg-ink-900 text-white' if key == show else 'bg-ink-100 text-ink-600 hover:bg-ink-200' }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if not rows %}
+<div class="mt-6 rounded-2xl border border-dashed border-ink-200 p-10 text-center text-ink-400">
+  <p class="font-medium text-ink-600">{{ 'No favorites yet.' if show == 'all' else 'Nothing here.' }}</p>
+  <p class="mt-1 text-sm">Press the ☆ on a card or a car page to follow it. Price moves and disappearances then show up here and in your notifications.</p>
+</div>
+{% else %}
+<ul class="mt-4 space-y-3">
+  {% for r in rows %}{% set l = r.l %}{% set w = r.w %}
+  <li class="card overflow-hidden {{ 'opacity-70' if not l.is_active }}">
+    <div class="flex flex-col gap-3 p-3 sm:flex-row sm:items-stretch">
+      <a href="/listings/{{ l.id }}" class="relative block h-36 w-full shrink-0 overflow-hidden rounded-xl bg-ink-100 sm:h-28 sm:w-40">
+        {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" loading="lazy" class="h-full w-full object-cover">{% endif %}
+        <span class="pill absolute left-2 top-2 bg-ink-950/80 text-white backdrop-blur">{{ l.country }}</span>
+        {% if not l.is_active %}<span class="pill absolute right-2 top-2 bg-bad-700 text-white">gone</span>{% endif %}
+      </a>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div class="min-w-0">
+            <a href="/listings/{{ l.id }}" class="block truncate font-semibold leading-tight">{{ l.make }} {{ l.model }} <span class="font-normal text-ink-400">{{ l.first_registration.year if l.first_registration }}</span></a>
+            <div class="truncate text-xs text-ink-500">{{ l.variant or '' }}</div>
+            <div class="mt-1 text-xs text-ink-500">{{ l.mileage_km|km }}{% if l.gearbox %} · {{ l.gearbox }}{% endif %}{% if l.fuel %} · {{ l.fuel }}{% endif %} · {{ l.city or l.country }} · {{ l.source }}</div>
+          </div>
+          <div class="shrink-0 text-right">
+            <div class="text-lg font-bold tracking-tight">{{ l.price_eur|eur }}</div>
+            {% if r.change < 0 %}<div class="text-xs font-semibold text-good-700" title="was {{ r.price_then|eur }} when you added it">▼ {{ (-r.change)|eur }} since added</div>
+            {% elif r.change > 0 %}<div class="text-xs font-semibold text-bad-700" title="was {{ r.price_then|eur }} when you added it">▲ {{ r.change|eur }} since added</div>
+            {% else %}<div class="text-xs text-ink-400">unchanged since added</div>{% endif %}
+          </div>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+          {% if l.spread_eur is not none %}<span class="pill {{ 'bg-good-100 text-good-700' if l.spread_eur > 0 else 'bg-bad-100 text-bad-700' }}" title="NL value {{ l.nl_value_eur|eur }} − landed {{ l.landed_cost_eur|eur }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }} spread</span>{% endif %}
+          {% if l.landed_cost_eur %}<span class="pill bg-ink-100 text-ink-600">landed ≈ {{ l.landed_cost_eur|eur }}</span>{% endif %}
+          {% if w.target_price_eur %}<span class="pill {{ 'bg-good-100 text-good-700' if l.price_eur <= w.target_price_eur else 'bg-brand-100 text-brand-700' }}" title="group alert when it drops to this">target {{ w.target_price_eur|eur }}{{ ' ✓' if l.price_eur <= w.target_price_eur }}</span>{% endif %}
+          {% if r.deal %}<a href="/deals/{{ r.deal.id }}" class="pill bg-ink-900 text-white">deal · {{ r.deal.stage.value }}</a>{% endif %}
+          {% if l.notes %}<span class="pill bg-ink-100 text-ink-600">{{ l.notes|length }} note{{ '' if l.notes|length == 1 else 's' }}</span>{% endif %}
+          {% if r.others %}<span class="pill bg-ink-100 text-ink-600" title="also a favorite of">also {{ r.others|join(', ') }}</span>{% endif %}
+          <span class="text-ink-400">added {{ w.created_at|timeago }}</span>
+        </div>
+        {% include "listings/_insight_badges.html" %}
+      </div>
+      <div class="flex shrink-0 flex-row items-center gap-2 sm:flex-col sm:items-end sm:justify-between">
+        <form method="post" action="/listings/{{ l.id }}/watch" class="flex items-center gap-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="number" name="target_price_eur" step="100" value="{{ w.target_price_eur or '' }}" placeholder="target €" class="input !mt-0 !w-28 !py-1 text-xs" title="Telegram alert to the group when the price drops to this">
+          <button name="action" value="watch" class="btn-outline !px-2 !py-1 !text-xs">set</button>
+        </form>
+        <div class="flex items-center gap-1">
+          {% if not r.deal and l.is_active %}
+          <form method="post" action="/deals" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="listing_id" value="{{ l.id }}">
+            <button class="btn-ghost !px-2 !py-1 !text-xs">Track as deal</button></form>
+          {% endif %}
+          <form method="post" action="/listings/{{ l.id }}/star" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button class="btn-ghost !px-2 !py-1 !text-xs text-ink-500" title="remove from favorites">☆ remove</button></form>
+        </div>
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

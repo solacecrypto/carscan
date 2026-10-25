@@ -214,8 +214,8 @@
         {{ checks([('price_dropped', 'price dropped')]) }}
       {% endcall %}
 
-      {% call row('more', 'More', ([('my stars' if f.starred), ('gone' if f.include_inactive), ('duplicates' if f.include_duplicates)]|select|join(', ')) if g.more else '') %}
-        {{ checks([('starred', 'only cars I starred'), ('include_inactive', 'include gone cars'), ('include_duplicates', 'include duplicates')]) }}
+      {% call row('more', 'More', ([('my favorites' if f.starred), ('gone' if f.include_inactive), ('duplicates' if f.include_duplicates)]|select|join(', ')) if g.more else '') %}
+        {{ checks([('starred', 'only my favorites'), ('include_inactive', 'include gone cars'), ('include_duplicates', 'include duplicates')]) }}
       {% endcall %}
 
       <noscript><div class="p-3"><button class="btn-primary w-full">Apply</button></div></noscript>

@@ -500,7 +500,7 @@ def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, d
     row.seller_name = "Auto Müller"
     db.commit()
     page = client.get(f"/listings/{row.id}").text
-    assert "Starred by" in page and "No notes yet" in page and 'href="/sellers/Auto%20M' in page
+    assert "Favorite of" in page and "No notes yet" in page and 'href="/sellers/Auto%20M' in page
     assert "Notes" in page and 'hx-post="/listings/' in page
     token = _csrf(page)
     r = client.post(
@@ -556,9 +556,37 @@ def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Ses
     assert r.status_code == 200 and 'aria-pressed="true"' in r.text
     assert db.query(Watch).filter_by(listing_id=row.id, user_id=seeded["user"].id).count() == 1
     page = client.get("/listings?starred=true&profitable=false").text
-    assert "320i" in page.split('id="results"')[1] and "only cars I starred" in page
-    r = client.get("/favorites", follow_redirects=False)
-    assert r.status_code == 307 and "starred=true" in r.headers["location"]
+    assert "320i" in page.split('id="results"')[1] and "only my favorites" in page
+    # the favorites page: stats, price change since starring, target and removal
+    # pretend the star was set between the two price points (7000 → 6000)
+    db.query(Watch).filter_by(listing_id=row.id).update({"created_at": NOW - timedelta(hours=12)})
+    db.commit()
+    page = client.get("/favorites").text
+    assert "320i" in page and "1 still for sale" in page and "€ 1.000 since added" in page
+    assert "€ 1.000 lower than when added" in page
+    assert "Nothing here." in client.get("/favorites?show=gone").text
+    assert "320i" in client.get("/favorites?show=drops&sort=drop").text
+    r = client.post(
+        f"/listings/{row.id}/watch",
+        data={"csrf_token": token, "target_price_eur": "5000", "action": "watch"},
+        headers={"referer": "http://localhost/favorites"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and r.headers["location"] == "/favorites"
+    page = client.get("/favorites?show=target").text
+    assert "target € 5.000" in page and "1 reached" not in page
+    r = client.post(
+        f"/listings/{row.id}/star",
+        data={"csrf_token": token},
+        headers={"referer": "http://localhost/favorites"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and r.headers["location"] == "/favorites"
+    assert "No favorites yet." in client.get("/favorites").text
+    # star it again for the rest of the test
+    client.post(
+        f"/listings/{row.id}/star", data={"csrf_token": token}, headers={"HX-Request": "true"}
+    )
     r = client.post(
         f"/listings/{row.id}/star", data={"csrf_token": token}, headers={"HX-Request": "true"}
     )

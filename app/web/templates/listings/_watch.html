@@ -1,10 +1,10 @@
 {% set mine = (listing.watches|selectattr('user_id', 'equalto', user.id)|list|first) if user else none %}
 <div id="watch-{{ listing.id }}" class="text-sm">
-  <p class="mt-1 text-xs text-ink-500">A star gets you a notification when the price moves, the ad disappears or comes back, the spread crosses zero, or someone adds a note or claims the car.</p>
+  <p class="mt-1 text-xs text-ink-500">A favorite gets you a notification when the price moves, the ad disappears or comes back, the spread crosses zero, or someone adds a note or claims the car.</p>
   <form hx-post="/listings/{{ listing.id }}/watch" hx-target="#watch-{{ listing.id }}" hx-swap="outerHTML" method="post" action="/listings/{{ listing.id }}/watch" class="mt-2 flex flex-wrap items-end gap-2">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <label class="label block text-xs">also alert the group below €<input type="number" name="target_price_eur" step="100" value="{{ mine.target_price_eur if mine and mine.target_price_eur }}" placeholder="target price" class="input !mt-1 !w-36"></label>
-    <button name="action" value="watch" class="btn-outline !py-2">{{ 'Update target' if mine else 'Star with target' }}</button>
+    <button name="action" value="watch" class="btn-outline !py-2">{{ 'Update target' if mine else 'Favorite with target' }}</button>
   </form>
   {% if mine and mine.target_price_eur %}<p class="mt-1 text-[11px] text-ink-400">Telegram alert to the group when it drops to {{ mine.target_price_eur|eur }} or below.{% if mine.triggered_at %} Last triggered {{ mine.triggered_at|timeago }}.{% endif %}</p>{% endif %}
 </div>

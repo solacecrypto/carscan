@@ -215,7 +215,7 @@
     </div>
     {% with listing=l, translate_error=None %}{% include "listings/_description.html" %}{% endwith %}
     {% endif %}
-    <details class="card fold p-4"><summary><h2>Starred by</h2><span class="fold-value">{{ l.watches|map(attribute='user.username')|join(', ') or 'nobody yet' }}</span></summary>
+    <details class="card fold p-4"><summary><h2>Favorite of</h2><span class="fold-value">{{ l.watches|map(attribute='user.username')|join(', ') or 'nobody yet' }}</span></summary>
       <div class="mt-2">{% with listing=l %}{% include "listings/_watch.html" %}{% endwith %}</div></details>
     <details class="card fold p-4" {{ 'open' if l.price_history|length > 1 }}>
       <summary><h2>Price history</h2><span class="fold-value">{{ l.price_history|length }} entr{{ 'y' if l.price_history|length == 1 else 'ies' }}</span></summary>

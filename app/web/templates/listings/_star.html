@@ -1,7 +1,7 @@
 {% set on = l.id in (starred_ids or []) %}
 <button type="button" id="star-{{ l.id }}{{ size }}" hx-post="/listings/{{ l.id }}/star?size={{ size }}" hx-swap="outerHTML" hx-target="this"
         class="{{ 'flex h-9 w-9 items-center justify-center rounded-full shadow backdrop-blur' if not size else 'btn-outline' }} {{ ('bg-brand-500 text-ink-950' if on else 'bg-white/90 text-ink-500 hover:text-brand-600') if not size else ('!border-brand-400 !bg-brand-50 !text-brand-800' if on else '') }}"
-        title="{{ 'Starred: you get a notification when the price moves or the ad goes' if on else 'Star this car to follow it' }}" aria-pressed="{{ 'true' if on else 'false' }}">
+        title="{{ 'Favorite: you get a notification when the price moves or the ad goes' if on else 'Add to favorites to follow this car' }}" aria-pressed="{{ 'true' if on else 'false' }}">
   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="{{ 'currentColor' if on else 'none' }}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.4 6.3 20.5l1.2-6.4L2.8 9.7l6.4-.8z"/></svg>
-  {% if size %}<span>{{ 'Starred' if on else 'Star' }}</span>{% endif %}
+  {% if size %}<span>{{ 'Favorited' if on else 'Favorite' }}</span>{% endif %}
 </button>
