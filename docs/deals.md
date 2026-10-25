@@ -37,7 +37,9 @@ Filter by owner; track a car straight from the page by pasting its id or link on
 Each card shows the photo, owner, days in stage (red and "stuck" past the per-stage limit in
 `STALE_DAYS`), distance from the base, ask → offer → bought, expected or actual profit, the
 checklist progress for bought cars, a one-line **next action** (`next_action`) and buttons to
-move to the next stage or drop it.
+move to the next stage or drop it. On a desktop a card can also be dragged onto the previous or
+next column (native HTML drag and drop, posts to the same stage endpoint, then reloads); on
+phones the buttons remain the way to move a deal.
 
 The deal page has a clickable stage progress bar, the next action, a drop button that asks for
 a reason (stored on the stage event), an owner handover select (logged in the history), and

@@ -47,12 +47,12 @@
 {% else %}
 <div class="mt-6 flex flex-col gap-5 lg:flex-row lg:gap-4 lg:overflow-x-auto lg:pb-3 lg:snap-x" id="board">
   {% for stage, deals in groups %}
-  <section class="w-full shrink-0 snap-start lg:w-[19rem] {{ 'hidden lg:block' if not deals }}" id="stage-{{ stage.value }}">
+  <section class="stage-col w-full shrink-0 snap-start rounded-2xl p-1 transition lg:w-[19rem] {{ 'hidden lg:block' if not deals }}" id="stage-{{ stage.value }}" data-stage="{{ stage.value }}">
     <h2 class="flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-ink-500">
       <span class="h-2.5 w-2.5 rounded-full {{ colors[stage.value] }}"></span>{{ stage.value }}
       <span class="ml-auto rounded-full bg-ink-100 px-2 text-[11px] text-ink-600">{{ deals|length }}</span>
     </h2>
-    <ul class="mt-2 space-y-3">
+    <ul class="mt-2 min-h-[6rem] space-y-3">
       {% for d in deals %}{% include "deals/_card.html" %}{% else %}
       <li class="rounded-2xl border border-dashed border-ink-200 p-4 text-center text-xs text-ink-300">empty</li>
       {% endfor %}
@@ -61,6 +61,56 @@
   {% endfor %}
 </div>
 {% endif %}
+
+<script>
+// Drag a card onto the previous or next stage column to move the deal. Posts to the same
+// stage endpoint as the buttons; the page reloads so the tiles and counts stay right.
+(function () {
+  var stages = {{ groups|map(attribute=0)|map(attribute='value')|list|tojson }};
+  var csrf = {{ csrf_token|tojson }};
+  var dragging = null;
+  function allowed(from, to) { return Math.abs(stages.indexOf(from) - stages.indexOf(to)) === 1; }
+  document.querySelectorAll('.deal-card').forEach(function (card) {
+    card.addEventListener('dragstart', function (e) {
+      dragging = card;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.deal);
+      card.classList.add('opacity-40');
+      document.querySelectorAll('.stage-col').forEach(function (col) {
+        col.classList.toggle('bg-brand-100/40', allowed(card.dataset.stage, col.dataset.stage));
+        col.classList.toggle('opacity-50', col.dataset.stage !== card.dataset.stage && !allowed(card.dataset.stage, col.dataset.stage));
+      });
+    });
+    card.addEventListener('dragend', function () {
+      card.classList.remove('opacity-40');
+      document.querySelectorAll('.stage-col').forEach(function (col) { col.classList.remove('bg-brand-100/40', 'opacity-50', 'ring-2', 'ring-brand-400'); });
+      dragging = null;
+    });
+  });
+  document.querySelectorAll('.stage-col').forEach(function (col) {
+    col.addEventListener('dragover', function (e) {
+      if (!dragging || !allowed(dragging.dataset.stage, col.dataset.stage)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('ring-2', 'ring-brand-400');
+    });
+    col.addEventListener('dragleave', function () { col.classList.remove('ring-2', 'ring-brand-400'); });
+    col.addEventListener('drop', function (e) {
+      if (!dragging || !allowed(dragging.dataset.stage, col.dataset.stage)) return;
+      e.preventDefault();
+      var card = dragging, to = col.dataset.stage;
+      var empty = col.querySelector('ul > li:not(.deal-card)');
+      if (empty) empty.remove();
+      col.querySelector('ul').prepend(card);
+      card.classList.add('pointer-events-none', 'opacity-60');
+      var body = new URLSearchParams({ csrf_token: csrf, stage: to });
+      fetch('/deals/' + card.dataset.deal + '/stage', { method: 'POST', body: body, credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); location.reload(); })
+        .catch(function () { alert('Could not move the deal, reloading.'); location.reload(); });
+    });
+  });
+})();
+</script>
 
 <div class="mt-8 flex items-center justify-between">
   <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Closed · {{ sold|length }} sold, {{ dropped|length }} dropped</h2>

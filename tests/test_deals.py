@@ -223,6 +223,7 @@ def test_web_deal_flow(db: Session) -> None:
     deals_page = c.get("/deals").text
     assert "bought" in deals_page and "actual € 7.100" in deals_page
     assert "Pick up the car" in deals_page and "→ imported" in deals_page
+    assert 'draggable="true"' in deals_page and 'data-stage="bought"' in deals_page
     assert "€ 7.100 invested" in deals_page  # summary tile: cars owned
     # owner filter, closed section, tracking by link
     assert "actual € 7.100" in c.get("/deals?owner=q").text

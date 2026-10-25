@@ -1,6 +1,6 @@
 {# one deal on the board; expects d, now, trips, days_in_stage, is_stale, next_stage, next_action #}
 {% set l = d.listing %}{% set days = days_in_stage(d, now) %}{% set stale = is_stale(d, now) %}{% set nxt = next_stage(d) %}
-<li class="card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg {{ 'ring-2 ring-bad-700/30' if stale }}">
+<li class="deal-card card cursor-grab overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg active:cursor-grabbing {{ 'ring-2 ring-bad-700/30' if stale }}" draggable="true" data-deal="{{ d.id }}" data-stage="{{ d.stage.value }}">
   <div class="flex gap-3 p-3">
     <a href="/deals/{{ d.id }}" class="relative block h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-ink-100">
       {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" loading="lazy" class="h-full w-full object-cover">{% endif %}
