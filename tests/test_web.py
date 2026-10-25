@@ -488,7 +488,15 @@ def test_models_page_and_accuracy_on_cards(client: TestClient, seeded: dict, db:
     snapshot_models(db, date(2026, 10, 16))
     db.commit()
     page = client.get("/models").text
-    assert "closed deal" in page and "landed cost off by" in page and "median spread" in page
+    assert "BMW E90/E91 318i/320i" in page and "estimates within" in page
+    assert "median spread" in page and 'href="/models/bmw-3er-e90"' in page
+    assert "1 deal" in page and "DE 1" in page
+    page = client.get("/models?sort=supply").text
+    assert "BMW E90/E91 318i/320i" in page
+    page = client.get("/models/bmw-3er-e90").text
+    assert "Best cars right now" in page and "Deals on this model" in page
+    assert "landed-cost estimate was off by" in page and "Asking prices" in page
+    assert client.get("/models/no-such-model").status_code == 404
     assert "estimates within" in client.get("/listings?profitable=false").text
 
 

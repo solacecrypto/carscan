@@ -61,3 +61,15 @@ from the comparables: supply (active ads for the model and for the same engine/g
 age of the ads on sale (Marktplaats `listed_at`), buyer enquiries (AutoScout24.nl `demand`
 band), and sell-through (days until a tracked ad disappears, used once 20+ ads have gone).
 Each signal scores 0–100, the weighted average maps to A–E. Indicative only.
+
+## Models pages (2026-10-25)
+
+`/models` ranks the watchlist models by median spread (or by positive share, best single car,
+7-day spread trend, supply, name). Everything is computed on request in
+`app/market/overview.py` from the active cars: supply by country, new and gone in 7 days,
+valued and positive counts, median ask / landed / NL value / spread, top-quarter spread, the
+best car, NL comparables count and asking median, deals and sold count, favorites, estimate
+accuracy from closed deals. The trend lines and the 7-day spread change come from the nightly
+`model_history` snapshots. `/models/{key}` adds histograms (asking price, spread, mileage,
+registration year), the country split, the top ten cars by spread, deals on the model, the
+NL asking-price quartiles and the newest arrivals. Links go to `/listings?model_key=…`.

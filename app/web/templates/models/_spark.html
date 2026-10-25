@@ -1,0 +1,3 @@
+{# small trend line; expects points, tone ('brand'|'good'|'ink'), optional h #}
+{% if points %}<svg viewBox="0 0 160 36" preserveAspectRatio="none" class="h-9 w-full"><polyline points="{{ points }}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" class="{{ {'brand': 'text-brand-500', 'good': 'text-good-700', 'ink': 'text-ink-400'}[tone] }}"/></svg>
+{% else %}<div class="flex h-9 items-center justify-center rounded bg-ink-50 text-[10px] text-ink-300">needs 2 days</div>{% endif %}

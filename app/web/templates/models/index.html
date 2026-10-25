@@ -1,48 +1,105 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="mb-4 flex items-end justify-between">
-  <div><h1>Models</h1><p class="text-sm text-ink-400">Is the margin on a model widening or collapsing? One snapshot per day.</p></div>
+{% set t = totals %}
+<div class="flex flex-wrap items-end justify-between gap-3">
+  <div><h1>Models</h1><p class="text-sm text-ink-400">Where the margin is right now, per model on the watchlist. Live numbers from the cars on the site; the trend lines come from the nightly snapshot.</p></div>
+  <form method="get" action="/models" class="flex items-center gap-2 text-sm">
+    <label class="text-xs text-ink-400">rank by</label>
+    <select name="sort" class="input !mt-0 !w-auto !py-1.5" onchange="this.form.submit()">
+      {% for key, label in [('spread', 'median spread'), ('positive', 'share with positive return'), ('best', 'best single car'), ('trend', 'spread trend, 7 days'), ('supply', 'supply'), ('name', 'name')] %}
+      <option value="{{ key }}" {{ 'selected' if key == sort }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
 </div>
-{% if not cards %}
-<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">No snapshots yet. The worker takes one every night; <code>carscan models snapshot</code> takes one now.</p>
-{% endif %}
-<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-  {% for c in cards %}
-  {% set h = c.latest %}
-  <section class="card p-4">
-    <div class="flex items-start justify-between gap-2">
-      <div class="min-w-0">
-        <h2 class="truncate font-semibold">{{ c.label }}</h2>
-        <p class="text-xs text-ink-400">{{ h.n_active }} cars · {{ h.n_valued }} valued · {{ h.n_comparables }} NL comparables · {{ c.days }} day{{ '' if c.days == 1 else 's' }} of history</p>
-      </div>
-      {% if h.median_spread_eur is not none %}
-      <div class="shrink-0 text-right">
-        <div class="text-lg font-bold {{ 'text-good-700' if h.median_spread_eur > 0 else 'text-bad-700' }}">{{ '+' if h.median_spread_eur > 0 }}{{ h.median_spread_eur|eur }}</div>
-        <div class="text-[11px] text-ink-400">median spread{% if c.spread_change is not none and c.days > 1 %} · {{ '+' if c.spread_change > 0 }}{{ c.spread_change|eur }} since day 1{% endif %}</div>
-      </div>
-      {% endif %}
-    </div>
-    <div class="mt-3 grid grid-cols-2 gap-3 text-xs text-ink-500">
-      <div>
-        <div class="mb-1">median spread</div>
-        {% if c.spread_points %}<svg viewBox="0 0 160 36" class="h-9 w-full"><polyline points="{{ c.spread_points }}" fill="none" stroke="currentColor" stroke-width="2" class="text-brand-500"/></svg>{% else %}<div class="h-9 rounded bg-ink-50 text-center text-[11px] leading-9 text-ink-300">needs 2+ days</div>{% endif %}
-      </div>
-      <div>
-        <div class="mb-1">share with positive return{% if c.positive_pct is not none %} · <b class="text-ink-700">{{ c.positive_pct }}%</b>{% endif %}</div>
-        {% if c.positive_points %}<svg viewBox="0 0 160 36" class="h-9 w-full"><polyline points="{{ c.positive_points }}" fill="none" stroke="currentColor" stroke-width="2" class="text-good-700"/></svg>{% else %}<div class="h-9 rounded bg-ink-50 text-center text-[11px] leading-9 text-ink-300">needs 2+ days</div>{% endif %}
-      </div>
-    </div>
-    <dl class="mt-3 grid grid-cols-3 gap-2 text-xs">
-      <div><dt class="text-ink-400">median ask</dt><dd class="font-medium">{{ h.median_price_eur|eur if h.median_price_eur else '–' }}</dd></div>
-      <div><dt class="text-ink-400">median landed</dt><dd class="font-medium">{{ h.median_landed_eur|eur if h.median_landed_eur else '–' }}</dd></div>
-      <div><dt class="text-ink-400">median NL value</dt><dd class="font-medium">{{ h.median_nl_value_eur|eur if h.median_nl_value_eur else '–' }}</dd></div>
-    </dl>
-    {% set acc = accuracy.get(c.key) %}
-    {% if acc %}
-    <p class="mt-3 rounded-lg bg-ink-50 px-2.5 py-1.5 text-xs text-ink-600">Our estimates on {{ acc.n }} closed deal{{ '' if acc.n == 1 else 's' }}: landed cost off by <b>{{ acc.landed_err_pct }}%</b>{% if acc.value_err_pct is not none %}, NL value off by <b>{{ acc.value_err_pct }}%</b> ({{ acc.n_sold }} sold){% endif %}.</p>
-    {% endif %}
-    <a href="/listings?model={{ c.label|urlencode }}" class="mt-3 inline-block text-xs underline">see the cars →</a>
-  </section>
+
+<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+  {% for label, value, sub, tone in [
+    ('Models', t.models, 'on the watchlist', ''),
+    ('Cars on the site', t.cars, '+' ~ t.new_7d ~ ' new, −' ~ t.gone_7d ~ ' gone in 7 days', ''),
+    ('Positive return', t.positive, ((100 * t.positive / t.valued)|round|int ~ '% of ' ~ t.valued ~ ' valued') if t.valued else 'nothing valued yet', 'good' if t.positive else ''),
+    ('NL comparables', t.comparables, 'active ads on the NL sites', ''),
+    ('Best model', t.best.label if t.best else '–', ('median spread ' ~ (t.best.median_spread_eur|eur)) if t.best else 'no spreads yet', 'good' if t.best and t.best.median_spread_eur > 0 else ''),
+    ('Snapshot days', (models|map(attribute='history')|map('length')|max) if models else 0, 'nightly history behind the trends', '')] %}
+  <div class="card p-3">
+    <div class="label">{{ label }}</div>
+    <div class="mt-1 truncate text-xl font-bold tracking-tight {{ 'text-good-700' if tone == 'good' }}" title="{{ value }}">{{ value }}</div>
+    <div class="text-[11px] text-ink-400">{{ sub }}</div>
+  </div>
   {% endfor %}
 </div>
+
+{% if not models %}
+<p class="mt-6 rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">No models yet. Add them to <code>models.yaml</code> and run <code>carscan models sync</code>.</p>
+{% endif %}
+
+{% set live = models|selectattr('n_active')|list %}{% set empty = models|rejectattr('n_active')|list %}
+<ol class="mt-6 space-y-3">
+  {% for m in live %}
+  <li class="card overflow-hidden">
+    <div class="grid gap-4 p-4 lg:grid-cols-12 lg:items-center">
+      <div class="flex min-w-0 gap-3 lg:col-span-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-900 text-sm font-bold text-white">{{ loop.index }}</span>
+        <div class="min-w-0">
+          <a href="/models/{{ m.key }}" class="block truncate font-semibold leading-tight hover:underline">{{ m.label }}</a>
+          <div class="truncate text-xs text-ink-400">{% if m.years %}{{ m.years[0] }}–{{ m.years[1] }}{% endif %}{% if m.motors %} · {{ m.motors|join(', ') }}{% endif %}{% if m.bodies %} · {{ m.bodies|join('/') }}{% endif %}</div>
+          <div class="mt-1.5 flex flex-wrap gap-1 text-[11px]">
+            <span class="pill bg-ink-100 text-ink-600" title="active cars on the site">{{ m.n_active }} cars</span>
+            {% for cc, n in m.by_country.items() if n %}<span class="pill bg-ink-50 text-ink-500">{{ cc }} {{ n }}</span>{% endfor %}
+            {% if m.new_7d %}<span class="pill bg-brand-100 text-brand-700" title="new in the last 7 days">+{{ m.new_7d }}</span>{% endif %}
+            {% if m.gone_7d %}<span class="pill bg-ink-100 text-ink-500" title="disappeared in the last 7 days (sold or withdrawn)">−{{ m.gone_7d }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="lg:col-span-2">
+        <div class="label">positive return</div>
+        {% if m.n_valued %}
+        <div class="mt-1 flex items-center gap-2"><span class="text-lg font-bold {{ 'text-good-700' if m.positive_pct >= 25 else 'text-ink-800' }}">{{ m.positive_pct }}%</span><span class="text-xs text-ink-400">{{ m.n_positive }} of {{ m.n_valued }}</span></div>
+        <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink-100"><div class="h-full rounded-full bg-good-700" style="width: {{ m.positive_pct }}%"></div></div>
+        {% else %}<div class="mt-1 text-sm text-ink-400">no NL value yet</div>{% endif %}
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-xs lg:col-span-3">
+        <div><div class="label">median ask</div><div class="mt-1 font-semibold">{{ m.median_price_eur|eur }}</div></div>
+        <div><div class="label">landed</div><div class="mt-1 font-semibold">{{ m.median_landed_eur|eur }}</div></div>
+        <div><div class="label">NL value</div><div class="mt-1 font-semibold">{{ m.median_value_eur|eur }}</div>{% if m.n_comparables %}<div class="text-[10px] text-ink-400">{{ m.n_comparables }} comps</div>{% endif %}</div>
+      </div>
+      <div class="flex items-center gap-3 lg:col-span-2">
+        <div class="shrink-0">
+          <div class="label">median spread</div>
+          {% if m.median_spread_eur is not none %}
+          <div class="text-xl font-bold tracking-tight {{ 'text-good-700' if m.median_spread_eur > 0 else 'text-bad-700' }}">{{ '+' if m.median_spread_eur > 0 }}{{ m.median_spread_eur|eur }}</div>
+          <div class="text-[11px] {{ 'text-good-700' if m.spread_change_7d and m.spread_change_7d > 0 else ('text-bad-700' if m.spread_change_7d and m.spread_change_7d < 0 else 'text-ink-400') }}">{% if m.spread_change_7d is not none %}{{ '+' if m.spread_change_7d > 0 }}{{ m.spread_change_7d|eur }} in 7 days{% else %}top quarter {{ m.p75_spread_eur|eur }}{% endif %}</div>
+          {% else %}<div class="text-sm text-ink-400">–</div>{% endif %}
+        </div>
+        <div class="w-full min-w-[4rem] text-ink-500">{% with points=m.spread_points, tone='brand' %}{% include "models/_spark.html" %}{% endwith %}</div>
+      </div>
+      <div class="lg:col-span-2 lg:text-right">
+        {% if m.best %}
+        <div class="label">best car</div>
+        <a href="/listings/{{ m.best.id }}" class="mt-1 block truncate text-sm font-medium hover:underline">{{ m.best.make }} {{ m.best.model }} {{ m.best.year or '' }}</a>
+        <div class="text-xs text-ink-500">{{ m.best.price_eur|eur }} · <b class="text-good-700">+{{ m.best.spread_eur|eur }}</b> · {{ m.best.country }}</div>
+        {% endif %}
+        <div class="mt-2 flex flex-wrap gap-1 text-[11px] lg:justify-end">
+          {% if m.n_deals %}<span class="pill bg-ink-900 text-white" title="deals tracked on this model">{{ m.n_deals }} deal{{ '' if m.n_deals == 1 else 's' }}{% if m.n_sold %} · {{ m.n_sold }} sold{% endif %}</span>{% endif %}
+          {% if m.accuracy %}<span class="pill bg-ink-100 text-ink-600" title="how far our landed-cost estimate was off on real deals">estimates within {{ m.accuracy.landed_err_pct }}%</span>{% endif %}
+          {% if m.n_favorites %}<span class="pill bg-brand-100 text-brand-700">☆ {{ m.n_favorites }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 border-t border-ink-100 bg-ink-50/60 px-4 py-2 text-xs">
+      <a href="/models/{{ m.key }}" class="font-semibold text-ink-800 hover:underline">Details →</a>
+      <a href="/listings?model_key={{ m.key }}" class="text-ink-600 hover:underline">profitable cars ({{ m.n_positive }})</a>
+      <a href="/listings?model_key={{ m.key }}&profitable=false&sort=newest" class="text-ink-600 hover:underline">all cars ({{ m.n_active }})</a>
+      {% if not m.tracked %}<span class="ml-auto text-ink-400">not in models.yaml</span>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ol>
+{% if empty %}
+<div class="mt-6 rounded-2xl border border-dashed border-ink-200 p-4 text-sm text-ink-500">
+  <span class="font-medium text-ink-700">No cars on the site right now:</span>
+  {% for m in empty %}<a href="/models/{{ m.key }}" class="hover:underline">{{ m.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}
+  <span class="block text-xs text-ink-400">Their searches run on the normal schedule; cars show up here as soon as one is found.</span>
+</div>
+{% endif %}
 {% endblock %}

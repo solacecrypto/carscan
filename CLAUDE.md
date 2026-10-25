@@ -136,6 +136,13 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Models and favorites pages (2026-10-25)
+
+`/models` + `/models/{key}` rebuilt on `app/market/overview.py` (live per-model stats,
+histograms, trends from `model_history`); `/favorites` is its own page (stats, filters,
+price since starred; UI says "Favorites", code keeps `watches`/`starred`). Kleinanzeigen
+photos deduped (`carscan photos-dedupe`). See `docs/valuation.md`, `docs/notifications.md`.
+
 ## Deals board (2026-10-25)
 
 `/deals` rebuilt as a stage board with summary tiles, owner filter, track-by-id/link, next

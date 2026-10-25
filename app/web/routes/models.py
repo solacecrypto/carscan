@@ -1,54 +1,51 @@
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
-from app.deals.calibration import model_accuracy
-from app.market.history import model_series, sparkline
+from app.market.overview import model_detail, model_overview, overview_totals
 from app.web.deps import DB, CurrentUser
 from app.web.templating import templates
 
 router = APIRouter()
 
+SORTS = {
+    "spread": lambda m: -(m.median_spread_eur if m.median_spread_eur is not None else -(10**9)),
+    "positive": lambda m: -(m.positive_pct if m.positive_pct is not None else -1),
+    "supply": lambda m: -m.n_active,
+    "trend": lambda m: -(m.spread_change_7d if m.spread_change_7d is not None else -(10**9)),
+    "best": lambda m: -((m.best.spread_eur or 0) if m.best else -(10**9)),
+    "name": lambda m: m.label.lower(),
+}
+
 
 @router.get("/models", response_class=HTMLResponse)
-def models_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
-    from app.watchlist import load_models
-
-    try:
-        labels = {m["key"]: m["label"] for m in load_models()}
-    except FileNotFoundError:
-        labels = {}
-    series = model_series(db)
-    cards = []
-    for key, rows in sorted(
-        series.items(), key=lambda t: -(t[1][-1].median_spread_eur or -(10**9))
-    ):
-        latest = rows[-1]
-        spreads = [r.median_spread_eur for r in rows]
-        positive = [round(100 * r.n_positive / r.n_valued) if r.n_valued else None for r in rows]
-        first = next((s for s in spreads if s is not None), None)
-        cards.append(
-            {
-                "key": key,
-                "label": labels.get(key, key),
-                "latest": latest,
-                "days": len(rows),
-                "spread_points": sparkline(spreads),
-                "positive_points": sparkline(positive),
-                "positive_pct": positive[-1],
-                "spread_change": (latest.median_spread_eur - first)
-                if first is not None and latest.median_spread_eur is not None
-                else None,
-            }
-        )
+def models_page(request: Request, db: DB, user: CurrentUser, sort: str = "spread") -> HTMLResponse:
+    sort = sort if sort in SORTS else "spread"
+    now = datetime.now(UTC)
+    models = model_overview(db, now)
+    models.sort(key=SORTS[sort])
     return templates.TemplateResponse(
         request,
         "models/index.html",
         {
             "title": "Models",
-            "cards": cards,
-            "accuracy": model_accuracy(db),
-            "now": datetime.now(UTC),
+            "models": models,
+            "totals": overview_totals(models),
+            "sort": sort,
+            "now": now,
         },
+    )
+
+
+@router.get("/models/{key}", response_class=HTMLResponse)
+def model_page(request: Request, db: DB, user: CurrentUser, key: str) -> HTMLResponse:
+    now = datetime.now(UTC)
+    data = model_detail(db, key, now)
+    if data is None:
+        raise HTTPException(404)
+    return templates.TemplateResponse(
+        request,
+        "models/detail.html",
+        {"title": data["stats"].label, "now": now, **data},
     )
