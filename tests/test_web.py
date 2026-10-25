@@ -809,3 +809,24 @@ def test_filter_presets(client: TestClient, seeded: dict, db: Session) -> None:
     assert client.post("/presets", data=bad).status_code == 400
     client.post(f"/presets/{pr.id}/delete", data={"csrf_token": token})
     assert db.query(FilterPreset).count() == 0
+
+
+def test_listings_page_has_no_nested_forms(client: TestClient, seeded: dict, db: Session) -> None:
+    """A form inside the filter form makes the browser close the filter form early."""
+    import re
+    from datetime import UTC, datetime
+
+    from app.db import FilterPreset
+
+    db.add(
+        FilterPreset(
+            user_id=seeded["user"].id, name="p", query="spread_min=1", created_at=datetime.now(UTC)
+        )
+    )
+    db.commit()
+    html = client.get("/listings").text
+    depth = 0
+    for m in re.finditer(r"<(/?)form\b", html):
+        depth += -1 if m.group(1) else 1
+        assert depth in (0, 1), "nested <form>"
+    assert depth == 0

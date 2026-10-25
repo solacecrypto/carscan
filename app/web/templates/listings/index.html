@@ -102,20 +102,19 @@
           <span class="label">My presets</span>
           <details class="relative">
             <summary class="cursor-pointer list-none text-[11px] font-semibold text-brand-300 hover:text-brand-200 [&::-webkit-details-marker]:hidden">+ save current</summary>
-            <form method="post" action="/presets" class="absolute right-0 z-20 mt-1 flex w-60 gap-1 rounded-xl bg-ink-900 p-2 shadow-lg ring-1 ring-white/10" onsubmit="this.query.value = location.search.slice(1)">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <input type="hidden" name="query" value="{{ query }}">
-              <input type="text" name="name" placeholder="name, e.g. chain + 1k" maxlength="60" required class="input !mt-0 flex-1 !py-1.5 !text-xs">
-              <button class="btn-primary !px-2.5 !py-1.5 !text-xs">Save</button>
-            </form>
+            <div class="absolute right-0 z-20 mt-1 flex w-60 gap-1 rounded-xl bg-ink-900 p-2 shadow-lg ring-1 ring-white/10">
+              {# the inputs belong to the save form that lives outside this filter form (forms cannot nest) #}
+              <input type="text" name="name" form="preset-save" placeholder="name, e.g. chain + 1k" maxlength="60" required class="input !mt-0 flex-1 !py-1.5 !text-xs">
+              <button type="submit" form="preset-save" class="btn-primary !px-2.5 !py-1.5 !text-xs">Save</button>
+            </div>
           </details>
         </div>
         <div class="flex flex-wrap gap-1.5">
           {% for pr in presets %}
           {% set on = pr.query == query %}
-          <span class="group inline-flex items-center overflow-hidden rounded-full border {{ 'border-brand-400 bg-brand-500 text-ink-950' if on else 'border-white/15 text-ink-200 hover:border-white/40' }} text-xs">
+          <span class="inline-flex items-center overflow-hidden rounded-full border {{ 'border-brand-400 bg-brand-500 text-ink-950' if on else 'border-white/15 text-ink-200 hover:border-white/40' }} text-xs">
             <a href="/listings?{{ pr.query }}" class="px-3 py-1.5 font-medium">{{ pr.name }}</a>
-            <form method="post" action="/presets/{{ pr.id }}/delete" class="contents" onsubmit="return confirm('Delete preset “{{ pr.name|e }}”?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="pr-2.5 pl-0.5 {{ 'text-ink-900/60 hover:text-ink-950' if on else 'text-ink-500 hover:text-white' }}" title="delete preset">×</button></form>
+            <button type="submit" form="preset-del-{{ pr.id }}" class="pr-2.5 pl-0.5 {{ 'text-ink-900/60 hover:text-ink-950' if on else 'text-ink-500 hover:text-white' }}" title="delete preset">×</button>
           </span>
           {% else %}<span class="text-[11px] text-ink-500">Set filters, then “+ save current” to keep them as a named preset.</span>{% endfor %}
         </div>
@@ -221,6 +220,12 @@
 
       <noscript><div class="p-3"><button class="btn-primary w-full">Apply</button></div></noscript>
     </form>
+    <form id="preset-save" method="post" action="/presets" class="hidden" onsubmit="this.query.value = location.search.slice(1)">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="query" value="{{ query }}">
+    </form>
+    {% for pr in presets %}
+    <form id="preset-del-{{ pr.id }}" method="post" action="/presets/{{ pr.id }}/delete" class="hidden" onsubmit="return confirm('Delete preset “{{ pr.name|e }}”?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"></form>
+    {% endfor %}
   </aside>
 
   <div class="min-w-0 flex-1">
