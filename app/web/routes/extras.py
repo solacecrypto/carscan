@@ -279,6 +279,7 @@ def listing_nearby(
     km: int = 50,
     min_spread: int = 1,
     same_model: str = "",
+    page: int = 1,
 ) -> HTMLResponse:
     """Other cars around this one, for planning several viewings on one trip. Chips narrow
     it down: minimum spread, admitted condition, brand, same model."""
@@ -311,9 +312,13 @@ def listing_nearby(
         if cond and not _passes_condition(x, cond):
             continue
         rows.append((x, dist))
-    rows = rows[:80]
+    per_page = 8
+    total_rows = len(rows)
+    pages = max(1, -(-total_rows // per_page))
+    page = min(max(1, page), pages)
+    page_rows = rows[(page - 1) * per_page : page * per_page]
     markers = []
-    for x, dist in rows:
+    for x, dist in rows[:200]:  # the map shows the whole filtered set, the list one page
         g = lookup(db, x.city, x.postcode, x.country)
         if g and g.lat is not None:
             markers.append(
@@ -333,7 +338,10 @@ def listing_nearby(
         {
             "listing": listing,
             "here": here,
-            "rows": rows,
+            "rows": page_rows,
+            "total_rows": total_rows,
+            "page": page,
+            "pages": pages,
             "km": km,
             "min_spread": min_spread,
             "cond": cond,

@@ -748,7 +748,7 @@ def test_nearby_panel_and_map(client: TestClient, seeded: dict, db: Session) -> 
     page = client.get(f"/listings/{row.id}").text
     assert 'id="map"' in page and "Open in Google Maps" in page and "/nearby?km=50" in page
     part = client.get(f"/listings/{row.id}/nearby?km=100").text
-    assert "within 100 km" in part and "data-markers" in part
+    assert 'data-km="100"' in part and "data-markers" in part and 'name="page"' in part
     part = client.get(f"/listings/{row.id}/nearby?km=100&min_spread=0").text
     assert 'name="min_spread" value="0" class="peer sr-only" checked' in part
     part = client.get(

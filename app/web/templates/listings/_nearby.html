@@ -2,39 +2,80 @@
   {% if not here %}
   <p class="text-sm text-ink-400">This car's location is not resolved yet, so nothing can be measured from it.</p>
   {% else %}
-  {% set chip = 'pill inline-block cursor-pointer border border-ink-200 px-2.5 py-1 text-[11px] text-ink-600 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950' %}
-  <form hx-get="/listings/{{ listing.id }}/nearby" hx-trigger="change" hx-target="#nearby-{{ listing.id }}" hx-swap="outerHTML" class="space-y-1.5 text-xs">
-    <div class="flex flex-wrap items-center gap-1">
-      <span class="w-14 text-ink-400">within</span>
-      {% for r in [25, 50, 100, 150, 250] %}<label><input type="radio" name="km" value="{{ r }}" class="peer sr-only" {{ 'checked' if r == km }}><span class="{{ chip }}">{{ r }} km</span></label>{% endfor %}
+  {% set seg = 'cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-medium text-ink-500 transition peer-checked:bg-white peer-checked:text-ink-900 peer-checked:shadow-sm' %}
+  {% set chip = 'cursor-pointer rounded-full border border-ink-200 bg-white px-2.5 py-1 text-[11px] text-ink-600 transition hover:border-ink-400 peer-checked:border-ink-900 peer-checked:bg-ink-900 peer-checked:text-white' %}
+  {% set n_more = cond|length + makes|length + (1 if same_model else 0) %}
+  <form id="nearby-form-{{ listing.id }}" hx-get="/listings/{{ listing.id }}/nearby" hx-trigger="change" hx-target="#nearby-{{ listing.id }}" hx-swap="outerHTML" class="rounded-xl bg-ink-50 p-2.5">
+    <input type="hidden" name="page" value="1">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] uppercase tracking-wide text-ink-400">within</span>
+        <div class="flex rounded-lg bg-ink-100 p-0.5">
+          {% for r in [25, 50, 100, 150, 250] %}<label><input type="radio" name="km" value="{{ r }}" class="peer sr-only" {{ 'checked' if r == km }}><span class="{{ seg }}">{{ r }}</span></label>{% endfor %}
+          <span class="self-center pl-1 pr-1.5 text-[11px] text-ink-400">km</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] uppercase tracking-wide text-ink-400">spread</span>
+        <div class="flex rounded-lg bg-ink-100 p-0.5">
+          {% for v, t in [(0, 'any'), (1, '> 0'), (500, '500+'), (1000, '1k+'), (2000, '2k+')] %}<label><input type="radio" name="min_spread" value="{{ v }}" class="peer sr-only" {{ 'checked' if v == min_spread }}><span class="{{ seg }}">{{ t }}</span></label>{% endfor %}
+        </div>
+      </div>
+      <details class="group ml-auto" {{ 'open' if n_more }}>
+        <summary class="flex cursor-pointer select-none items-center gap-1 text-[11px] font-medium text-ink-600 hover:text-ink-900">
+          <svg class="h-3.5 w-3.5 transition group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          more filters{% if n_more %} <span class="rounded-full bg-ink-900 px-1.5 text-[10px] text-white">{{ n_more }}</span>{% endif %}
+        </summary>
+      </details>
     </div>
-    <div class="flex flex-wrap items-center gap-1">
-      <span class="w-14 text-ink-400">spread ≥</span>
-      {% for v, t in [(0, 'any'), (1, '> 0'), (500, '€ 500'), (1000, '€ 1.000'), (2000, '€ 2.000')] %}<label><input type="radio" name="min_spread" value="{{ v }}" class="peer sr-only" {{ 'checked' if v == min_spread }}><span class="{{ chip }}">{{ t }}</span></label>{% endfor %}
-    </div>
-    <div class="flex flex-wrap items-center gap-1">
-      <span class="w-14 text-ink-400">condition</span>
-      {% for v, t in [('accident_free', 'accident-free'), ('chain_replaced', 'chain replaced'), ('full_history', 'full history'), ('papers_ok', 'papers ok'), ('no_defects', 'no admitted defects')] %}<label><input type="checkbox" name="cond" value="{{ v }}" class="peer sr-only" {{ 'checked' if v in cond }}><span class="{{ chip }}">{{ t }}</span></label>{% endfor %}
-    </div>
-    <div class="flex flex-wrap items-center gap-1">
-      <span class="w-14 text-ink-400">brand</span>
-      {% for b, n in brands %}<label><input type="checkbox" name="make" value="{{ b }}" class="peer sr-only" {{ 'checked' if b in makes }}><span class="{{ chip }}">{{ b }} <span class="opacity-60">{{ n }}</span></span></label>{% endfor %}
-      <label><input type="checkbox" name="same_model" value="1" class="peer sr-only" {{ 'checked' if same_model }}><span class="{{ chip }}">same model as this car</span></label>
+    <div class="nearby-more mt-2 space-y-2 border-t border-ink-200/70 pt-2 {{ '' if n_more else 'hidden' }}">
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span class="w-14 text-[11px] uppercase tracking-wide text-ink-400">condition</span>
+        {% for v, t in [('accident_free', 'accident-free'), ('chain_replaced', 'chain replaced'), ('full_history', 'full history'), ('papers_ok', 'papers ok'), ('no_defects', 'no admitted defects')] %}<label><input type="checkbox" name="cond" value="{{ v }}" class="peer sr-only" {{ 'checked' if v in cond }}><span class="{{ chip }}">{{ t }}</span></label>{% endfor %}
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span class="w-14 text-[11px] uppercase tracking-wide text-ink-400">brand</span>
+        {% for b, n in brands %}<label><input type="checkbox" name="make" value="{{ b }}" class="peer sr-only" {{ 'checked' if b in makes }}><span class="{{ chip }}">{{ b }} <span class="opacity-50">{{ n }}</span></span></label>{% endfor %}
+        <label><input type="checkbox" name="same_model" value="1" class="peer sr-only" {{ 'checked' if same_model }}><span class="{{ chip }}">same model</span></label>
+      </div>
     </div>
   </form>
-  <p class="mb-1 mt-2 text-xs text-ink-500">{{ rows|length }} car{{ '' if rows|length == 1 else 's' }} within {{ km }} km, nearest first{% if total > rows|length %} ({{ total }} before filters){% endif %}. Star the ones to visit; your Starred tab becomes the route list.</p>
-  <ul class="divide-y divide-ink-100 text-sm">
+
+  <div class="mt-3 flex items-center justify-between text-xs text-ink-500">
+    <span>{% if total_rows %}<b class="text-ink-800">{{ total_rows }}</b> car{{ '' if total_rows == 1 else 's' }} within {{ km }} km{% if total > total_rows %} · {{ total }} before filters{% endif %}{% else %}No cars match. Loosen a filter.{% endif %}</span>
+    {% if pages > 1 %}
+    <span class="flex items-center gap-1">
+      <button {% if page > 1 %}hx-get="/listings/{{ listing.id }}/nearby" hx-include="#nearby-form-{{ listing.id }}" hx-vals='{"page": {{ page - 1 }}}' hx-target="#nearby-{{ listing.id }}" hx-swap="outerHTML"{% else %}disabled{% endif %} class="flex h-7 w-7 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:border-ink-400 disabled:opacity-30" aria-label="previous"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <span class="tabular-nums">{{ page }} / {{ pages }}</span>
+      <button {% if page < pages %}hx-get="/listings/{{ listing.id }}/nearby" hx-include="#nearby-form-{{ listing.id }}" hx-vals='{"page": {{ page + 1 }}}' hx-target="#nearby-{{ listing.id }}" hx-swap="outerHTML"{% else %}disabled{% endif %} class="flex h-7 w-7 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:border-ink-400 disabled:opacity-30" aria-label="next"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    </span>
+    {% endif %}
+  </div>
+
+  <ul class="mt-2 space-y-1.5">
     {% for x, dist in rows %}
-    <li class="flex items-center gap-3 py-2">
-      <a href="/listings/{{ x.id }}" class="shrink-0">{% if x.photos %}<img src="{{ x.photos[0] }}" alt="" loading="lazy" class="h-12 w-16 rounded-lg object-cover">{% else %}<span class="block h-12 w-16 rounded-lg bg-ink-100"></span>{% endif %}</a>
+    <li class="flex items-center gap-3 rounded-xl border border-ink-100 bg-white p-2 transition hover:border-ink-300">
+      <a href="/listings/{{ x.id }}" class="relative shrink-0">{% if x.photos %}<img src="{{ x.photos[0] }}" alt="" loading="lazy" class="h-14 w-20 rounded-lg object-cover">{% else %}<span class="block h-14 w-20 rounded-lg bg-ink-100"></span>{% endif %}
+        <span class="absolute bottom-1 left-1 rounded-md bg-ink-950/75 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ dist }} km</span></a>
       <span class="min-w-0 flex-1">
-        <a href="/listings/{{ x.id }}" class="block truncate font-medium">{{ x.make }} {{ x.model }} {{ x.first_registration.year if x.first_registration }} <span class="font-normal text-ink-400">· {{ x.mileage_km|km }} · {{ x.gearbox or '–' }}</span></a>
-        <span class="block text-xs text-ink-500">{{ x.city or '' }} · <b>{{ dist }} km</b> · {{ x.price_eur|eur }}{% if x.spread_eur is not none %} · <span class="{{ 'text-good-700' if x.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if x.spread_eur > 0 }}{{ x.spread_eur|eur }}</span>{% endif %} · {{ x.source }}</span>
-        {% with l=x %}{% include "listings/_insight_badges.html" %}{% endwith %}
+        <a href="/listings/{{ x.id }}" class="block truncate text-sm font-semibold text-ink-900">{{ x.make }} {{ x.model }} <span class="font-normal text-ink-400">{{ x.first_registration.year if x.first_registration }}</span></a>
+        <span class="block truncate text-xs text-ink-500">{{ x.mileage_km|km }} · {{ x.gearbox or '–' }} · {{ x.city or '' }} · {{ x.source }}</span>
+        {% set i = x.insight %}{% if i and i.tags %}<span class="mt-1 flex flex-wrap gap-1">{% set colors = {'bad': 'bg-bad-100 text-bad-700', 'good': 'bg-good-100 text-good-700', 'note': 'bg-ink-100 text-ink-600'} %}{% for t in i.tags[:2] %}<span class="pill {{ colors[t.polarity] }}">{{ t.label }}</span>{% endfor %}</span>{% endif %}
+      </span>
+      <span class="shrink-0 text-right">
+        <span class="block text-sm font-semibold text-ink-900">{{ x.price_eur|eur }}</span>
+        {% if x.spread_eur is not none %}<span class="block text-xs font-semibold {{ 'text-good-700' if x.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if x.spread_eur > 0 }}{{ x.spread_eur|eur }}</span>{% endif %}
       </span>
       {% with l=x, size='' %}{% include "listings/_star.html" %}{% endwith %}
     </li>
-    {% else %}<li class="py-3 text-sm text-ink-400">No cars match in that range. Loosen a chip.</li>{% endfor %}
+    {% endfor %}
   </ul>
+  <script>
+    (function () {
+      const form = document.getElementById('nearby-form-{{ listing.id }}');
+      const more = form.querySelector('.nearby-more'), det = form.querySelector('details');
+      det.addEventListener('toggle', () => more.classList.toggle('hidden', !det.open));
+    })();
+  </script>
   {% endif %}
 </div>
