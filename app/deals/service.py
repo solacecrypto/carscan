@@ -20,6 +20,7 @@ STAGE_ORDER = [
     DealStage.sold,
 ]
 ACTUAL_FIELDS = (
+    "offer_eur",
     "purchase_price_eur",
     "transport_eur",
     "bpm_eur",
@@ -187,3 +188,78 @@ def checklist_for(deal: Deal) -> list[tuple[str, str, bool]]:
 
 def days_in_stage(deal: Deal, now: datetime) -> int:
     return (now - deal.stage_changed_at).days
+
+
+def next_stage(deal: Deal) -> DealStage | None:
+    """The stage after the current one, or None when the deal is closed."""
+    if deal.stage not in STAGE_ORDER:
+        return None
+    i = STAGE_ORDER.index(deal.stage)
+    return STAGE_ORDER[i + 1] if i + 1 < len(STAGE_ORDER) else None
+
+
+# after this many days in a stage a deal counts as stuck and its owner gets a reminder
+STALE_DAYS = {
+    DealStage.spotted: 3,
+    DealStage.contacted: 5,
+    DealStage.inspected: 5,
+    DealStage.bought: 14,
+    DealStage.imported: 7,
+    DealStage.listed: 45,
+}
+
+
+def is_stale(deal: Deal, now: datetime) -> bool:
+    limit = STALE_DAYS.get(deal.stage)
+    return limit is not None and days_in_stage(deal, now) > limit
+
+
+def next_action(deal: Deal) -> str:
+    """One line saying what should happen next, so the board reads as a to-do list."""
+    st = deal.stage
+    if st is DealStage.spotted:
+        return "Contact the seller: is it still for sale, what is the lowest price?"
+    if st is DealStage.contacted:
+        return "Arrange an inspection or ask for extra photos, service history and the VIN."
+    if st is DealStage.inspected:
+        return "Decide: make an offer and buy, or drop it."
+    if st is DealStage.bought:
+        items = checklist_for(deal)
+        left = [label for _k, label, done in items if not done]
+        if left:
+            return f"Pick up the car: {len(left)} of {len(items)} checklist items still open."
+        return "Pick up the car and log the purchase price and transport."
+    if st is DealStage.imported:
+        return "RDW inspection and BPM, then photograph and list it."
+    if st is DealStage.listed:
+        return "Waiting for a buyer. Log the sale price when it sells."
+    if st is DealStage.sold:
+        return "Done. Check the actuals are complete for calibration."
+    return "Dropped."
+
+
+def summary(deals: list[Deal], now: datetime) -> dict[str, Any]:
+    """Headline numbers for the deals page."""
+    open_ = [d for d in deals if d.stage not in (DealStage.sold, DealStage.dropped)]
+    owned = [
+        d for d in open_ if d.stage in (DealStage.bought, DealStage.imported, DealStage.listed)
+    ]
+    sold = [d for d in deals if d.stage is DealStage.sold]
+    dropped = [d for d in deals if d.stage is DealStage.dropped]
+    invested = sum(d.total_cost_eur or 0 for d in owned)
+    expected = [d.expected_profit_eur for d in open_ if d.expected_profit_eur is not None]
+    realised = [d.profit_eur for d in sold if d.profit_eur is not None]
+    days = [d.days_to_sell for d in sold if d.days_to_sell is not None]
+    decided = len(sold) + len(dropped)
+    return {
+        "open": len(open_),
+        "owned": len(owned),
+        "invested_eur": invested,
+        "expected_profit_eur": sum(expected) if expected else None,
+        "realised_profit_eur": sum(realised) if realised else None,
+        "sold": len(sold),
+        "dropped": len(dropped),
+        "avg_days_to_sell": round(sum(days) / len(days)) if days else None,
+        "hit_rate_pct": round(len(sold) / decided * 100) if decided else None,
+        "stale": sum(1 for d in open_ if is_stale(d, now)),
+    }

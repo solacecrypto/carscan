@@ -136,6 +136,15 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Deals board (2026-10-25)
+
+`/deals` rebuilt as a stage board with summary tiles, owner filter, track-by-id/link, next
+action per card, quick advance/drop; deal page with stage progress bar, in-place actuals
+(`deals.offer_eur`), drop reason, owner handover, folds. `Deal.expected_profit_eur`,
+`margin_pct`; `app/deals/service.py` `next_action`/`is_stale`/`summary`; daily
+`deal_reminders_job` (notification kind `deal`). Calibration left the nav (linked from Deals).
+See `docs/deals.md`.
+
 ## Reliability round (2026-10-20)
 
 Stars + in-app notifications + wanted models (`app/notify`, `notifications`, `subscriptions`,

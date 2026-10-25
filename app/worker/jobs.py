@@ -629,6 +629,14 @@ def backup_job() -> dict[str, str | int]:
     return info
 
 
+def deal_reminders_job() -> int:
+    """Daily: nudge deal owners about stuck deals and changed ads."""
+    from app.deals.reminders import deal_reminders
+
+    with db_session() as s:
+        return deal_reminders(s, datetime.now(UTC))
+
+
 def snapshot_models_job() -> int:
     """Nightly: one history row per watchlist model (supply, valued share, median spread)."""
     from app.market.history import snapshot_models

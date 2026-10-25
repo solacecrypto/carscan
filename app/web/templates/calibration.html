@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Calibration</h1>
+<a href="/deals" class="text-sm text-ink-400">← Deals</a>
+<h1 class="mt-2">Calibration</h1>
 <p class="mt-1 text-sm text-ink-600">Estimates frozen when a deal was tracked, compared with what you logged. {{ report.deals_bought }} bought, {{ report.deals_sold }} sold. Suggestions are for <code>costs.yaml</code>; nothing is applied automatically.</p>
 {% if report.metrics %}
 <div class="mt-4 overflow-x-auto card">

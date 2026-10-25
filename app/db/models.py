@@ -312,6 +312,7 @@ class Deal(Base):
     est_spread_eur: Mapped[int | None] = mapped_column(Integer)
 
     # actuals, all whole euros
+    offer_eur: Mapped[int | None] = mapped_column(Integer)  # our bid while negotiating
     purchase_price_eur: Mapped[int | None] = mapped_column(Integer)
     transport_eur: Mapped[int | None] = mapped_column(Integer)
     bpm_eur: Mapped[int | None] = mapped_column(Integer)
@@ -358,6 +359,32 @@ class Deal(Base):
         if start is None or self.sold_at is None:
             return None
         return (self.sold_at - start).days
+
+    @property
+    def margin_pct(self) -> int | None:
+        """Profit as a share of total cost, whole percent."""
+        total, profit = self.total_cost_eur, self.profit_eur
+        if not total or profit is None:
+            return None
+        return round(profit / total * 100)
+
+    @property
+    def expected_profit_eur(self) -> int | None:
+        """Best current guess: actual sale minus actual costs where known, otherwise the frozen
+        NL value minus what it has cost so far (or the estimated landed cost before buying)."""
+        if self.profit_eur is not None:
+            return self.profit_eur
+        value = self.sale_price_eur or self.listed_price_eur or self.est_nl_value_eur
+        if value is None:
+            return None
+        cost = self.total_cost_eur
+        if cost is None:
+            if self.est_landed_cost_eur is None:
+                return None
+            cost = self.est_landed_cost_eur
+            if self.offer_eur is not None:
+                cost += self.offer_eur - self.est_price_eur
+        return value - cost
 
 
 class DealEvent(Base):

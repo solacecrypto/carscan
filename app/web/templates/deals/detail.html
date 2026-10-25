@@ -1,88 +1,187 @@
 {% extends "base.html" %}
 {% block content %}
 {% set d = deal %}{% set l = d.listing %}
+{% set closed = d.stage.value in ('sold', 'dropped') %}
 <a href="/deals" class="text-sm text-ink-400">← Deals</a>
-<div class="mt-2 grid gap-4 lg:grid-cols-2">
-  <div class="min-w-0 space-y-4">
-    <div class="card p-4">
-      <h1><a href="/listings/{{ l.id }}" class="underline">{{ l.make }} {{ l.model }}</a> <span class="text-base font-normal text-ink-400">{{ l.variant or '' }}</span></h1>
-      <p class="text-sm text-ink-600">{{ l.first_registration|month }} · {{ l.mileage_km|km }} · {{ l.source }} · owner {{ d.owner.username }}</p>
-      <p class="mt-2"><span class="rounded bg-slate-900 px-2 py-0.5 text-sm font-semibold text-white">{{ d.stage.value }}</span>
-        <span class="text-xs text-ink-400">since {{ d.stage_changed_at.strftime('%Y-%m-%d') }}</span></p>
-      <form method="post" action="/deals/{{ d.id }}/stage" class="mt-3 flex flex-wrap gap-1">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        {% for st in stages %}
-        <button name="stage" value="{{ st.value }}" class="rounded px-2 py-1 text-xs {{ 'bg-slate-900 text-white' if st == d.stage else 'bg-ink-100 hover:bg-ink-200' }}" {{ 'disabled' if st == d.stage }}>{{ st.value }}</button>
-        {% endfor %}
-        <button name="stage" value="dropped" class="rounded bg-red-100 px-2 py-1 text-xs text-bad-700">drop</button>
-      </form>
-    </div>
-    <div class="card p-4">
-      <h2 class="font-semibold">Estimate vs actual</h2>
-      <table class="mt-2 w-full text-sm">
-        <thead class="text-left text-xs uppercase text-ink-400"><tr><th></th><th class="text-right">estimated</th><th class="text-right">actual</th></tr></thead>
-        <tbody>
-        {% for label, est, act in [('Purchase price', d.est_price_eur, d.purchase_price_eur), ('Transport', d.est_transport_eur, d.transport_eur),
-                                   ('BPM', d.est_bpm_eur, d.bpm_eur), ('RDW & fees', d.est_fees_eur, d.fees_eur),
-                                   ('Landed cost', d.est_landed_cost_eur, d.actual_landed_cost_eur), ('Repairs', None, d.repairs_eur), ('Other', None, d.other_eur),
-                                   ('NL value / sale price', d.est_nl_value_eur, d.sale_price_eur), ('Spread / profit', d.est_spread_eur, d.profit_eur)] %}
-        <tr class="border-t border-ink-100"><td class="py-1">{{ label }}</td><td class="text-right">{{ est|eur if est is not none else '–' }}</td><td class="text-right font-medium">{{ act|eur if act is not none else '–' }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      {% if d.days_to_sell is not none %}<p class="mt-2 text-sm text-ink-600">Sold after {{ d.days_to_sell }} days.</p>{% endif %}
+
+<div class="card mt-2 overflow-hidden">
+  <div class="flex flex-col gap-4 p-4 sm:flex-row">
+    <a href="/listings/{{ l.id }}" class="relative block h-32 w-full shrink-0 overflow-hidden rounded-xl bg-ink-100 sm:h-28 sm:w-40">
+      {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" class="h-full w-full object-cover">{% endif %}
+      <span class="pill absolute left-2 top-2 bg-ink-950/80 text-white backdrop-blur">{{ l.country }}</span>
+    </a>
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h1 class="leading-tight"><a href="/listings/{{ l.id }}" class="hover:underline">{{ l.make }} {{ l.model }}</a> <span class="text-base font-normal text-ink-400">{{ l.first_registration.year if l.first_registration }}</span></h1>
+          <p class="truncate text-sm text-ink-500">{{ l.variant or '' }}</p>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <span class="rounded-lg px-2.5 py-1 text-sm font-semibold {{ 'bg-good-100 text-good-700' if d.stage.value == 'sold' else ('bg-bad-100 text-bad-700' if d.stage.value == 'dropped' else 'bg-ink-900 text-white') }}">{{ d.stage.value }}</span>
+          <span class="text-xs {{ 'font-semibold text-bad-700' if stale else 'text-ink-400' }}">{{ (now - d.stage_changed_at).days }} d{% if stale %} · stuck{% endif %}</span>
+        </div>
+      </div>
+      <div class="mt-2 flex flex-wrap gap-1.5 text-xs">
+        <span class="pill bg-ink-100 text-ink-700">{{ l.first_registration|month }}</span>
+        <span class="pill bg-ink-100 text-ink-700">{{ l.mileage_km|km }}</span>
+        {% if l.gearbox %}<span class="pill bg-ink-100 text-ink-700">{{ l.gearbox }}</span>{% endif %}
+        {% if l.fuel %}<span class="pill bg-ink-100 text-ink-700">{{ l.fuel }}</span>{% endif %}
+        <span class="pill bg-ink-100 text-ink-700">{{ l.city or l.country }} · {{ l.seller_type.value }}</span>
+        <span class="pill bg-ink-100 text-ink-700">{{ l.source }}</span>
+        {% if not l.is_active %}<span class="pill bg-bad-700 text-white">ad gone</span>{% elif l.price_eur != d.est_price_eur %}<span class="pill bg-brand-100 text-brand-700">ask now {{ l.price_eur|eur }}</span>{% endif %}
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <a href="{{ l.url }}" target="_blank" rel="noopener" class="btn-outline !py-1.5">Open ad ↗</a>
+        <a href="/listings/{{ l.id }}" class="btn-ghost !py-1.5">Car page</a>
+        <form method="post" action="/deals/{{ d.id }}/owner" class="ml-auto flex items-center gap-1 text-xs text-ink-500">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          owner
+          <select name="owner_id" class="input !mt-0 !w-auto !py-1 !text-xs" onchange="this.form.submit()">
+            {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if u.id == d.owner_id }}>{{ u.username }}</option>{% endfor %}
+          </select>
+        </form>
+      </div>
     </div>
   </div>
-  <div class="min-w-0 space-y-4">
+
+  <form method="post" action="/deals/{{ d.id }}/stage" class="border-t border-ink-100 bg-ink-50/60 px-4 py-3" id="stage-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <ol class="flex items-center gap-1 overflow-x-auto text-xs">
+      {% set cur = stages.index(d.stage) if d.stage in stages else -1 %}
+      {% for st in stages %}{% set i = loop.index0 %}
+      <li class="flex items-center gap-1 {{ 'flex-1' if not loop.last }}">
+        <button name="stage" value="{{ st.value }}" {{ 'disabled' if st == d.stage }} title="{{ 'current stage' if st == d.stage else 'move to ' ~ st.value }}"
+          class="flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 font-medium transition {{ 'bg-ink-900 text-white' if st == d.stage else ('bg-brand-100 text-brand-700 hover:bg-brand-200' if i < cur else 'bg-white text-ink-500 ring-1 ring-ink-200 hover:ring-ink-400') }}">
+          <span class="flex h-4 w-4 items-center justify-center rounded-full text-[10px] {{ 'bg-white text-ink-900' if st == d.stage else ('bg-brand-500 text-ink-950' if i < cur else 'bg-ink-100') }}">{{ '✓' if i < cur else loop.index }}</span>{{ st.value }}
+        </button>
+        {% if not loop.last %}<span class="h-px min-w-2 flex-1 {{ 'bg-brand-400' if i < cur else 'bg-ink-200' }}"></span>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <p class="text-sm text-ink-700"><span class="label mr-1">Next</span>{{ next_action }}</p>
+      <div class="ml-auto flex items-center gap-2">
+        {% if next_stage %}<button name="stage" value="{{ next_stage.value }}" class="btn-primary !py-1.5">→ {{ next_stage.value }}</button>{% endif %}
+        {% if d.stage.value == 'dropped' %}<button name="stage" value="spotted" class="btn-outline !py-1.5">reopen</button>
+        {% elif not closed %}
+        <details class="relative">
+          <summary class="btn-outline !py-1.5 list-none text-bad-700 [&::-webkit-details-marker]:hidden">drop…</summary>
+          <div class="absolute right-0 z-20 mt-1 w-64 rounded-xl bg-white p-3 shadow-lg ring-1 ring-ink-900/10">
+            <label class="label">Why?</label>
+            <input name="note" placeholder="sold already / too rusty / price" class="input" autocomplete="off">
+            <button name="stage" value="dropped" class="btn-dark mt-2 w-full !py-1.5 !bg-bad-700">Drop this deal</button>
+          </div>
+        </details>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-5">
+  <div class="min-w-0 space-y-4 lg:col-span-3">
     <form method="post" action="/deals/{{ d.id }}/actuals" class="card p-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <h2 class="font-semibold">Actuals (€)</h2>
-      <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-        {% for f in actual_fields %}
-        <label class="block">{{ f.replace('_eur','').replace('_',' ') }}
-          <input type="number" name="{{ f }}" value="{{ d[f] if d[f] is not none }}" class="input"></label>
-        {% endfor %}
-        {% for f in date_fields %}
-        <label class="block">{{ f.replace('_at','') }} date
-          <input type="date" name="{{ f }}" value="{{ d[f].isoformat() if d[f] }}" class="input"></label>
+      <div class="flex items-center justify-between">
+        <h2>Estimate vs actual</h2>
+        <span class="text-[11px] text-ink-400">type the real numbers as you learn them, whole euros</span>
+      </div>
+      {% macro row(label, est, name, act, hint='', total=false) %}
+      {% set delta = (act - est) if act is not none and est is not none else none %}
+      <tr class="{{ 'border-t border-ink-200 bg-ink-50/60 font-medium' if total else 'border-t border-ink-100' }}">
+        <td class="py-1.5 pr-2">{{ label }}{% if hint %} <span class="text-[11px] text-ink-400">{{ hint }}</span>{% endif %}</td>
+        <td class="py-1.5 text-right text-ink-500">{{ est|eur if est is not none else '–' }}</td>
+        <td class="py-1.5 pl-2 text-right">{% if name %}<input type="number" name="{{ name }}" value="{{ act if act is not none }}" placeholder="{{ est if est is not none else '' }}" class="input !mt-0 !w-28 !py-1 text-right">{% else %}<span class="font-semibold">{{ act|eur if act is not none else '–' }}</span>{% endif %}</td>
+        <td class="py-1.5 pl-2 text-right text-xs {{ 'text-bad-700' if delta is not none and delta > 0 else ('text-good-700' if delta is not none and delta < 0 else 'text-ink-300') }}">{% if delta is not none %}{{ '+' if delta > 0 }}{{ delta|eur }}{% endif %}</td>
+      </tr>
+      {% endmacro %}
+      <table class="mt-2 w-full text-sm">
+        <thead class="text-left text-[11px] uppercase tracking-wider text-ink-400"><tr><th></th><th class="text-right">estimated</th><th class="pl-2 text-right">actual</th><th class="pl-2 text-right">Δ</th></tr></thead>
+        <tbody>
+          {{ row('Asking price', d.est_price_eur, none, l.price_eur if l.price_eur != d.est_price_eur else none, 'now' if l.price_eur != d.est_price_eur else '') }}
+          {{ row('Our offer', none, 'offer_eur', d.offer_eur, 'what we bid') }}
+          {{ row('Purchase price', d.est_price_eur, 'purchase_price_eur', d.purchase_price_eur) }}
+          {{ row('Transport', d.est_transport_eur, 'transport_eur', d.transport_eur) }}
+          {{ row('BPM', d.est_bpm_eur, 'bpm_eur', d.bpm_eur) }}
+          {{ row('RDW & fees', d.est_fees_eur, 'fees_eur', d.fees_eur) }}
+          {{ row('Landed cost', d.est_landed_cost_eur, none, d.actual_landed_cost_eur, total=true) }}
+          {{ row('Repairs', l.repair_cost_eur, 'repairs_eur', d.repairs_eur, 'rough estimate from the ad' if l.repair_cost_eur else '') }}
+          {{ row('Other', none, 'other_eur', d.other_eur, 'cleaning, parts, ads') }}
+          {{ row('Total cost', (d.est_landed_cost_eur + (l.repair_cost_eur or 0)) if d.est_landed_cost_eur is not none else none, none, d.total_cost_eur, total=true) }}
+          {{ row('Listed at', d.est_nl_asking_median_eur, 'listed_price_eur', d.listed_price_eur, 'NL asking median' if d.est_nl_asking_median_eur else '') }}
+          {{ row('Sale price', d.est_nl_value_eur, 'sale_price_eur', d.sale_price_eur, 'NL value' if d.est_nl_value_eur else '') }}
+          <tr class="border-t-2 border-ink-900 text-base font-bold">
+            <td class="py-2">Profit</td>
+            <td class="py-2 text-right text-ink-500">{{ d.est_spread_eur|eur if d.est_spread_eur is not none else '–' }}</td>
+            <td class="py-2 pl-2 text-right {{ 'text-good-700' if d.profit_eur and d.profit_eur > 0 else ('text-bad-700' if d.profit_eur is not none) }}">{{ d.profit_eur|eur if d.profit_eur is not none else '–' }}{% if d.margin_pct is not none %} <span class="text-xs font-normal text-ink-400">{{ d.margin_pct }}%</span>{% endif %}</td>
+            <td class="py-2 pl-2 text-right text-xs font-normal">{% if d.profit_eur is not none and d.est_spread_eur is not none %}{% set dd = d.profit_eur - d.est_spread_eur %}<span class="{{ 'text-good-700' if dd > 0 else 'text-bad-700' }}">{{ '+' if dd > 0 }}{{ dd|eur }}</span>{% elif d.expected_profit_eur is not none %}<span class="text-ink-400" title="NL value minus what it has cost so far">expect {{ '+' if d.expected_profit_eur > 0 }}{{ d.expected_profit_eur|eur }}</span>{% endif %}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+        {% for f, lab in [('bought_at', 'Bought on'), ('listed_at', 'Listed on'), ('sold_at', 'Sold on')] %}
+        <label class="block"><span class="label">{{ lab }}</span><input type="date" name="{{ f }}" value="{{ d[f].isoformat() if d[f] }}" class="input !py-1"></label>
         {% endfor %}
       </div>
-      <label class="mt-2 block text-sm">Notes<textarea name="notes" rows="3" class="input">{{ d.notes or '' }}</textarea></label>
-      <button class="mt-3 btn-primary">Save</button>
+      {% if d.days_to_sell is not none %}<p class="mt-2 text-xs text-ink-500">Sold after <b>{{ d.days_to_sell }} days</b> on the market.</p>{% endif %}
+      <label class="mt-3 block text-sm"><span class="label">Deal notes</span><textarea name="notes" rows="3" placeholder="seller's name is not stored here — phone outcome, agreed price, pickup date…" class="input">{{ d.notes or '' }}</textarea></label>
+      <div class="mt-3 flex items-center justify-between">
+        <span class="text-[11px] text-ink-400">Actuals feed <a href="/calibration" class="underline">calibration</a>.</span>
+        <button class="btn-primary">Save</button>
+      </div>
     </form>
+
     <div class="card p-4">
-      <h2 class="font-semibold" id="checklist">Pickup checklist <span class="text-xs font-normal text-ink-400">{{ checklist|selectattr(2)|list|length }} of {{ checklist|length }}</span></h2>
-      <form method="post" action="/deals/{{ d.id }}/checklist" class="mt-2 space-y-1 text-sm">
+      <h2>History</h2>
+      <ol class="mt-2 space-y-2 text-sm">
+        {% for e in d.events|reverse %}
+        <li class="flex gap-3">
+          <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ 'bg-brand-500' if e.kind == 'stage' else 'bg-ink-300' }}"></span>
+          <div class="min-w-0">
+            <div>{% if e.kind == 'stage' %}→ <b>{{ e.stage.value }}</b>{% if e.note %} <span class="text-ink-600">— {{ e.note }}</span>{% endif %}
+              {% elif e.kind == 'created' %}tracked as deal
+              {% elif e.kind == 'note' %}{{ e.note }}
+              {% else %}updated {% for k, v in e.changes.items() %}<span class="text-ink-600">{{ k.replace('_eur','').replace('_at',' date').replace('_',' ') }}</span>{% if v[1] is not none and k != 'notes' %} → <b>{{ v[1] }}</b>{% endif %}{{ ', ' if not loop.last }}{% endfor %}{% endif %}</div>
+            <div class="text-[11px] text-ink-400">{{ e.at.strftime('%Y-%m-%d %H:%M') }} · {{ e.user.username if e.user else 'system' }}</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+
+  <div class="min-w-0 space-y-4 lg:col-span-2">
+    {% set done = checklist|selectattr(2)|list|length %}
+    <details class="card fold p-4" id="checklist" {{ 'open' if d.stage.value in ('inspected', 'bought') and done < checklist|length }}>
+      <summary><h2>Pickup checklist</h2><span class="fold-value {{ 'text-good-700' if done == checklist|length }}">{{ done }} / {{ checklist|length }}</span></summary>
+      <form method="post" action="/deals/{{ d.id }}/checklist" class="mt-2 space-y-0.5 text-sm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        {% for key, label, done in checklist %}
-        <label class="check !px-1 {{ 'text-ink-400 line-through' if done }}"><input type="checkbox" name="{{ key }}" {{ 'checked' if done }}> {{ label }}</label>
+        {% for key, label, done_ in checklist %}
+        <label class="check !px-1 hover:!bg-ink-50 {{ 'text-ink-400 line-through' if done_ }}"><input type="checkbox" name="{{ key }}" {{ 'checked' if done_ }}> {{ label }}</label>
         {% endfor %}
         <button class="btn-outline mt-2 !py-1.5 !text-xs">Save checklist</button>
       </form>
-      <h2 class="mt-4 font-semibold">Pickup</h2>
+    </details>
+
+    <details class="card fold p-4" id="pickup" open>
+      <summary><h2>Pickup trip</h2>{% if trip %}<span class="fold-value">≈ {{ trip.km }} km · {{ trip.total_eur|eur }}</span>{% endif %}</summary>
       {% if trip %}
-      <p class="mt-1 text-sm">≈ <b>{{ trip.km }} km</b> from {{ trip['from'] }}, about {{ trip.hours_one_way }} h one way · fuel + tolls ≈ <b>{{ trip.total_eur|eur }}</b></p>
-      {% else %}<p class="mt-1 text-sm text-ink-400">Location not resolved yet.</p>{% endif %}
+      <p class="mt-2 text-sm">≈ <b>{{ trip.km }} km</b> from {{ trip['from'] }}, about {{ trip.hours_one_way }} h one way · fuel + tolls ≈ <b>{{ trip.total_eur|eur }}</b></p>
+      {% else %}<p class="mt-2 text-sm text-ink-400">Location not resolved yet.</p>{% endif %}
       {% if near_deals %}
-      <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Other open deals within 100 km</p>
-      <ul class="text-sm">{% for nd, km in near_deals %}<li><a href="/deals/{{ nd.id }}" class="underline">{{ nd.listing.make }} {{ nd.listing.model }}</a> · {{ nd.stage.value }} · {{ nd.listing.city or '' }} · {{ km }} km</li>{% endfor %}</ul>
+      <p class="label mt-3">Other open deals within 100 km</p>
+      <ul class="mt-1 space-y-1 text-sm">{% for nd, km in near_deals %}<li><a href="/deals/{{ nd.id }}" class="underline">{{ nd.listing.make }} {{ nd.listing.model }}</a> <span class="text-ink-400">· {{ nd.stage.value }} · {{ nd.listing.city or '' }} · {{ km }} km</span></li>{% endfor %}</ul>
       {% endif %}
       {% if near_cars %}
-      <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Positive-return cars within 50 km, worth combining</p>
-      <ul class="text-sm">{% for nc, km in near_cars %}<li><a href="/listings/{{ nc.id }}" class="underline">{{ nc.make }} {{ nc.model }} {{ nc.first_registration.year if nc.first_registration }}</a> · {{ nc.price_eur|eur }} · +{{ nc.spread_eur|eur }} · {{ nc.city or '' }} · {{ km }} km</li>{% endfor %}</ul>
+      <p class="label mt-3">Positive-return cars within 50 km, worth combining</p>
+      <ul class="mt-1 space-y-1 text-sm">{% for nc, km in near_cars %}<li><a href="/listings/{{ nc.id }}" class="underline">{{ nc.make }} {{ nc.model }} {{ nc.first_registration.year if nc.first_registration }}</a> <span class="text-ink-400">· {{ nc.price_eur|eur }} · <span class="text-good-700">+{{ nc.spread_eur|eur }}</span> · {{ nc.city or '' }} · {{ km }} km</span></li>{% endfor %}</ul>
       {% endif %}
-      <h2 class="mt-4 font-semibold">Notes on the car</h2>
-      <div class="mt-2 rounded-xl border border-ink-100 p-3">{% with listing=d.listing %}{% include "listings/_notes.html" %}{% endwith %}</div>
-      <h2 class="mt-4 font-semibold">History</h2>
-      <ul class="mt-2 space-y-1 text-sm">
-        {% for e in d.events|reverse %}
-        <li class="border-b border-ink-100 py-1"><span class="text-ink-400">{{ e.at.strftime('%Y-%m-%d %H:%M') }}</span> · {{ e.user.username if e.user else 'system' }} ·
-          {% if e.kind == 'stage' %}→ <b>{{ e.stage.value }}</b>{% if e.note %} ({{ e.note }}){% endif %}
-          {% elif e.kind == 'created' %}tracked as deal
-          {% else %}updated {{ e.changes.keys()|join(', ') }}{% endif %}</li>
-        {% endfor %}
-      </ul>
-    </div>
+    </details>
+
+    <details class="card fold p-4" id="carnotes" {{ 'open' if l.notes }}>
+      <summary><h2>Notes on the car</h2><span class="fold-value">{{ l.notes|length }}</span></summary>
+      <div class="mt-2">{% with listing=l %}{% include "listings/_notes.html" %}{% endwith %}</div>
+    </details>
   </div>
 </div>
 {% endblock %}

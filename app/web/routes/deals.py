@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
@@ -6,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.alerts import notify_group
-from app.db import Deal, DealEvent, DealStage, Listing
+from app.db import Deal, DealEvent, DealStage, Listing, User
 from app.deals import (
     ACTUAL_FIELDS,
     DATE_FIELDS,
@@ -15,7 +16,11 @@ from app.deals import (
     checklist_for,
     create_deal,
     days_in_stage,
+    is_stale,
+    next_action,
+    next_stage,
     set_stage,
+    summary,
     update_actuals,
 )
 from app.deals.calibration import model_accuracy
@@ -38,42 +43,61 @@ def _trip(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]
 
 @router.get("/deals", response_class=HTMLResponse)
 def deals_index(
-    request: Request, db: DB, user: CurrentUser, show_closed: bool = False
+    request: Request,
+    db: DB,
+    user: CurrentUser,
+    show_closed: bool = False,
+    owner: str = "",
 ) -> HTMLResponse:
     stmt = (
         select(Deal)
         .options(selectinload(Deal.listing), selectinload(Deal.owner))
         .order_by(Deal.updated_at.desc())
     )
-    deals = list(db.scalars(stmt))
+    all_deals = list(db.scalars(stmt))
+    deals = [d for d in all_deals if not owner or d.owner.username == owner]
     now = datetime.now(UTC)
     trips = {d.id: _trip(db, d.listing) for d in deals}
-    groups = [
-        (stage, [d for d in deals if d.stage is stage])
-        for stage in STAGE_ORDER + [DealStage.dropped]
-        if show_closed or stage not in (DealStage.sold, DealStage.dropped)
-    ]
+    groups = [(stage, [d for d in deals if d.stage is stage]) for stage in STAGE_ORDER[:-1]]
+    sold = sorted(
+        (d for d in deals if d.stage is DealStage.sold),
+        key=lambda d: d.sold_at or d.stage_changed_at.date(),
+        reverse=True,
+    )
+    dropped = [d for d in deals if d.stage is DealStage.dropped]
+    owners = sorted({d.owner.username for d in all_deals})
     return templates.TemplateResponse(
         request,
         "deals/index.html",
         {
             "title": "Deals",
             "groups": groups,
+            "sold": sold,
+            "dropped": dropped,
             "now": now,
             "days_in_stage": days_in_stage,
+            "is_stale": is_stale,
+            "checklist_for": checklist_for,
+            "next_action": next_action,
+            "next_stage": next_stage,
             "show_closed": show_closed,
+            "owner": owner,
+            "owners": owners,
             "trips": trips,
+            "summary": summary(deals, now),
         },
     )
 
 
 @router.post("/deals", response_class=HTMLResponse)
 def deals_create(
-    request: Request, db: DB, user: CurrentUser, listing_id: int = Form(...)
+    request: Request, db: DB, user: CurrentUser, listing_id: str = Form(...)
 ) -> RedirectResponse:
-    listing = db.get(Listing, listing_id)
+    """Track a car as a deal, given our listing id or a link to its page on this site."""
+    m = re.search(r"(\d+)", listing_id)
+    listing = db.get(Listing, int(m.group(1))) if m else None
     if listing is None:
-        raise HTTPException(404)
+        raise HTTPException(404, "no such car on this site")
     deal = create_deal(db, listing, user, datetime.now(UTC))
     return RedirectResponse(f"/deals/{deal.id}", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -136,8 +160,36 @@ def deal_detail(request: Request, db: DB, user: CurrentUser, deal_id: int) -> HT
             "actual_fields": ACTUAL_FIELDS,
             "date_fields": DATE_FIELDS,
             "now": datetime.now(UTC),
+            "next_action": next_action(deal),
+            "next_stage": next_stage(deal),
+            "stale": is_stale(deal, datetime.now(UTC)),
+            "users": list(db.scalars(select(User).order_by(User.username))),
         },
     )
+
+
+@router.post("/deals/{deal_id}/owner", response_class=HTMLResponse)
+def deal_set_owner(
+    request: Request, db: DB, user: CurrentUser, deal_id: int, owner_id: int = Form(...)
+) -> RedirectResponse:
+    deal = _load(db, deal_id)
+    new_owner = db.get(User, owner_id)
+    if new_owner is None:
+        raise HTTPException(404)
+    if new_owner.id != deal.owner_id:
+        now = datetime.now(UTC)
+        deal.events.append(
+            DealEvent(
+                user=user,
+                at=now,
+                kind="note",
+                note=f"handed over from {deal.owner.username} to {new_owner.username}",
+            )
+        )
+        deal.owner = new_owner
+        deal.updated_at = now
+        db.flush()
+    return RedirectResponse(f"/deals/{deal_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/deals/{deal_id}/stage", response_class=HTMLResponse)
@@ -165,7 +217,8 @@ def deal_set_stage(
         verb = "bought" if new_stage is DealStage.bought else "sold"
         money = f" for € {amount:,}".replace(",", ".") if amount else ""
         notify_group(f"{'🛒' if verb == 'bought' else '💰'} {user.username} {verb} {car}{money}")
-    return RedirectResponse(f"/deals/{deal_id}", status_code=status.HTTP_303_SEE_OTHER)
+    back = "/deals" if request.headers.get("referer", "").rstrip("/").endswith("/deals") else None
+    return RedirectResponse(back or f"/deals/{deal_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/deals/{deal_id}/checklist", dependencies=[Depends(csrf_protect)])

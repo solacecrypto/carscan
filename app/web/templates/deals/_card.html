@@ -1,0 +1,40 @@
+{# one deal on the board; expects d, now, trips, days_in_stage, is_stale, next_stage, next_action #}
+{% set l = d.listing %}{% set days = days_in_stage(d, now) %}{% set stale = is_stale(d, now) %}{% set nxt = next_stage(d) %}
+<li class="card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg {{ 'ring-2 ring-bad-700/30' if stale }}">
+  <div class="flex gap-3 p-3">
+    <a href="/deals/{{ d.id }}" class="relative block h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-ink-100">
+      {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" loading="lazy" class="h-full w-full object-cover">{% endif %}
+      <span class="pill absolute left-1 top-1 bg-ink-950/80 text-white backdrop-blur">{{ l.country }}</span>
+    </a>
+    <div class="min-w-0 flex-1">
+      <a href="/deals/{{ d.id }}" class="block truncate font-semibold leading-tight">{{ l.make }} {{ l.model }} <span class="font-normal text-ink-400">{{ l.first_registration.year if l.first_registration }}</span></a>
+      <div class="truncate text-xs text-ink-400">{{ l.variant or '' }}{% if l.mileage_km %} · {{ l.mileage_km|km }}{% endif %}{% if l.gearbox %} · {{ l.gearbox }}{% endif %}</div>
+      <div class="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
+        <span class="pill bg-ink-900 text-white" title="owner">{{ d.owner.username }}</span>
+        <span class="pill {{ 'bg-bad-100 text-bad-700' if stale else 'bg-ink-100 text-ink-600' }}" title="days in this stage">{{ days }} d{% if stale %} · stuck{% endif %}</span>
+        {% if trips[d.id] %}<span class="pill bg-ink-100 text-ink-600" title="from the base, one way">≈ {{ trips[d.id].km }} km</span>{% endif %}
+        {% if not l.is_active and d.stage.value in ('spotted', 'contacted', 'inspected') %}<span class="pill bg-bad-700 text-white">ad gone</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="flex items-end justify-between gap-2 px-3 pb-2 text-xs text-ink-600">
+    <div>
+      {% if d.purchase_price_eur %}bought <b class="text-ink-900">{{ d.purchase_price_eur|eur }}</b>{% elif d.offer_eur %}ask {{ d.est_price_eur|eur }} · offer <b class="text-ink-900">{{ d.offer_eur|eur }}</b>{% else %}ask <b class="text-ink-900">{{ d.est_price_eur|eur }}</b>{% endif %}
+      {% if d.actual_landed_cost_eur %}<span class="block">landed actual {{ d.actual_landed_cost_eur|eur }}</span>{% elif d.est_landed_cost_eur %}<span class="block">landed ≈ {{ d.est_landed_cost_eur|eur }}</span>{% endif %}
+      {% if d.sale_price_eur %}<span class="block">sold {{ d.sale_price_eur|eur }}</span>{% elif d.listed_price_eur %}<span class="block">listed at {{ d.listed_price_eur|eur }}</span>{% endif %}
+    </div>
+    {% set ep = d.expected_profit_eur %}
+    {% if ep is not none %}<div class="shrink-0 rounded-lg px-2 py-1 text-sm font-bold {{ 'bg-good-100 text-good-700' if ep > 0 else 'bg-bad-100 text-bad-700' }}" title="{{ 'profit' if d.profit_eur is not none else 'expected profit' }}">{{ '+' if ep > 0 }}{{ ep|eur }}</div>{% endif %}
+  </div>
+  {% if d.stage.value == 'bought' %}{% set items = checklist_for(d) %}{% set done = items|selectattr(2)|list|length %}
+  <div class="px-3 pb-2" title="pickup checklist"><div class="h-1.5 w-full overflow-hidden rounded-full bg-ink-100"><div class="h-full rounded-full bg-brand-500" style="width: {{ (done * 100 / items|length)|round|int }}%"></div></div><div class="mt-0.5 text-[10px] text-ink-400">checklist {{ done }}/{{ items|length }}</div></div>
+  {% endif %}
+  <p class="border-t border-ink-100 px-3 py-1.5 text-[11px] italic text-ink-500">{{ next_action(d) }}</p>
+  {% if nxt %}
+  <form method="post" action="/deals/{{ d.id }}/stage" class="flex border-t border-ink-100 text-xs">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button name="stage" value="{{ nxt.value }}" class="flex-1 px-3 py-1.5 font-medium text-ink-700 hover:bg-ink-50">→ {{ nxt.value }}</button>
+    {% if d.stage.value in ('spotted', 'contacted', 'inspected') %}<button name="stage" value="dropped" class="border-l border-ink-100 px-3 py-1.5 text-bad-700 hover:bg-bad-100/50">drop</button>{% endif %}
+  </form>
+  {% endif %}
+</li>

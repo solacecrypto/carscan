@@ -82,8 +82,8 @@
           <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2-5h14l2 5M4 13h16v5H4zM7 18v2M17 18v2"/><path d="M7 15.5h.01M17 15.5h.01"/></svg>
         </span><span class="hidden sm:inline">Car Scanner</span></a>
       {% set path = request.url.path %}
-      {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/favorites', 'Starred'), ('/models', 'Models'), ('/digest', 'Digest'), ('/searches', 'Searches'), ('/calibration', 'Calibration'), ('/status', 'Status')] %}
-      {% set on = path.startswith(href) or (href == '/listings' and (path == '/' or path.startswith('/sellers')) and 'starred=true' not in request.url.query) or (href == '/favorites' and 'starred=true' in request.url.query) %}
+      {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/favorites', 'Starred'), ('/models', 'Models'), ('/digest', 'Digest'), ('/searches', 'Searches'), ('/status', 'Status')] %}
+      {% set on = path.startswith(href) or (href == '/deals' and path.startswith('/calibration')) or (href == '/listings' and (path == '/' or path.startswith('/sellers')) and 'starred=true' not in request.url.query) or (href == '/favorites' and 'starred=true' in request.url.query) %}
       <a href="{{ href }}" class="relative shrink-0 rounded-lg px-3 py-1.5 {{ 'text-white' if on else 'text-ink-300 hover:bg-white/5 hover:text-white' }}">{{ text }}{% if on %}<span class="absolute inset-x-3 -bottom-2 h-0.5 rounded-full bg-brand-500"></span>{% endif %}</a>
       {% endfor %}
       <div class="ml-auto"></div>

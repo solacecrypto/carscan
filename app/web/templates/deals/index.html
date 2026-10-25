@@ -1,31 +1,102 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="flex items-end justify-between gap-3">
-  <div><h1>Deals</h1><p class="text-sm text-ink-400">Cars someone is working on. Start one with “Track as deal” on a car page.</p></div>
-  <a href="/deals?show_closed={{ 'false' if show_closed else 'true' }}" class="text-sm underline">{{ 'hide' if show_closed else 'show' }} sold &amp; dropped</a>
+{% set s = summary %}
+<div class="flex flex-wrap items-end justify-between gap-3">
+  <div><h1>Deals</h1><p class="text-sm text-ink-400">Every car someone is working on, from first contact to sold. Each card says what to do next.</p></div>
+  <div class="flex flex-wrap items-center gap-2 text-sm">
+    <form method="get" action="/deals" class="flex items-center gap-1">
+      {% if show_closed %}<input type="hidden" name="show_closed" value="true">{% endif %}
+      <select name="owner" class="input !mt-0 !w-auto !py-1.5" onchange="this.form.submit()">
+        <option value="">everyone</option>
+        {% for o in owners %}<option value="{{ o }}" {{ 'selected' if o == owner }}>{{ o }}{{ ' (me)' if o == user.username }}</option>{% endfor %}
+      </select>
+    </form>
+    <a href="/calibration" class="btn-outline !py-1.5">Calibration</a>
+    <form method="post" action="/deals" class="flex items-center gap-1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input name="listing_id" required placeholder="car id or link on this site" class="input !mt-0 !w-48 !py-1.5">
+      <button class="btn-primary !py-1.5">Track</button>
+    </form>
+  </div>
 </div>
-{% set colors = {'spotted': 'bg-ink-200', 'contacted': 'bg-amber-200', 'inspected': 'bg-orange-200', 'bought': 'bg-blue-200',
-                 'imported': 'bg-indigo-200', 'listed': 'bg-purple-200', 'sold': 'bg-green-200', 'dropped': 'bg-red-100'} %}
-<div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+
+<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+  {% for label, value, sub, tone in [
+    ('Open deals', s.open, (s.stale ~ ' stuck') if s.stale else 'none stuck', 'bad' if s.stale else ''),
+    ('Cars owned', s.owned, (s.invested_eur|eur) ~ ' invested', ''),
+    ('Expected profit', s.expected_profit_eur|eur if s.expected_profit_eur is not none else '–', 'open deals, NL value − cost', 'good' if s.expected_profit_eur and s.expected_profit_eur > 0 else ('bad' if s.expected_profit_eur is not none else '')),
+    ('Realised profit', s.realised_profit_eur|eur if s.realised_profit_eur is not none else '–', s.sold ~ ' sold', 'good' if s.realised_profit_eur and s.realised_profit_eur > 0 else ('bad' if s.realised_profit_eur is not none else '')),
+    ('Days to sell', s.avg_days_to_sell if s.avg_days_to_sell is not none else '–', 'average, bought → sold', ''),
+    ('Hit rate', (s.hit_rate_pct ~ '%') if s.hit_rate_pct is not none else '–', s.dropped ~ ' dropped', '')] %}
+  <div class="card p-3">
+    <div class="label">{{ label }}</div>
+    <div class="mt-1 text-xl font-bold tracking-tight {{ 'text-good-700' if tone == 'good' else ('text-bad-700' if tone == 'bad') }}">{{ value }}</div>
+    <div class="text-[11px] text-ink-400">{{ sub }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% set colors = {'spotted': 'bg-ink-400', 'contacted': 'bg-amber-400', 'inspected': 'bg-orange-400', 'bought': 'bg-blue-500',
+                 'imported': 'bg-indigo-500', 'listed': 'bg-purple-500'} %}
+{% set total_open = groups|map(attribute=1)|map('length')|sum %}
+{% if total_open == 0 %}
+<div class="mt-6 rounded-2xl border border-dashed border-ink-200 p-10 text-center text-ink-400">
+  <p class="font-medium text-ink-600">No open deals{{ ' for ' ~ owner if owner }}.</p>
+  <p class="mt-1 text-sm">Open a car and press <b>Track as deal</b>, or paste its id or link above. The board then walks it from spotted to sold.</p>
+</div>
+{% else %}
+<div class="mt-6 flex flex-col gap-5 lg:flex-row lg:gap-4 lg:overflow-x-auto lg:pb-3 lg:snap-x" id="board">
   {% for stage, deals in groups %}
-  <section class="card p-3">
-    <h2 class="flex items-center justify-between font-semibold"><span class="rounded px-2 {{ colors[stage.value] }}">{{ stage.value }}</span><span class="text-sm text-ink-400">{{ deals|length }}</span></h2>
-    <ul class="mt-2 space-y-2">
-      {% for d in deals %}
-      <li class="rounded-lg border border-ink-100 p-2 text-sm">
-        <a href="/deals/{{ d.id }}" class="font-medium underline">{{ d.listing.make }} {{ d.listing.model }} {{ d.listing.first_registration.year if d.listing.first_registration }}</a>
-        <span class="text-ink-400">· {{ d.owner.username }} · {{ days_in_stage(d, now) }} d in stage{% if trips[d.id] %} · <span title="from the base, one way">≈ {{ trips[d.id].km }} km</span>{% endif %}</span>
-        <div class="text-xs text-ink-600">
-          ask {{ d.est_price_eur|eur }}{% if d.purchase_price_eur %} · bought {{ d.purchase_price_eur|eur }}{% endif %}
-          {% if d.est_landed_cost_eur %} · est. landed {{ d.est_landed_cost_eur|eur }}{% endif %}
-          {% if d.actual_landed_cost_eur %} · actual {{ d.actual_landed_cost_eur|eur }}{% endif %}
-          {% if d.sale_price_eur %} · sold {{ d.sale_price_eur|eur }}{% endif %}
-          {% if d.profit_eur is not none %} · <b class="{{ 'text-good-700' if d.profit_eur > 0 else 'text-bad-700' }}">profit {{ d.profit_eur|eur }}</b>{% endif %}
-        </div>
-      </li>
-      {% else %}<li class="text-xs text-ink-300">none</li>{% endfor %}
+  <section class="w-full shrink-0 snap-start lg:w-[19rem] {{ 'hidden lg:block' if not deals }}" id="stage-{{ stage.value }}">
+    <h2 class="flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-ink-500">
+      <span class="h-2.5 w-2.5 rounded-full {{ colors[stage.value] }}"></span>{{ stage.value }}
+      <span class="ml-auto rounded-full bg-ink-100 px-2 text-[11px] text-ink-600">{{ deals|length }}</span>
+    </h2>
+    <ul class="mt-2 space-y-3">
+      {% for d in deals %}{% include "deals/_card.html" %}{% else %}
+      <li class="rounded-2xl border border-dashed border-ink-200 p-4 text-center text-xs text-ink-300">empty</li>
+      {% endfor %}
     </ul>
   </section>
   {% endfor %}
 </div>
+{% endif %}
+
+<div class="mt-8 flex items-center justify-between">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Closed · {{ sold|length }} sold, {{ dropped|length }} dropped</h2>
+  <a href="/deals?show_closed={{ 'false' if show_closed else 'true' }}{% if owner %}&owner={{ owner }}{% endif %}" class="text-sm underline">{{ 'hide' if show_closed else 'show' }}</a>
+</div>
+{% if show_closed %}
+{% if sold %}
+<div class="card mt-2 overflow-x-auto">
+<table class="w-full text-sm">
+  <thead class="bg-ink-50 text-left text-xs uppercase text-ink-400"><tr><th class="p-2">car</th><th class="p-2">owner</th><th class="p-2 text-right">bought</th><th class="p-2 text-right">total cost</th><th class="p-2 text-right">sold</th><th class="p-2 text-right">profit</th><th class="p-2 text-right">est. spread</th><th class="p-2 text-right">days</th><th class="p-2">sold on</th></tr></thead>
+  <tbody>
+  {% for d in sold %}
+  <tr class="border-t border-ink-100">
+    <td class="p-2"><a href="/deals/{{ d.id }}" class="font-medium underline">{{ d.listing.make }} {{ d.listing.model }} {{ d.listing.first_registration.year if d.listing.first_registration }}</a></td>
+    <td class="p-2 text-ink-600">{{ d.owner.username }}</td>
+    <td class="p-2 text-right">{{ d.purchase_price_eur|eur }}</td>
+    <td class="p-2 text-right">{{ d.total_cost_eur|eur }}</td>
+    <td class="p-2 text-right">{{ d.sale_price_eur|eur }}</td>
+    <td class="p-2 text-right font-semibold {{ 'text-good-700' if d.profit_eur and d.profit_eur > 0 else ('text-bad-700' if d.profit_eur is not none) }}">{{ d.profit_eur|eur }}{% if d.margin_pct is not none %} <span class="text-xs font-normal text-ink-400">{{ d.margin_pct }}%</span>{% endif %}</td>
+    <td class="p-2 text-right text-ink-400">{{ d.est_spread_eur|eur }}</td>
+    <td class="p-2 text-right">{{ d.days_to_sell if d.days_to_sell is not none else '–' }}</td>
+    <td class="p-2 text-ink-400">{{ d.sold_at or '' }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% if dropped %}
+<ul class="mt-3 space-y-1 text-sm">
+  {% for d in dropped %}
+  <li class="flex flex-wrap items-center gap-2 text-ink-600"><span class="pill bg-bad-100 text-bad-700">dropped</span>
+    <a href="/deals/{{ d.id }}" class="underline">{{ d.listing.make }} {{ d.listing.model }} {{ d.listing.first_registration.year if d.listing.first_registration }}</a>
+    <span class="text-ink-400">· {{ d.owner.username }} · ask {{ d.est_price_eur|eur }} · {{ d.stage_changed_at.strftime('%Y-%m-%d') }}</span></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endif %}
 {% endblock %}

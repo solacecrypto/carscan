@@ -25,3 +25,31 @@ over bought/sold deals: transport per country, BPM ratio, fees, negotiated disco
 from NL asking median to real sale price, NL value vs sale, days to sell, profit vs estimated
 spread. Each row shows n; fewer than 3 is flagged. It prints suggested `costs.yaml` values;
 apply them by editing the file and running `carscan costs recompute` / `carscan values recompute`.
+
+## The deals page (2026-10-25)
+
+`/deals` is a board: one column per open stage (spotted … listed), closed deals (sold table
+with profit, margin and days to sell; dropped list) under a "show" toggle. Tiles at the top:
+open deals (and how many are stuck), cars owned and the cash invested in them, expected
+profit over open deals, realised profit, average days to sell, hit rate (sold ÷ sold+dropped).
+Filter by owner; track a car straight from the page by pasting its id or link on this site.
+
+Each card shows the photo, owner, days in stage (red and "stuck" past the per-stage limit in
+`STALE_DAYS`), distance from the base, ask → offer → bought, expected or actual profit, the
+checklist progress for bought cars, a one-line **next action** (`next_action`) and buttons to
+move to the next stage or drop it.
+
+The deal page has a clickable stage progress bar, the next action, a drop button that asks for
+a reason (stored on the stage event), an owner handover select (logged in the history), and
+one "Estimate vs actual" table where the actuals are typed in place: our offer (`offer_eur`,
+used for the expected profit before buying), purchase, transport, BPM, fees, repairs (the ad's
+rough repair estimate is shown as the estimate), other, listed and sale price, with a Δ column.
+The pickup checklist, pickup trip, nearby deals/cars, car notes and history are folds.
+
+**Expected profit** (`Deal.expected_profit_eur`): actual profit when sold, otherwise sale or
+listed price or the frozen NL value, minus the actual total cost so far, or the estimated
+landed cost (adjusted by offer − ask) before anything was paid.
+
+**Reminders** (`app/deals/reminders.py`, daily 08:00 Amsterdam, notification kind `deal` to
+the owner): stuck in a stage past `STALE_DAYS`; the ad of a not-yet-bought deal disappeared;
+its asking price changed since tracking. Same-day repeats refresh the unread notification.

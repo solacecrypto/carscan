@@ -8,7 +8,7 @@
 </div>
 <div class="grid gap-4 lg:grid-cols-5">
   <div class="min-w-0 lg:col-span-3">
-    {% set icons = {'price_down': '🔻', 'price_up': '🔺', 'target': '🎯', 'gone': '🚫', 'back': '↩️', 'spread_up': '📈', 'spread_down': '📉', 'wanted': '🆕', 'note': '📝', 'claimed': '🙋'} %}
+    {% set icons = {'price_down': '🔻', 'price_up': '🔺', 'target': '🎯', 'gone': '🚫', 'back': '↩️', 'spread_up': '📈', 'spread_down': '📉', 'wanted': '🆕', 'note': '📝', 'claimed': '🙋', 'deal': '🤝'} %}
     {% if not rows %}<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">Nothing yet. Star cars with ☆ on their cards, and add the models you want on the right.</p>{% endif %}
     <ul class="space-y-2">
       {% for n in rows %}

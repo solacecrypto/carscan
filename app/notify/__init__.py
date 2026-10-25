@@ -28,6 +28,7 @@ KINDS = {
     "wanted": "new car for a wanted model",
     "note": "note on a starred car",
     "claimed": "someone claimed a starred car",
+    "deal": "one of your deals needs attention",
     "system": "system health",
 }
 

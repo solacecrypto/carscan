@@ -21,6 +21,7 @@ from app.logging import configure_logging, configure_sentry
 from app.worker.jobs import (
     analyze_backlog,
     backup_job,
+    deal_reminders_job,
     digest_job,
     enrich_backlog,
     geocode_backlog_job,
@@ -76,6 +77,14 @@ def build_scheduler(interval_minutes: int) -> BackgroundScheduler:
         with_heartbeat("digest")(digest_job),
         CronTrigger(hour=7, minute=0, timezone="Europe/Amsterdam"),
         id="digest",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
+    )
+    scheduler.add_job(
+        with_heartbeat("deal_reminders")(deal_reminders_job),
+        CronTrigger(hour=8, minute=0, timezone="Europe/Amsterdam"),
+        id="deal_reminders",
         max_instances=1,
         coalesce=True,
         misfire_grace_time=3600,
