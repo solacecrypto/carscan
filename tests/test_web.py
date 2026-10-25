@@ -679,3 +679,8 @@ def test_free_text_search(client: TestClient, seeded: dict, db: Session) -> None
     assert "320i" in results("/listings?q=touring+xenon")
     assert "320i" in results("/listings?q=two+keys")
     assert "No listings match" in results("/listings?q=cabrio")
+
+
+def test_filter_sidebar_scrolls_within_the_viewport(client: TestClient, seeded: dict) -> None:
+    aside = client.get("/listings").text.split('id="filter-panel"')[1].split(">")[0]
+    assert "lg:sticky" in aside and "lg:overflow-y-auto" in aside and "100vh" in aside

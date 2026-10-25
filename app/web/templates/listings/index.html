@@ -87,7 +87,7 @@
 </div>
 
 <div class="lg:flex lg:items-start lg:gap-6">
-  <aside id="filter-panel" class="mb-5 hidden lg:sticky lg:top-16 lg:mb-0 lg:block lg:w-72 lg:shrink-0">
+  <aside id="filter-panel" class="mb-5 hidden lg:sticky lg:top-16 lg:mb-0 lg:block lg:w-72 lg:shrink-0 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-2xl">
     <form id="filters" hx-get="/listings" hx-target="#results" hx-swap="outerHTML" hx-trigger="change, submit, change from:#sort" hx-push-url="true"
           class="panel divide-y divide-white/10 overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3">
