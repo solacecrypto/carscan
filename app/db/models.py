@@ -411,6 +411,18 @@ class ListingNote(Base):
     user: Mapped[User] = relationship()
 
 
+class FilterPreset(Base):
+    """A named set of listing filters a user saved (the query string of the listings page)."""
+
+    __tablename__ = "filter_presets"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(60))
+    query: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class PushSubscription(Base):
     """One browser/device subscribed to web push for one user."""
 

@@ -775,3 +775,37 @@ def test_car_page_tags_are_balanced(client: TestClient, seeded: dict, db: Sessio
         opened = len(re.findall(rf"<{tag}\b", html))
         closed = len(re.findall(rf"</{tag}>", html))
         assert opened == closed, f"<{tag}>: {opened} opened, {closed} closed"
+
+
+def test_filter_presets(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.db import FilterPreset
+
+    page = client.get("/listings").text
+    assert "My presets" in page and "save current" in page
+    token = _csrf(page)
+    q = "spread_min=1000&chain_replaced=true&sort=newest"
+    r = client.post(
+        "/presets",
+        data={
+            "name": "chain + 1k",
+            "query": "?spread_min=1000&chain_replaced=true&page=3&sort=newest",
+            "csrf_token": token,
+        },  # noqa: E501
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and r.headers["location"] == f"/listings?{q}"
+    pr = db.query(FilterPreset).one()
+    assert pr.name == "chain + 1k" and "page=" not in pr.query
+    page = client.get(f"/listings?{q}").text
+    assert f'href="/listings?{q.replace("&", "&amp;")}"' in page
+    block = page.split("My presets")[1].split('type="search"')[0]
+    assert "bg-brand-500 text-ink-950" in block  # the matching preset is highlighted
+    data = {"name": "chain + 1k", "query": "spread_min=2000", "csrf_token": token}
+    client.post("/presets", data=data, follow_redirects=False)
+    db.expire_all()
+    assert db.query(FilterPreset).count() == 1  # same name: updated, not duplicated
+    assert db.query(FilterPreset).one().query == "spread_min=2000"
+    bad = {"name": "", "query": "x=1", "csrf_token": token}
+    assert client.post("/presets", data=bad).status_code == 400
+    client.post(f"/presets/{pr.id}/delete", data={"csrf_token": token})
+    assert db.query(FilterPreset).count() == 0

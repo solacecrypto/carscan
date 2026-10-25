@@ -7,6 +7,7 @@ from app.db.models import (
     DealEvent,
     DealStage,
     Digest,
+    FilterPreset,
     GeoCache,
     Heartbeat,
     Listing,
@@ -27,6 +28,7 @@ from app.db.models import (
 
 __all__ = [
     "Digest",
+    "FilterPreset",
     "Notification",
     "PushSubscription",
     "Subscription",

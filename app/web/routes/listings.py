@@ -1,12 +1,12 @@
 from datetime import UTC, datetime, timedelta
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import selectinload
 
-from app.db import Alert, AlertStatus, Comparable, Listing, Watch
+from app.db import Alert, AlertStatus, Comparable, FilterPreset, Listing, Watch
 from app.deals import get_deal_for_listing, sync_from_alert_status
 from app.deals.calibration import model_accuracy
 from app.market import market_for_listing
@@ -77,6 +77,13 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "colors": COLORS,
         "swatches": SWATCHES,
         "starred_ids": set(db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))),
+        "presets": list(
+            db.scalars(
+                select(FilterPreset)
+                .where(FilterPreset.user_id == user.id)
+                .order_by(FilterPreset.created_at)
+            )
+        ),
     }
     if request.headers.get("HX-Request"):
         resp = templates.TemplateResponse(request, "listings/_results.html", ctx)
@@ -107,6 +114,41 @@ def _filtered_stmt(f: dict) -> Select:  # type: ignore[type-arg]
             Listing.previous_price_eur.isnot(None), Listing.price_eur < Listing.previous_price_eur
         )
     return stmt
+
+
+@router.post("/presets", dependencies=[Depends(csrf_protect)])
+def preset_save(
+    db: DB, user: CurrentUser, name: str = Form(""), query: str = Form("")
+) -> RedirectResponse:
+    """Save the current filters under a name (the listings query string, minus paging)."""
+    name = name.strip()[:60]
+    pairs = [
+        (k, v)
+        for k, v in parse_qsl(query.lstrip("?"), keep_blank_values=False)
+        if k not in ("page", "since") and v
+    ]
+    clean = urlencode(pairs)
+    if not name or not clean:
+        raise HTTPException(400, "a name and at least one filter are needed")
+    existing = db.scalar(
+        select(FilterPreset).where(FilterPreset.user_id == user.id, FilterPreset.name == name)
+    )
+    if existing is not None:
+        existing.query = clean
+    else:
+        db.add(FilterPreset(user_id=user.id, name=name, query=clean, created_at=datetime.now(UTC)))
+    db.flush()
+    return RedirectResponse(f"/listings?{clean}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/presets/{preset_id}/delete", dependencies=[Depends(csrf_protect)])
+def preset_delete(db: DB, user: CurrentUser, preset_id: int) -> RedirectResponse:
+    row = db.get(FilterPreset, preset_id)
+    if row is None or row.user_id != user.id:
+        raise HTTPException(404)
+    db.delete(row)
+    db.flush()
+    return RedirectResponse("/listings", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/listings/new-count", response_class=HTMLResponse)
