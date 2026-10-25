@@ -112,7 +112,7 @@
       </div>
       {% endif %}
     </div>
-    <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink-950/90 p-4" role="dialog" aria-modal="true" aria-label="photo">
+    <div id="lightbox" class="fixed inset-0 z-[1200] hidden items-center justify-center bg-ink-950/90 p-4" role="dialog" aria-modal="true" aria-label="photo">
       <button type="button" id="lightbox-close" class="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20" aria-label="close">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       {% if l.photos|length > 1 %}
@@ -361,7 +361,7 @@
       <h2>Location &amp; nearby <span class="text-xs font-normal text-ink-300">rough: the ad's town, not the street</span></h2>
       {% if coords %}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-      <div id="map" class="mt-2 h-64 w-full rounded-xl bg-ink-100"></div>
+      <div id="map" class="relative z-0 mt-2 h-64 w-full rounded-xl bg-ink-100 [isolation:isolate]"></div>
       <p class="mt-1 text-xs"><a href="https://www.google.com/maps/search/?api=1&query={{ ((l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' ' ~ l.country)|trim|urlencode }}" target="_blank" rel="noopener" class="underline">Open in Google Maps ↗</a></p>
       <div id="nearby-{{ l.id }}" class="mt-2" hx-get="/listings/{{ l.id }}/nearby?km=50" hx-trigger="load" hx-swap="outerHTML"><p class="text-xs text-ink-400">looking around…</p></div>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
