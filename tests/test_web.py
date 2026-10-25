@@ -756,3 +756,21 @@ def test_nearby_panel_and_map(client: TestClient, seeded: dict, db: Session) -> 
     ).text
     assert 'value="chain_replaced" class="peer sr-only" checked' in part
     assert 'name="same_model" value="1" class="peer sr-only" checked' in part
+
+
+def test_car_page_tags_are_balanced(client: TestClient, seeded: dict, db: Session) -> None:
+    """A stray or missing </details> or </div> silently breaks the two-column layout."""
+    import re
+
+    from app.insights.service import apply_rules
+
+    row = seeded["a"]
+    row.description = "Unfallfrei. TÜV bis 06/2027."
+    row.photos = ["https://x/1.jpg"]
+    apply_rules(row, NOW)
+    db.commit()
+    html = client.get(f"/listings/{row.id}").text
+    for tag in ("div", "details", "ul", "form"):
+        opened = len(re.findall(rf"<{tag}\b", html))
+        closed = len(re.findall(rf"</{tag}>", html))
+        assert opened == closed, f"<{tag}>: {opened} opened, {closed} closed"

@@ -345,7 +345,7 @@
       {% else %}
       <p class="text-sm text-ink-400">No NL market data for this model yet.</p>
       {% endif %}
-    </div>
+    </details>
     <div id="map-card" class="card p-4">
       <h2>Location &amp; nearby <span class="text-xs font-normal text-ink-300">rough: the ad's town, not the street</span></h2>
       {% if coords %}
@@ -385,7 +385,7 @@
       {% else %}
       <p class="mt-1 text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}. Places are geocoded a few minutes after a car appears.</p>
       {% endif %}
-    </details>
+    </div>
     <details id="pickup" class="card fold p-4">
       <summary><h2>Pickup <span class="text-xs font-normal text-ink-300">from {{ trip['from'] if trip else 'the base' }}</span></h2><span class="fold-value">{% if trip %}≈ {{ trip.km }} km · {{ trip.total_eur|eur }}{% else %}–{% endif %}</span></summary>
       {% if trip %}
