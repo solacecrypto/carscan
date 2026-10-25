@@ -248,6 +248,7 @@ def summary(deals: list[Deal], now: datetime) -> dict[str, Any]:
     dropped = [d for d in deals if d.stage is DealStage.dropped]
     invested = sum(d.total_cost_eur or 0 for d in owned)
     expected = [d.expected_profit_eur for d in open_ if d.expected_profit_eur is not None]
+    costs = [d.expected_cost_eur for d in open_ if d.expected_cost_eur is not None]
     realised = [d.profit_eur for d in sold if d.profit_eur is not None]
     days = [d.days_to_sell for d in sold if d.days_to_sell is not None]
     decided = len(sold) + len(dropped)
@@ -255,6 +256,7 @@ def summary(deals: list[Deal], now: datetime) -> dict[str, Any]:
         "open": len(open_),
         "owned": len(owned),
         "invested_eur": invested,
+        "expected_cost_eur": sum(costs) if costs else None,
         "expected_profit_eur": sum(expected) if expected else None,
         "realised_profit_eur": sum(realised) if realised else None,
         "sold": len(sold),

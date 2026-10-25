@@ -20,10 +20,11 @@
   </div>
 </div>
 
-<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
   {% for label, value, sub, tone in [
     ('Open deals', s.open, (s.stale ~ ' stuck') if s.stale else 'none stuck', 'bad' if s.stale else ''),
     ('Cars owned', s.owned, (s.invested_eur|eur) ~ ' invested', ''),
+    ('Expected cost', s.expected_cost_eur|eur if s.expected_cost_eur is not none else '–', 'open deals, all in incl. repairs', ''),
     ('Expected profit', s.expected_profit_eur|eur if s.expected_profit_eur is not none else '–', 'open deals, NL value − cost', 'good' if s.expected_profit_eur and s.expected_profit_eur > 0 else ('bad' if s.expected_profit_eur is not none else '')),
     ('Realised profit', s.realised_profit_eur|eur if s.realised_profit_eur is not none else '–', s.sold ~ ' sold', 'good' if s.realised_profit_eur and s.realised_profit_eur > 0 else ('bad' if s.realised_profit_eur is not none else '')),
     ('Days to sell', s.avg_days_to_sell if s.avg_days_to_sell is not none else '–', 'average, bought → sold', ''),

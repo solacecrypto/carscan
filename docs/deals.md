@@ -48,9 +48,11 @@ used for the expected profit before buying), purchase, transport, BPM, fees, rep
 rough repair estimate is shown as the estimate), other, listed and sale price, with a Δ column.
 The pickup checklist, pickup trip, nearby deals/cars, car notes and history are folds.
 
-**Expected profit** (`Deal.expected_profit_eur`): actual profit when sold, otherwise sale or
-listed price or the frozen NL value, minus the actual total cost so far, or the estimated
-landed cost (adjusted by offer − ask) before anything was paid.
+**Expected cost** (`Deal.expected_cost_eur`): the actual total cost once the purchase is
+logged, otherwise the frozen landed-cost estimate (our offer replacing the ask once made) plus
+the ad's rough repair estimate. **Expected profit** (`expected_profit_eur`): actual profit when
+sold, otherwise sale or listed price or the frozen NL value minus the expected cost. Both are
+summed over open deals in the tiles and shown on every card.
 
 **Reminders** (`app/deals/reminders.py`, daily 08:00 Amsterdam, notification kind `deal` to
 the owner): stuck in a stage past `STALE_DAYS`; the ad of a not-yet-bought deal disappeared;

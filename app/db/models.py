@@ -369,21 +369,29 @@ class Deal(Base):
         return round(profit / total * 100)
 
     @property
+    def expected_cost_eur(self) -> int | None:
+        """What the car will have cost all in: the actual total where the purchase is logged,
+        otherwise the frozen landed-cost estimate (our offer replacing the ask once made) plus
+        the rough repair estimate from the ad."""
+        if self.total_cost_eur is not None:
+            return self.total_cost_eur
+        if self.est_landed_cost_eur is None:
+            return None
+        cost = self.est_landed_cost_eur
+        if self.offer_eur is not None:
+            cost += self.offer_eur - self.est_price_eur
+        return cost + (self.listing.repair_cost_eur or 0)
+
+    @property
     def expected_profit_eur(self) -> int | None:
-        """Best current guess: actual sale minus actual costs where known, otherwise the frozen
-        NL value minus what it has cost so far (or the estimated landed cost before buying)."""
+        """Best current guess: actual profit when sold, otherwise the sale or listed price or the
+        frozen NL value minus the expected cost."""
         if self.profit_eur is not None:
             return self.profit_eur
         value = self.sale_price_eur or self.listed_price_eur or self.est_nl_value_eur
-        if value is None:
+        cost = self.expected_cost_eur
+        if value is None or cost is None:
             return None
-        cost = self.total_cost_eur
-        if cost is None:
-            if self.est_landed_cost_eur is None:
-                return None
-            cost = self.est_landed_cost_eur
-            if self.offer_eur is not None:
-                cost += self.offer_eur - self.est_price_eur
         return value - cost
 
 

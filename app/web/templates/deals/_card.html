@@ -20,7 +20,7 @@
   <div class="flex items-end justify-between gap-2 px-3 pb-2 text-xs text-ink-600">
     <div>
       {% if d.purchase_price_eur %}bought <b class="text-ink-900">{{ d.purchase_price_eur|eur }}</b>{% elif d.offer_eur %}ask {{ d.est_price_eur|eur }} · offer <b class="text-ink-900">{{ d.offer_eur|eur }}</b>{% else %}ask <b class="text-ink-900">{{ d.est_price_eur|eur }}</b>{% endif %}
-      {% if d.actual_landed_cost_eur %}<span class="block">landed actual {{ d.actual_landed_cost_eur|eur }}</span>{% elif d.est_landed_cost_eur %}<span class="block">landed ≈ {{ d.est_landed_cost_eur|eur }}</span>{% endif %}
+      {% if d.total_cost_eur is not none %}<span class="block" title="purchase + transport + BPM + fees + repairs + other, as logged">cost actual {{ d.total_cost_eur|eur }}</span>{% elif d.expected_cost_eur is not none %}<span class="block" title="estimated landed cost plus the rough repair estimate">cost ≈ {{ d.expected_cost_eur|eur }}</span>{% endif %}
       {% if d.sale_price_eur %}<span class="block">sold {{ d.sale_price_eur|eur }}</span>{% elif d.listed_price_eur %}<span class="block">listed at {{ d.listed_price_eur|eur }}</span>{% endif %}
     </div>
     {% set ep = d.expected_profit_eur %}

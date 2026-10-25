@@ -221,12 +221,12 @@ def test_web_deal_flow(db: Session) -> None:
     page = c.get(deal_url).text
     assert "€ 7.100" in page and "deal!" in page and "purchase_price_eur" in page
     deals_page = c.get("/deals").text
-    assert "bought" in deals_page and "actual € 7.100" in deals_page
+    assert "bought" in deals_page and "cost actual € 7.100" in deals_page
     assert "Pick up the car" in deals_page and "→ imported" in deals_page
     assert 'draggable="true"' in deals_page and 'data-stage="bought"' in deals_page
     assert "€ 7.100 invested" in deals_page  # summary tile: cars owned
     # owner filter, closed section, tracking by link
-    assert "actual € 7.100" in c.get("/deals?owner=q").text
+    assert "cost actual € 7.100" in c.get("/deals?owner=q").text
     assert "No open deals for nobody" in c.get("/deals?owner=nobody").text
     assert "0 sold, 0 dropped" in c.get("/deals?show_closed=true").text
     r = c.post(
@@ -316,7 +316,10 @@ def test_next_action_stale_and_summary(db: Session) -> None:
     assert next_stage(d) is DealStage.contacted
     assert next_action(d).startswith("Contact the seller")
     assert not is_stale(d, NOW + timedelta(days=3)) and is_stale(d, NOW + timedelta(days=4))
-    assert d.expected_profit_eur == 1600
+    assert d.expected_cost_eur == 7700 and d.expected_profit_eur == 1600
+    d.listing.repair_cost_eur = 400
+    assert d.expected_cost_eur == 8100 and d.expected_profit_eur == 1200
+    d.listing.repair_cost_eur = None
     update_actuals(d, {"offer_eur": "5500"}, u, NOW)
     assert d.expected_profit_eur == 2100  # cheaper purchase than the ask → more expected
     set_stage(d, DealStage.bought, u, NOW)
@@ -345,6 +348,7 @@ def test_next_action_stale_and_summary(db: Session) -> None:
     s = summary([d, sold, dropped], NOW)
     assert s["open"] == 1 and s["owned"] == 1 and s["invested_eur"] == 6800
     assert s["expected_profit_eur"] == 2500 and s["realised_profit_eur"] == 3000
+    assert s["expected_cost_eur"] == 6800
     assert s["sold"] == 1 and s["dropped"] == 1 and s["hit_rate_pct"] == 50
     assert s["avg_days_to_sell"] == 20 and s["stale"] == 0
 
