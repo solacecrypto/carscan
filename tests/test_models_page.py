@@ -67,6 +67,21 @@ def test_model_overview_and_detail(db: Session) -> None:
     assert bmw.label == "BMW E90/E91 318i/320i" and bmw.years == [2008, 2014]
     assert (bmw.n_active, bmw.n_valued, bmw.n_positive, bmw.positive_pct) == (3, 2, 1, 50)
     assert bmw.by_country == {"DE": 1, "BE": 1, "IT": 1, "SE": 0}
+    assert list(bmw.per_country) == ["DE", "BE", "IT"]
+    assert bmw.per_country["DE"]["median_spread_eur"] == 1600
+    assert bmw.per_country["BE"] | {"x": 1} == {
+        "n": 1,
+        "n_valued": 1,
+        "n_positive": 0,
+        "positive_pct": 0,
+        "median_price_eur": 9000,
+        "median_landed_eur": 7700,
+        "median_value_eur": 9300,
+        "median_spread_eur": -300,
+        "best_spread_eur": -300,
+        "x": 1,
+    }
+    assert bmw.per_country["IT"]["median_spread_eur"] is None
     assert bmw.median_spread_eur == 650 and bmw.best.spread_eur == 1600
     assert bmw.new_7d == 3 and bmw.gone_7d == 1 and bmw.history == []
     golf = models["vw-golf-6"]  # on the watchlist but without cars

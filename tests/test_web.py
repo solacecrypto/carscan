@@ -495,6 +495,7 @@ def test_models_page_and_accuracy_on_cards(client: TestClient, seeded: dict, db:
     assert "BMW E90/E91 318i/320i" in page
     page = client.get("/models/bmw-3er-e90").text
     assert "Best cars right now" in page and "Deals on this model" in page
+    assert "By country" in page and "median spread, all countries" in client.get("/models").text
     assert "landed-cost estimate was off by" in page and "Asking prices" in page
     assert client.get("/models/no-such-model").status_code == 404
     assert "estimates within" in client.get("/listings?profitable=false").text

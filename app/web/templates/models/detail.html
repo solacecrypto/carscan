@@ -40,6 +40,31 @@
 <div class="mt-1 flex justify-between text-[10px] text-ink-400"><span>{{ rows[0].lo|eur if kind == 'eur' else (rows[0].lo // 1000) ~ 'k' }}</span><span>{{ rows[-1].hi|eur if kind == 'eur' else (rows[-1].hi // 1000) ~ 'k' }}</span></div>
 {% endmacro %}
 
+{% if m.per_country %}
+<div class="card mt-5 overflow-x-auto">
+  <div class="flex items-center justify-between p-4 pb-2"><h2>By country <span class="text-ink-400">· where the margin actually is</span></h2><span class="text-[11px] text-ink-400">medians over the active cars from each country; NL is what the same model asks at home</span></div>
+  <table class="w-full text-sm">
+    <thead class="bg-ink-50 text-left text-[11px] uppercase tracking-wider text-ink-400"><tr><th class="px-4 py-2">from</th><th class="px-2 py-2 text-right">cars</th><th class="px-2 py-2 text-right">valued</th><th class="px-2 py-2 text-right">median ask</th><th class="px-2 py-2 text-right">median landed</th><th class="px-2 py-2 text-right">NL value</th><th class="px-2 py-2 text-right">median spread</th><th class="px-2 py-2 text-right">best spread</th><th class="px-4 py-2 text-right">positive</th></tr></thead>
+    <tbody>
+    {% for cc, pc in m.per_country.items() %}
+    <tr class="border-t border-ink-100">
+      <td class="px-4 py-2 font-semibold">{{ cc }}</td>
+      <td class="px-2 py-2 text-right">{{ pc.n }}</td>
+      <td class="px-2 py-2 text-right text-ink-500">{{ pc.n_valued }}</td>
+      <td class="px-2 py-2 text-right">{{ pc.median_price_eur|eur }}</td>
+      <td class="px-2 py-2 text-right">{{ pc.median_landed_eur|eur }}</td>
+      <td class="px-2 py-2 text-right text-ink-500">{{ pc.median_value_eur|eur }}</td>
+      <td class="px-2 py-2 text-right font-bold {{ 'text-good-700' if pc.median_spread_eur and pc.median_spread_eur > 0 else ('text-bad-700' if pc.median_spread_eur is not none) }}">{{ ('+' if pc.median_spread_eur > 0) ~ (pc.median_spread_eur|eur) if pc.median_spread_eur is not none else '–' }}</td>
+      <td class="px-2 py-2 text-right text-good-700">{{ ('+' ~ (pc.best_spread_eur|eur)) if pc.best_spread_eur and pc.best_spread_eur > 0 else '–' }}</td>
+      <td class="px-4 py-2 text-right"><div class="flex items-center justify-end gap-2">{% if pc.positive_pct is not none %}<div class="h-1.5 w-16 overflow-hidden rounded-full bg-ink-100"><div class="h-full rounded-full bg-good-700" style="width: {{ pc.positive_pct }}%"></div></div>{{ pc.positive_pct }}%{% else %}–{% endif %}</div></td>
+    </tr>
+    {% endfor %}
+    <tr class="border-t border-ink-200 bg-ink-50/60"><td class="px-4 py-2 font-semibold">NL</td><td class="px-2 py-2 text-right">{{ m.n_comparables }}</td><td class="px-2 py-2 text-right text-ink-400">ads</td><td class="px-2 py-2 text-right">{{ m.comp_median_price_eur|eur }}</td><td class="px-2 py-2 text-right text-ink-400" colspan="5">asking median on the NL sites · our NL value per car is a haircut on close matches</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
 <div class="mt-5 grid gap-4 lg:grid-cols-3">
   <div class="card p-4">
     <h2>Trend <span class="text-ink-400">· {{ m.history|length }} nightly snapshots</span></h2>

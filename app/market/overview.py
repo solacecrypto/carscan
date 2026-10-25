@@ -67,6 +67,7 @@ class ModelStats:
     n_positive: int = 0
     positive_pct: int | None = None
     by_country: dict[str, int] = field(default_factory=dict)
+    per_country: dict[str, dict[str, Any]] = field(default_factory=dict)
     median_price_eur: int | None = None
     median_landed_eur: int | None = None
     median_value_eur: int | None = None
@@ -219,6 +220,23 @@ def _fill(stats: ModelStats, now: datetime) -> None:
     stats.n_positive = sum(1 for s in spreads if s > 0)
     stats.positive_pct = _pct(stats.n_positive, stats.n_valued)
     stats.by_country = {cc: sum(1 for c in cars if c.country == cc) for cc in COUNTRIES}
+    stats.per_country = {}
+    for cc in COUNTRIES:
+        mine = [c for c in cars if c.country == cc]
+        if not mine:
+            continue
+        sp = [c.spread_eur for c in mine if c.spread_eur is not None]
+        stats.per_country[cc] = {
+            "n": len(mine),
+            "n_valued": len(sp),
+            "n_positive": sum(1 for x in sp if x > 0),
+            "positive_pct": _pct(sum(1 for x in sp if x > 0), len(sp)),
+            "median_price_eur": _med([c.price_eur for c in mine]),
+            "median_landed_eur": _med([c.landed_eur for c in mine if c.landed_eur is not None]),
+            "median_value_eur": _med([c.value_eur for c in mine if c.value_eur is not None]),
+            "median_spread_eur": _med(sp),
+            "best_spread_eur": max(sp) if sp else None,
+        }
     stats.median_price_eur = _med([c.price_eur for c in cars])
     stats.median_landed_eur = _med([c.landed_eur for c in cars if c.landed_eur is not None])
     stats.median_value_eur = _med([c.value_eur for c in cars if c.value_eur is not None])

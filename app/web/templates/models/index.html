@@ -58,14 +58,27 @@
         <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink-100"><div class="h-full rounded-full bg-good-700" style="width: {{ m.positive_pct }}%"></div></div>
         {% else %}<div class="mt-1 text-sm text-ink-400">no NL value yet</div>{% endif %}
       </div>
-      <div class="grid grid-cols-3 gap-2 text-xs lg:col-span-3">
-        <div><div class="label">median ask</div><div class="mt-1 font-semibold">{{ m.median_price_eur|eur }}</div></div>
-        <div><div class="label">landed</div><div class="mt-1 font-semibold">{{ m.median_landed_eur|eur }}</div></div>
-        <div><div class="label">NL value</div><div class="mt-1 font-semibold">{{ m.median_value_eur|eur }}</div>{% if m.n_comparables %}<div class="text-[10px] text-ink-400">{{ m.n_comparables }} comps</div>{% endif %}</div>
+      <div class="lg:col-span-4">
+        <table class="w-full text-xs">
+          <thead class="text-left text-[10px] uppercase tracking-wider text-ink-400"><tr><th class="pr-2 font-semibold">from</th><th class="pr-2 text-right font-semibold">cars</th><th class="pr-2 text-right font-semibold">ask</th><th class="pr-2 text-right font-semibold">landed</th><th class="pr-2 text-right font-semibold">spread</th><th class="text-right font-semibold">positive</th></tr></thead>
+          <tbody>
+          {% for cc, pc in m.per_country.items() %}
+          <tr class="border-t border-ink-100">
+            <td class="py-0.5 pr-2 font-semibold text-ink-700">{{ cc }}</td>
+            <td class="py-0.5 pr-2 text-right text-ink-500">{{ pc.n }}</td>
+            <td class="py-0.5 pr-2 text-right">{{ pc.median_price_eur|eur }}</td>
+            <td class="py-0.5 pr-2 text-right">{{ pc.median_landed_eur|eur }}</td>
+            <td class="py-0.5 pr-2 text-right font-semibold {{ 'text-good-700' if pc.median_spread_eur and pc.median_spread_eur > 0 else ('text-bad-700' if pc.median_spread_eur is not none else 'text-ink-300') }}">{{ ('+' if pc.median_spread_eur > 0) ~ (pc.median_spread_eur|eur) if pc.median_spread_eur is not none else '–' }}</td>
+            <td class="py-0.5 text-right text-ink-500">{{ (pc.positive_pct ~ '%') if pc.positive_pct is not none else '–' }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="border-t border-ink-200 bg-ink-50/60"><td class="py-0.5 pr-2 font-semibold text-ink-700" title="what the same model asks on the NL sites, median of {{ m.n_comparables }} ads">NL</td><td class="py-0.5 pr-2 text-right text-ink-500">{{ m.n_comparables }}</td><td class="py-0.5 pr-2 text-right">{{ m.comp_median_price_eur|eur }}</td><td class="py-0.5 pr-2 text-right text-ink-400" colspan="3">value ≈ {{ m.median_value_eur|eur }}</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="flex items-center gap-3 lg:col-span-2">
+      <div class="flex items-center gap-3 lg:col-span-3">
         <div class="shrink-0">
-          <div class="label">median spread</div>
+          <div class="label">median spread, all countries</div>
           {% if m.median_spread_eur is not none %}
           <div class="text-xl font-bold tracking-tight {{ 'text-good-700' if m.median_spread_eur > 0 else 'text-bad-700' }}">{{ '+' if m.median_spread_eur > 0 }}{{ m.median_spread_eur|eur }}</div>
           <div class="text-[11px] {{ 'text-good-700' if m.spread_change_7d and m.spread_change_7d > 0 else ('text-bad-700' if m.spread_change_7d and m.spread_change_7d < 0 else 'text-ink-400') }}">{% if m.spread_change_7d is not none %}{{ '+' if m.spread_change_7d > 0 }}{{ m.spread_change_7d|eur }} in 7 days{% else %}top quarter {{ m.p75_spread_eur|eur }}{% endif %}</div>
@@ -73,24 +86,18 @@
         </div>
         <div class="w-full min-w-[4rem] text-ink-500">{% with points=m.spread_points, tone='brand' %}{% include "models/_spark.html" %}{% endwith %}</div>
       </div>
-      <div class="lg:col-span-2 lg:text-right">
-        {% if m.best %}
-        <div class="label">best car</div>
-        <a href="/listings/{{ m.best.id }}" class="mt-1 block truncate text-sm font-medium hover:underline">{{ m.best.make }} {{ m.best.model }} {{ m.best.year or '' }}</a>
-        <div class="text-xs text-ink-500">{{ m.best.price_eur|eur }} · <b class="text-good-700">+{{ m.best.spread_eur|eur }}</b> · {{ m.best.country }}</div>
-        {% endif %}
-        <div class="mt-2 flex flex-wrap gap-1 text-[11px] lg:justify-end">
-          {% if m.n_deals %}<span class="pill bg-ink-900 text-white" title="deals tracked on this model">{{ m.n_deals }} deal{{ '' if m.n_deals == 1 else 's' }}{% if m.n_sold %} · {{ m.n_sold }} sold{% endif %}</span>{% endif %}
-          {% if m.accuracy %}<span class="pill bg-ink-100 text-ink-600" title="how far our landed-cost estimate was off on real deals">estimates within {{ m.accuracy.landed_err_pct }}%</span>{% endif %}
-          {% if m.n_favorites %}<span class="pill bg-brand-100 text-brand-700">☆ {{ m.n_favorites }}</span>{% endif %}
-        </div>
-      </div>
     </div>
     <div class="flex flex-wrap items-center gap-3 border-t border-ink-100 bg-ink-50/60 px-4 py-2 text-xs">
       <a href="/models/{{ m.key }}" class="font-semibold text-ink-800 hover:underline">Details →</a>
       <a href="/listings?model_key={{ m.key }}" class="text-ink-600 hover:underline">profitable cars ({{ m.n_positive }})</a>
       <a href="/listings?model_key={{ m.key }}&profitable=false&sort=newest" class="text-ink-600 hover:underline">all cars ({{ m.n_active }})</a>
-      {% if not m.tracked %}<span class="ml-auto text-ink-400">not in models.yaml</span>{% endif %}
+      {% if m.best %}<span class="text-ink-500">best: <a href="/listings/{{ m.best.id }}" class="font-medium text-ink-800 hover:underline">{{ m.best.make }} {{ m.best.model }} {{ m.best.year or '' }}</a> {{ m.best.price_eur|eur }} · <b class="text-good-700">+{{ m.best.spread_eur|eur }}</b> · {{ m.best.country }}</span>{% endif %}
+      <span class="ml-auto flex gap-1">
+        {% if m.n_deals %}<span class="pill bg-ink-900 text-white" title="deals tracked on this model">{{ m.n_deals }} deal{{ '' if m.n_deals == 1 else 's' }}{% if m.n_sold %} · {{ m.n_sold }} sold{% endif %}</span>{% endif %}
+        {% if m.accuracy %}<span class="pill bg-ink-100 text-ink-600" title="how far our landed-cost estimate was off on real deals">estimates within {{ m.accuracy.landed_err_pct }}%</span>{% endif %}
+        {% if m.n_favorites %}<span class="pill bg-brand-100 text-brand-700">☆ {{ m.n_favorites }}</span>{% endif %}
+      </span>
+      {% if not m.tracked %}<span class="text-ink-400">not in models.yaml</span>{% endif %}
     </div>
   </li>
   {% endfor %}
