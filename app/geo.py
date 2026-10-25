@@ -155,6 +155,55 @@ def trip(
     }
 
 
+def _key_sql():  # type: ignore[no-untyped-def]
+    """The geo_cache key as SQL, matching cache_key()."""
+    from sqlalchemy import func, literal
+
+    return (
+        func.lower(func.trim(Listing.country))
+        + literal("|")
+        + func.lower(func.trim(func.coalesce(Listing.postcode, "")))
+        + literal("|")
+        + func.lower(func.trim(func.coalesce(Listing.city, "")))
+    )
+
+
+def nearby_listings(
+    session: Session,
+    listing: Listing,
+    radius_km: float,
+    positive_only: bool = True,
+    limit: int = 80,
+) -> tuple[GeoCache | None, list[tuple[Listing, int]]]:
+    """Active cars within ``radius_km`` of this car, nearest first. A bounding box on the
+    geocoded places does the heavy lifting in SQL; the exact distance is computed after."""
+    here = lookup(session, listing.city, listing.postcode, listing.country)
+    if here is None or here.lat is None or here.lon is None:
+        return None, []
+    dlat = radius_km / 111.0
+    dlon = radius_km / (111.0 * max(0.2, math.cos(math.radians(here.lat))))
+    stmt = (
+        select(Listing, GeoCache.lat, GeoCache.lon)
+        .join(GeoCache, GeoCache.key == _key_sql())
+        .where(
+            Listing.is_active.is_(True),
+            Listing.duplicate_of_id.is_(None),
+            Listing.id != listing.id,
+            GeoCache.lat.between(here.lat - dlat, here.lat + dlat),
+            GeoCache.lon.between(here.lon - dlon, here.lon + dlon),
+        )
+    )
+    if positive_only:
+        stmt = stmt.where(Listing.spread_eur > 0)
+    out = []
+    for x, lat, lon in session.execute(stmt).all():
+        km = haversine_km(here.lat, here.lon, lat, lon)
+        if km <= radius_km:
+            out.append((x, round(km)))
+    out.sort(key=lambda t: t[1])
+    return here, out[:limit]
+
+
 def nearby(
     session: Session, listing: Listing, candidates: list[Listing], radius_km: float = NEARBY_KM
 ) -> list[tuple[Listing, int]]:

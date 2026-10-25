@@ -1,0 +1,19 @@
+<div id="nearby-{{ listing.id }}" data-markers='{{ markers|tojson }}'>
+  {% if not here %}
+  <p class="text-sm text-ink-400">This car's location is not resolved yet, so nothing can be measured from it.</p>
+  {% else %}
+  <p class="mb-2 text-xs text-ink-500">{{ rows|length }} car{{ '' if rows|length == 1 else 's' }} within {{ km }} km{{ ' with a positive return' if positive_only else '' }}, nearest first. Star the ones to visit; your Starred tab becomes the route list.</p>
+  <ul class="divide-y divide-ink-100 text-sm">
+    {% for x, dist in rows %}
+    <li class="flex items-center gap-3 py-2">
+      <a href="/listings/{{ x.id }}" class="shrink-0">{% if x.photos %}<img src="{{ x.photos[0] }}" alt="" loading="lazy" class="h-12 w-16 rounded-lg object-cover">{% else %}<span class="block h-12 w-16 rounded-lg bg-ink-100"></span>{% endif %}</a>
+      <span class="min-w-0 flex-1">
+        <a href="/listings/{{ x.id }}" class="block truncate font-medium">{{ x.make }} {{ x.model }} {{ x.first_registration.year if x.first_registration }} <span class="font-normal text-ink-400">· {{ x.mileage_km|km }} · {{ x.gearbox or '–' }}</span></a>
+        <span class="block text-xs text-ink-500">{{ x.city or '' }} · <b>{{ dist }} km</b> · {{ x.price_eur|eur }}{% if x.spread_eur is not none %} · <span class="{{ 'text-good-700' if x.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if x.spread_eur > 0 }}{{ x.spread_eur|eur }}</span>{% endif %} · {{ x.source }}</span>
+      </span>
+      {% with l=x, size='' %}{% include "listings/_star.html" %}{% endwith %}
+    </li>
+    {% else %}<li class="py-3 text-sm text-ink-400">No other cars in that range{{ ' with a positive return; try "all cars"' if positive_only else '' }}.</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>

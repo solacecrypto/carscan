@@ -730,3 +730,24 @@ def test_translate_button_translates_once(
     monkeypatch.setattr("app.translate.default_translator", lambda: Refusing())
     r = client.post(f"/listings/{row2.id}/translate", data={"csrf_token": token}, headers=hx)
     assert "refused" in r.text and "Translate to English" in r.text
+
+
+def test_nearby_panel_and_map(client: TestClient, seeded: dict, db: Session) -> None:
+    from datetime import UTC, datetime
+
+    from app.db import GeoCache
+
+    row = seeded["a"]
+    row.city, row.postcode = "Hannover", None
+    db.add(
+        GeoCache(
+            key="de||hannover", country="DE", lat=52.37, lon=9.73, resolved_at=datetime.now(UTC)
+        )
+    )
+    db.commit()
+    page = client.get(f"/listings/{row.id}").text
+    assert 'id="map"' in page and "Open in Google Maps" in page and "/nearby?km=50" in page
+    part = client.get(f"/listings/{row.id}/nearby?km=100").text
+    assert "within 100 km" in part and "data-markers" in part
+    part = client.get(f"/listings/{row.id}/nearby?km=100&all=1").text
+    assert "with a positive return" not in part.split("nearest first")[0]

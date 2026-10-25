@@ -73,3 +73,27 @@ def test_backlog_trip_and_nearby(db: Session) -> None:
     assert trip(db, db.get(Listing, 4), base, TRAVEL) is None  # unknown place
     near = nearby(db, a, [b, c], radius_km=100)
     assert [(x.id, km) for x, km in near] == [(b.id, 55)]
+
+
+def test_nearby_listings_uses_the_geocode_cache(db: Session) -> None:
+    from app.geo import nearby_listings
+
+    a = _car(db, "n1", "Braunschweig", "DE", "38112", spread_eur=500)
+    b = _car(db, "n2", "Hannover", "DE", spread_eur=800)
+    c = _car(db, "n3", "Hannover", "DE", spread_eur=-50)
+    d = _car(db, "n4", "Milano", "IT", spread_eur=900)
+    for key, (lat, lon) in PLACES.items():
+        country = key.split("|")[0].upper()
+        db.add(GeoCache(key=key, country=country, lat=lat, lon=lon, resolved_at=NOW))
+    db.commit()
+    here, rows = nearby_listings(db, a, 100)
+    assert here is not None and [(x.id, km) for x, km in rows] == [(b.id, 55)]
+    _, rows = nearby_listings(db, a, 100, positive_only=False)
+    assert sorted(x.id for x, _ in rows) == sorted([b.id, c.id])
+    _, rows = nearby_listings(db, a, 1000)
+    assert d.id in [x.id for x, _ in rows]
+    _, rows = nearby_listings(db, a, 25)
+    assert rows == []
+    unknown = _car(db, "n5", "Atlantis", "DE")
+    db.commit()
+    assert nearby_listings(db, unknown, 100) == (None, [])

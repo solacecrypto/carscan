@@ -62,7 +62,7 @@
     <div><div class="text-xs text-ink-400">Market</div><div class="text-sm font-semibold">{{ {'A': 'Sells fast', 'B': 'Sells well', 'C': 'Average', 'D': 'Slow', 'E': 'Hard to sell'}[market.grade] }}</div><div class="text-[11px] text-ink-400">{% if market.expected_days %}≈ {{ market.expected_days }} days{% else %}{{ market.n_active }} rivals in NL{% endif %}</div></div>
     {% else %}<div><div class="text-xs text-ink-400">Market</div><div class="text-sm text-ink-400">no data yet</div></div>{% endif %}
   </a>
-  <a href="#pickup" class="card p-3 hover:ring-brand-400">
+  <a href="#map-card" class="card p-3 hover:ring-brand-400">
     <div class="text-xs text-ink-400">Pickup</div>
     <div class="mt-0.5 text-xl font-bold">{% if trip %}≈ {{ trip.km }} km{% else %}–{% endif %}</div>
     <div class="text-[11px] text-ink-400">{% if trip %}{{ trip.hours_one_way }} h one way · {{ trip.total_eur|eur }} fuel + tolls{% else %}{{ (l.postcode or '') ~ ' ' ~ (l.city or '') }}{% endif %}</div>
@@ -337,6 +337,59 @@
       <p class="mt-2 text-xs text-ink-300">Indicative. From the Dutch ads we track on AutoScout24.nl and Marktplaats, scanned twice a day. The sell-through signal switches on once enough tracked ads have disappeared.</p>
       {% else %}
       <p class="text-sm text-ink-400">No NL market data for this model yet.</p>
+      {% endif %}
+    </div>
+    <div id="map-card" class="card p-4">
+      <h2>Location &amp; nearby <span class="text-xs font-normal text-ink-300">rough: the ad's town, not the street</span></h2>
+      {% if coords %}
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+      <div id="map" class="mt-2 h-64 w-full rounded-xl bg-ink-100"></div>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="text-ink-500">Other cars within</span>
+        {% for r in [25, 50, 100, 150, 250] %}
+        <button hx-get="/listings/{{ l.id }}/nearby?km={{ r }}" hx-target="#nearby-{{ l.id }}" hx-swap="outerHTML" hx-include="#nearby-all" class="nearby-km pill border border-ink-200 px-3 py-1.5 text-ink-600 hover:border-brand-400" data-km="{{ r }}">{{ r }} km</button>
+        {% endfor %}
+        <label class="ml-1 flex cursor-pointer items-center gap-1 text-ink-500"><input type="checkbox" id="nearby-all" name="all" value="1" class="h-3.5 w-3.5"> all cars, not only positive return</label>
+        <a href="https://www.google.com/maps/search/?api=1&query={{ ((l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' ' ~ l.country)|trim|urlencode }}" target="_blank" rel="noopener" class="ml-auto underline">Open in Google Maps ↗</a>
+      </div>
+      <div id="nearby-{{ l.id }}" class="mt-2" hx-get="/listings/{{ l.id }}/nearby?km=50" hx-trigger="load" hx-swap="outerHTML"><p class="text-xs text-ink-400">looking around…</p></div>
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <script>
+        (function () {
+          const here = [{{ coords.lat }}, {{ coords.lon }}];
+          const map = L.map('map', { scrollWheelZoom: false }).setView(here, 9);
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
+          const car = L.circleMarker(here, { radius: 9, color: '#e08a0b', fillColor: '#e08a0b', fillOpacity: 0.9 }).addTo(map).bindPopup('This car · {{ (l.city or "")|e }}');
+          let layer = L.layerGroup().addTo(map);
+          let circle = null;
+          function render(box) {
+            const markers = JSON.parse(box.dataset.markers || '[]');
+            const km = Number((box.previousElementSibling && box.previousElementSibling.querySelector('.nearby-km.active') || {}).dataset?.km || 50);
+            layer.clearLayers();
+            if (circle) map.removeLayer(circle);
+            circle = L.circle(here, { radius: km * 1000, color: '#e08a0b', weight: 1, fillOpacity: 0.04 }).addTo(map);
+            const pts = [here];
+            markers.forEach(m => {
+              const good = m.spread !== null && m.spread > 0;
+              L.circleMarker([m.lat, m.lon], { radius: 6, color: good ? '#15803d' : '#55657c', fillColor: good ? '#15803d' : '#55657c', fillOpacity: 0.8 })
+                .addTo(layer).bindPopup(`<a href="/listings/${m.id}">${m.title}</a><br>${m.km} km${good ? ' · +€ ' + m.spread.toLocaleString('de-DE') : ''}`);
+              pts.push([m.lat, m.lon]);
+            });
+            map.fitBounds(L.latLngBounds(pts).pad(0.2), { maxZoom: 11 });
+          }
+          document.body.addEventListener('htmx:afterSwap', e => {
+            if (e.target.id === 'nearby-{{ l.id }}') render(e.target);
+          });
+          document.querySelectorAll('.nearby-km').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('.nearby-km').forEach(x => x.classList.remove('active', 'bg-brand-500', 'text-ink-950', 'border-brand-400'));
+            b.classList.add('active', 'bg-brand-500', 'text-ink-950', 'border-brand-400');
+          }));
+          const first = document.querySelector('.nearby-km[data-km="50"]'); if (first) first.classList.add('active', 'bg-brand-500', 'text-ink-950', 'border-brand-400');
+          document.getElementById('nearby-all').addEventListener('change', () => { const a = document.querySelector('.nearby-km.active'); if (a) a.click(); });
+        })();
+      </script>
+      {% else %}
+      <p class="mt-1 text-sm text-ink-400">Location not resolved yet{% if not l.city and not l.postcode %} (the ad gives no place){% endif %}. Places are geocoded a few minutes after a car appears.</p>
       {% endif %}
     </div>
     <div id="pickup" class="card p-4">

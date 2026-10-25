@@ -194,6 +194,7 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "deal": get_deal_for_listing(db, listing.id),
             "market": market_for_listing(db, listing, datetime.now(UTC)),
             "trip": _trip(db, listing),
+            "coords": _coords(db, listing),
             "starred_ids": {w.listing_id for w in listing.watches if w.user_id == user.id},
         },
     )
@@ -204,6 +205,15 @@ SWATCHES = {
     "red": "#c22", "green": "#2a8a3e", "brown": "#6b4a2b", "beige": "#d8c9a5", "yellow": "#e6c21a",
     "orange": "#e5731a", "gold": "#c9a227", "purple": "#6f3fa0", "other": "#b0b0b0",
 }  # fmt: skip
+
+
+def _coords(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]
+    from app.geo import lookup
+
+    g = lookup(db, listing.city, listing.postcode, listing.country)
+    if g is None or g.lat is None:
+        return None
+    return {"lat": g.lat, "lon": g.lon}
 
 
 def _trip(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]

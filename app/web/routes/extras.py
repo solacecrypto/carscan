@@ -252,6 +252,47 @@ def add_note(
     return _back(request, listing, "listings/_notes.html")
 
 
+@router.get("/listings/{listing_id}/nearby", response_class=HTMLResponse)
+def listing_nearby(
+    request: Request, db: DB, user: CurrentUser, listing_id: int, km: int = 50, all: str = ""
+) -> HTMLResponse:
+    """Other cars around this one, for planning several viewings on one trip."""
+    from app.geo import lookup, nearby_listings
+
+    listing = _listing(db, listing_id)
+    km = km if km in (25, 50, 100, 150, 250) else 50
+    positive_only = all != "1"
+    here, rows = nearby_listings(db, listing, km, positive_only=positive_only)
+    markers = []
+    for x, dist in rows:
+        g = lookup(db, x.city, x.postcode, x.country)
+        if g and g.lat is not None:
+            markers.append(
+                {
+                    "id": x.id,
+                    "lat": g.lat,
+                    "lon": g.lon,
+                    "title": f"{x.make} {x.model} · € {x.price_eur:,}".replace(",", "."),
+                    "km": dist,
+                    "spread": x.spread_eur,
+                }
+            )
+    starred = set(db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id)))
+    return templates.TemplateResponse(
+        request,
+        "listings/_nearby.html",
+        {
+            "listing": listing,
+            "here": here,
+            "rows": rows,
+            "km": km,
+            "positive_only": positive_only,
+            "markers": markers,
+            "starred_ids": starred,
+        },
+    )
+
+
 @router.post("/listings/{listing_id}/translate", dependencies=[Depends(csrf_protect)])
 def translate_listing(request: Request, db: DB, user: CurrentUser, listing_id: int) -> HTMLResponse:
     """Translate this car's description now; the result is stored, so it is done once."""
