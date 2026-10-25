@@ -252,17 +252,66 @@ def add_note(
     return _back(request, listing, "listings/_notes.html")
 
 
+NEARBY_CONDITIONS = ("accident_free", "chain_replaced", "full_history", "papers_ok", "no_defects")
+
+
+def _passes_condition(x: Listing, cond: list[str]) -> bool:
+    ins = x.insight
+    tags = {t.get("key") for t in ((ins.tags if ins else None) or [])}
+    if "accident_free" in cond and ("accident_free" not in tags or (ins and ins.accident == "yes")):
+        return False
+    if "chain_replaced" in cond and "chain_replaced" not in tags:
+        return False
+    if "full_history" in cond and "full_history" not in tags:
+        return False
+    if "papers_ok" in cond and "papers_missing" in tags:
+        return False
+    admitted = bool(x.repair_cost_eur) or bool(ins and ins.accident == "yes")
+    return not ("no_defects" in cond and admitted)
+
+
 @router.get("/listings/{listing_id}/nearby", response_class=HTMLResponse)
 def listing_nearby(
-    request: Request, db: DB, user: CurrentUser, listing_id: int, km: int = 50, all: str = ""
+    request: Request,
+    db: DB,
+    user: CurrentUser,
+    listing_id: int,
+    km: int = 50,
+    min_spread: int = 1,
+    same_model: str = "",
 ) -> HTMLResponse:
-    """Other cars around this one, for planning several viewings on one trip."""
+    """Other cars around this one, for planning several viewings on one trip. Chips narrow
+    it down: minimum spread, admitted condition, brand, same model."""
+    from collections import Counter
+
+    from sqlalchemy.orm import selectinload
+
     from app.geo import lookup, nearby_listings
 
     listing = _listing(db, listing_id)
     km = km if km in (25, 50, 100, 150, 250) else 50
-    positive_only = all != "1"
-    here, rows = nearby_listings(db, listing, km, positive_only=positive_only)
+    cond = [c for c in request.query_params.getlist("cond") if c in NEARBY_CONDITIONS]
+    makes = [m for m in request.query_params.getlist("make") if m]
+    here, found = nearby_listings(db, listing, km, positive_only=min_spread > 0, limit=400)
+    if found:  # one query for the condition tags of everything in range
+        ids = [x.id for x, _ in found]
+        db.execute(
+            select(Listing).where(Listing.id.in_(ids)).options(selectinload(Listing.insight))
+        )
+    total = len(found)
+    brands = sorted(Counter(x.make for x, _ in found).items(), key=lambda t: (-t[1], t[0]))[:8]
+    rows = []
+    for x, dist in found:
+        if min_spread > 1 and (x.spread_eur or 0) < min_spread:
+            continue
+        if makes and x.make not in makes:
+            continue
+        if same_model and (x.model_key or x.model) != (listing.model_key or listing.model):
+            continue
+        if cond and not _passes_condition(x, cond):
+            continue
+        rows.append((x, dist))
+    rows = rows[:80]
     markers = []
     for x, dist in rows:
         g = lookup(db, x.city, x.postcode, x.country)
@@ -286,7 +335,12 @@ def listing_nearby(
             "here": here,
             "rows": rows,
             "km": km,
-            "positive_only": positive_only,
+            "min_spread": min_spread,
+            "cond": cond,
+            "makes": makes,
+            "same_model": bool(same_model),
+            "brands": brands,
+            "total": total,
             "markers": markers,
             "starred_ids": starred,
         },

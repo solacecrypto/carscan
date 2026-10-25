@@ -1,8 +1,28 @@
-<div id="nearby-{{ listing.id }}" data-markers='{{ markers|tojson }}'>
+<div id="nearby-{{ listing.id }}" data-markers='{{ markers|tojson }}' data-km="{{ km }}">
   {% if not here %}
   <p class="text-sm text-ink-400">This car's location is not resolved yet, so nothing can be measured from it.</p>
   {% else %}
-  <p class="mb-2 text-xs text-ink-500">{{ rows|length }} car{{ '' if rows|length == 1 else 's' }} within {{ km }} km{{ ' with a positive return' if positive_only else '' }}, nearest first. Star the ones to visit; your Starred tab becomes the route list.</p>
+  {% set chip = 'pill inline-block cursor-pointer border border-ink-200 px-2.5 py-1 text-[11px] text-ink-600 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950' %}
+  <form hx-get="/listings/{{ listing.id }}/nearby" hx-trigger="change" hx-target="#nearby-{{ listing.id }}" hx-swap="outerHTML" class="space-y-1.5 text-xs">
+    <div class="flex flex-wrap items-center gap-1">
+      <span class="w-14 text-ink-400">within</span>
+      {% for r in [25, 50, 100, 150, 250] %}<label><input type="radio" name="km" value="{{ r }}" class="peer sr-only" {{ 'checked' if r == km }}><span class="{{ chip }}">{{ r }} km</span></label>{% endfor %}
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+      <span class="w-14 text-ink-400">spread ≥</span>
+      {% for v, t in [(0, 'any'), (1, '> 0'), (500, '€ 500'), (1000, '€ 1.000'), (2000, '€ 2.000')] %}<label><input type="radio" name="min_spread" value="{{ v }}" class="peer sr-only" {{ 'checked' if v == min_spread }}><span class="{{ chip }}">{{ t }}</span></label>{% endfor %}
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+      <span class="w-14 text-ink-400">condition</span>
+      {% for v, t in [('accident_free', 'accident-free'), ('chain_replaced', 'chain replaced'), ('full_history', 'full history'), ('papers_ok', 'papers ok'), ('no_defects', 'no admitted defects')] %}<label><input type="checkbox" name="cond" value="{{ v }}" class="peer sr-only" {{ 'checked' if v in cond }}><span class="{{ chip }}">{{ t }}</span></label>{% endfor %}
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+      <span class="w-14 text-ink-400">brand</span>
+      {% for b, n in brands %}<label><input type="checkbox" name="make" value="{{ b }}" class="peer sr-only" {{ 'checked' if b in makes }}><span class="{{ chip }}">{{ b }} <span class="opacity-60">{{ n }}</span></span></label>{% endfor %}
+      <label><input type="checkbox" name="same_model" value="1" class="peer sr-only" {{ 'checked' if same_model }}><span class="{{ chip }}">same model as this car</span></label>
+    </div>
+  </form>
+  <p class="mb-1 mt-2 text-xs text-ink-500">{{ rows|length }} car{{ '' if rows|length == 1 else 's' }} within {{ km }} km, nearest first{% if total > rows|length %} ({{ total }} before filters){% endif %}. Star the ones to visit; your Starred tab becomes the route list.</p>
   <ul class="divide-y divide-ink-100 text-sm">
     {% for x, dist in rows %}
     <li class="flex items-center gap-3 py-2">
@@ -10,10 +30,11 @@
       <span class="min-w-0 flex-1">
         <a href="/listings/{{ x.id }}" class="block truncate font-medium">{{ x.make }} {{ x.model }} {{ x.first_registration.year if x.first_registration }} <span class="font-normal text-ink-400">· {{ x.mileage_km|km }} · {{ x.gearbox or '–' }}</span></a>
         <span class="block text-xs text-ink-500">{{ x.city or '' }} · <b>{{ dist }} km</b> · {{ x.price_eur|eur }}{% if x.spread_eur is not none %} · <span class="{{ 'text-good-700' if x.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if x.spread_eur > 0 }}{{ x.spread_eur|eur }}</span>{% endif %} · {{ x.source }}</span>
+        {% with l=x %}{% include "listings/_insight_badges.html" %}{% endwith %}
       </span>
       {% with l=x, size='' %}{% include "listings/_star.html" %}{% endwith %}
     </li>
-    {% else %}<li class="py-3 text-sm text-ink-400">No other cars in that range{{ ' with a positive return; try "all cars"' if positive_only else '' }}.</li>{% endfor %}
+    {% else %}<li class="py-3 text-sm text-ink-400">No cars match in that range. Loosen a chip.</li>{% endfor %}
   </ul>
   {% endif %}
 </div>

@@ -97,3 +97,20 @@ def test_nearby_listings_uses_the_geocode_cache(db: Session) -> None:
     unknown = _car(db, "n5", "Atlantis", "DE")
     db.commit()
     assert nearby_listings(db, unknown, 100) == (None, [])
+
+
+def test_nearby_condition_filters(db: Session) -> None:
+    from app.insights.service import apply_rules
+    from app.web.routes.extras import _passes_condition
+
+    x = _car(db, "cf", "Hannover", "DE", spread_eur=300)
+    x.description = "Unfallfrei, Steuerkette erneuert, Scheckheftgepflegt."
+    apply_rules(x, NOW)
+    db.flush()
+    assert _passes_condition(x, ["accident_free", "chain_replaced", "full_history", "papers_ok"])
+    x.repair_cost_eur = 900
+    assert not _passes_condition(x, ["no_defects"])
+    y = _car(db, "cg", "Hannover", "DE")
+    y.description = "Unfallwagen, ohne Brief."
+    apply_rules(y, NOW)
+    assert not _passes_condition(y, ["accident_free"]) and not _passes_condition(y, ["papers_ok"])

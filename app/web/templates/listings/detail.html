@@ -344,14 +344,7 @@
       {% if coords %}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
       <div id="map" class="mt-2 h-64 w-full rounded-xl bg-ink-100"></div>
-      <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-        <span class="text-ink-500">Other cars within</span>
-        {% for r in [25, 50, 100, 150, 250] %}
-        <button hx-get="/listings/{{ l.id }}/nearby?km={{ r }}" hx-target="#nearby-{{ l.id }}" hx-swap="outerHTML" hx-include="#nearby-all" class="nearby-km pill border border-ink-200 px-3 py-1.5 text-ink-600 hover:border-brand-400" data-km="{{ r }}">{{ r }} km</button>
-        {% endfor %}
-        <label class="ml-1 flex cursor-pointer items-center gap-1 text-ink-500"><input type="checkbox" id="nearby-all" name="all" value="1" class="h-3.5 w-3.5"> all cars, not only positive return</label>
-        <a href="https://www.google.com/maps/search/?api=1&query={{ ((l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' ' ~ l.country)|trim|urlencode }}" target="_blank" rel="noopener" class="ml-auto underline">Open in Google Maps ↗</a>
-      </div>
+      <p class="mt-1 text-xs"><a href="https://www.google.com/maps/search/?api=1&query={{ ((l.postcode or '') ~ ' ' ~ (l.city or '') ~ ' ' ~ l.country)|trim|urlencode }}" target="_blank" rel="noopener" class="underline">Open in Google Maps ↗</a></p>
       <div id="nearby-{{ l.id }}" class="mt-2" hx-get="/listings/{{ l.id }}/nearby?km=50" hx-trigger="load" hx-swap="outerHTML"><p class="text-xs text-ink-400">looking around…</p></div>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <script>
@@ -364,7 +357,7 @@
           let circle = null;
           function render(box) {
             const markers = JSON.parse(box.dataset.markers || '[]');
-            const km = Number((box.previousElementSibling && box.previousElementSibling.querySelector('.nearby-km.active') || {}).dataset?.km || 50);
+            const km = Number(box.dataset.km || 50);
             layer.clearLayers();
             if (circle) map.removeLayer(circle);
             circle = L.circle(here, { radius: km * 1000, color: '#e08a0b', weight: 1, fillOpacity: 0.04 }).addTo(map);
@@ -380,12 +373,6 @@
           document.body.addEventListener('htmx:afterSwap', e => {
             if (e.target.id === 'nearby-{{ l.id }}') render(e.target);
           });
-          document.querySelectorAll('.nearby-km').forEach(b => b.addEventListener('click', () => {
-            document.querySelectorAll('.nearby-km').forEach(x => x.classList.remove('active', 'bg-brand-500', 'text-ink-950', 'border-brand-400'));
-            b.classList.add('active', 'bg-brand-500', 'text-ink-950', 'border-brand-400');
-          }));
-          const first = document.querySelector('.nearby-km[data-km="50"]'); if (first) first.classList.add('active', 'bg-brand-500', 'text-ink-950', 'border-brand-400');
-          document.getElementById('nearby-all').addEventListener('change', () => { const a = document.querySelector('.nearby-km.active'); if (a) a.click(); });
         })();
       </script>
       {% else %}
