@@ -684,3 +684,49 @@ def test_free_text_search(client: TestClient, seeded: dict, db: Session) -> None
 def test_filter_sidebar_scrolls_within_the_viewport(client: TestClient, seeded: dict) -> None:
     aside = client.get("/listings").text.split('id="filter-panel"')[1].split(">")[0]
     assert "lg:sticky" in aside and "lg:overflow-y-auto" in aside and "100vh" in aside
+
+
+def test_translate_button_translates_once(
+    client: TestClient, seeded: dict, db: Session, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    from app.translate import TranslateError
+
+    row = seeded["a"]
+    row.description = "Getriebe laut, rauscht. Unfallfrei."
+    db.commit()
+    page = client.get(f"/listings/{row.id}").text
+    assert "Translate to English" in page
+    token = _csrf(page)
+    hx = {"HX-Request": "true"}
+    calls: list[str] = []
+
+    class Fake:
+        name = "fake"
+
+        def translate(self, text: str) -> str:
+            calls.append(text)
+            return "EN: " + text
+
+    monkeypatch.setattr("app.translate.default_translator", lambda: Fake())
+    r = client.post(f"/listings/{row.id}/translate", data={"csrf_token": token}, headers=hx)
+    assert r.status_code == 200 and "EN: Getriebe laut" in r.text
+    assert "Translate to English" not in r.text
+    db.expire_all()
+    assert db.get(Listing, row.id).description_en.startswith("EN:")
+    assert "Translate to English" not in client.get(f"/listings/{row.id}").text
+    n = len(calls)
+    client.post(f"/listings/{row.id}/translate", data={"csrf_token": token}, headers=hx)
+    assert len(calls) == n  # already translated: no new request
+
+    class Refusing:
+        name = "fake"
+
+        def translate(self, text: str) -> str:
+            raise TranslateError("HTTP 302")
+
+    row2 = seeded["b"]
+    row2.description = "Noch ein Auto."
+    db.commit()
+    monkeypatch.setattr("app.translate.default_translator", lambda: Refusing())
+    r = client.post(f"/listings/{row2.id}/translate", data={"csrf_token": token}, headers=hx)
+    assert "refused" in r.text and "Translate to English" in r.text

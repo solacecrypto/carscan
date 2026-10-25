@@ -127,6 +127,10 @@ def test_translate_job_backs_off_after_a_block(monkeypatch) -> None:  # type: ig
         calls.append(1)
         return {"translated": 0, "evidence": 0, "failed": 1}
 
+    from app.config import Settings
+
+    auto = Settings(database_url="postgresql://x/y", secret_key="s", translate_auto=True)
+    monkeypatch.setattr("app.config.get_settings", lambda: auto)
     monkeypatch.setattr("app.translate.translate_pending", fake_pending)
     monkeypatch.setattr("app.translate.default_translator", lambda: FakeTranslator())
     monkeypatch.setattr(jobs, "_TRANSLATE_COOLDOWN_UNTIL", jobs._TRANSLATE_COOLDOWN_UNTIL)

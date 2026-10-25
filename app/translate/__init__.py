@@ -202,6 +202,23 @@ def translate_evidence(row: Listing, translator: Translator) -> int:
     return len(todo)
 
 
+def translate_one(
+    session: Session, listing: Listing, translator: Translator, now: datetime
+) -> None:
+    """Translate one car now (the button on its page): description, tag evidence, and the
+    repair estimate that reads the English text. Raises TranslateError when the provider
+    refuses, so the page can say so."""
+    from app.storage.listings import apply_costs
+
+    if listing.description_en:
+        return
+    text = translator.translate(listing.description or "")
+    listing.description_en = text.strip() or None
+    apply_costs(listing, now)
+    translate_evidence(listing, translator)
+    session.flush()
+
+
 def translate_pending(
     session: Session,
     translator: Translator,

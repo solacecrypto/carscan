@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from statistics import median
 from typing import Any
 
+import httpx
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import (
     FileResponse,
@@ -249,6 +250,27 @@ def add_note(
                 )
         db.flush()
     return _back(request, listing, "listings/_notes.html")
+
+
+@router.post("/listings/{listing_id}/translate", dependencies=[Depends(csrf_protect)])
+def translate_listing(request: Request, db: DB, user: CurrentUser, listing_id: int) -> HTMLResponse:
+    """Translate this car's description now; the result is stored, so it is done once."""
+    from app.translate import TranslateError, default_translator, translate_one
+
+    listing = _listing(db, listing_id)
+    error = None
+    translator = default_translator()
+    if translator is None:
+        error = "translation is switched off (TRANSLATE_PROVIDER)"
+    else:
+        try:
+            translate_one(db, listing, translator, datetime.now(UTC))
+        except (TranslateError, httpx.HTTPError) as e:
+            error = f"the translation service refused ({e}); try again in a few minutes"
+    ctx = {"listing": listing, "translate_error": error}
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(request, "listings/_description.html", ctx)
+    return RedirectResponse(f"/listings/{listing.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/push/key")

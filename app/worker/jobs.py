@@ -512,11 +512,13 @@ def enrich_backlog(
 
 
 def translate_backlog(limit: int | None = None) -> dict[str, int]:
-    """Catch-up pass: English text for descriptions that have none yet."""
-    if dormant():
-        return {}
+    """Catch-up pass: English text for descriptions that have none yet (TRANSLATE_AUTO=true;
+    by default translation happens on demand from the car page)."""
     from app.config import get_settings
     from app.translate import default_translator, translate_pending
+
+    if dormant() or not get_settings().translate_auto:
+        return {}
 
     global _TRANSLATE_COOLDOWN_UNTIL
     translator = default_translator()

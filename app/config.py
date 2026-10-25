@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     translate_provider: str = "google"
     deepl_api_key: SecretStr = SecretStr("")
     translate_per_run: int = 6
+    translate_auto: bool = False  # background translation of every car; off = on demand only
     sentry_dsn: str = ""  # error reports with stack traces (optional)
     # web push (docs/notifications.md): generate with `carscan push keygen`
     vapid_public_key: str = ""
