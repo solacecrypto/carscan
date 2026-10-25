@@ -338,6 +338,8 @@ def test_kleinanzeigen_ad_page_detail() -> None:
         and len(det["description"]) > 200
     )
     assert det["details"]["Getriebe"] == "Manuell" and det["details"]["Leistung"].endswith("PS")
+    # every gallery image carries id="viewad-image": no photo may be listed twice
+    assert det["images"] and len(det["images"]) == len(set(det["images"]))
     items = parse_articles((FIX / "kleinanzeigen" / "search_page1.html").read_text())
     item = next(i for i in items if i["id"] == "3537159648")
     raw = RawListing(

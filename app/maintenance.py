@@ -103,3 +103,39 @@ def prune(session: Session, now: datetime, batch: int = 500) -> dict[str, int]:
     session.commit()
     log.info("maintenance.prune", **counts)
     return counts
+
+
+def dedupe_photos(session: Session, batch: int = 500) -> int:
+    """Remove repeated URLs from every listing's photo list (an old Kleinanzeigen parser bug
+    stored each gallery image twice), also inside the raw detail blob. Returns rows changed."""
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.db.models import Listing
+
+    changed = 0
+    last = 0
+    while True:
+        rows = list(
+            session.scalars(
+                select(Listing).where(Listing.id > last).order_by(Listing.id).limit(batch)
+            )
+        )
+        if not rows:
+            break
+        for row in rows:
+            last = row.id
+            photos = list(dict.fromkeys(row.photos or []))
+            touched = False
+            if photos != (row.photos or []):
+                row.photos = photos
+                touched = True
+            detail = (row.raw or {}).get("detail")
+            if isinstance(detail, dict) and isinstance(detail.get("images"), list):
+                images = list(dict.fromkeys(detail["images"]))
+                if images != detail["images"]:
+                    detail["images"] = images
+                    flag_modified(row, "raw")
+                    touched = True
+            changed += touched
+        session.commit()
+    return changed

@@ -585,6 +585,17 @@ def prune_cmd() -> None:
     typer.echo(" ".join(f"{k}={v}" for k, v in counts.items()))
 
 
+@app.command("photos-dedupe")
+def photos_dedupe_cmd() -> None:
+    """Drop repeated photo URLs from stored listings (one-off repair after a parser bug)."""
+    from app.db import db_session
+    from app.maintenance import dedupe_photos
+
+    with db_session() as s:
+        n = dedupe_photos(s)
+    typer.echo(f"fixed {n} listings")
+
+
 push = typer.Typer(help="web push")
 app.add_typer(push, name="push")
 

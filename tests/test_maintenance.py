@@ -143,3 +143,31 @@ def test_automobile_it_search_blob_is_slimmed() -> None:
     slim = slim_search(d)
     assert slim["pictures"] == [{"sizes": {"XL": {"href": "xl"}}}]
     assert "imageRules" not in slim and "googleRating" not in slim and slim["title"] == "BMW 118i"
+
+
+def test_dedupe_photos(db: Session) -> None:
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.maintenance import dedupe_photos
+    from app.normalize import NormalizedListing
+
+    dup = _car(db, "dup", None)
+    dup.photos = ["https://i/a", "https://i/a", "https://i/b", "https://i/a"]
+    dup.raw = {"detail": {"images": ["https://i/a", "https://i/a"]}}
+    flag_modified(dup, "raw")
+    clean = _car(db, "clean", None)
+    clean.photos = ["https://i/x", "https://i/y"]
+    db.commit()
+    assert dedupe_photos(db) == 1
+    db.expire_all()
+    assert dup.photos == ["https://i/a", "https://i/b"]
+    assert dup.raw["detail"]["images"] == ["https://i/a"]
+    assert clean.photos == ["https://i/x", "https://i/y"]
+    assert dedupe_photos(db) == 0
+    # the normalizer never lets repeats in again
+    n = NormalizedListing(
+        source="x", source_listing_id="1", url="https://x/1", make="BMW", model="320i",
+        price_eur=1, seller_type=SellerType.dealer, country="DE",
+        photos=["https://i/a", "https://i/a", "https://i/b"],
+    )  # fmt: skip
+    assert n.photos == ["https://i/a", "https://i/b"]

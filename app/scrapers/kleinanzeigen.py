@@ -105,10 +105,14 @@ def parse_ad_page(html: str) -> dict[str, Any]:
         parts = [x.strip() for x in re.split(r"\s{2,}|\n", li.text().strip()) if x.strip()]
         if len(parts) >= 2:
             details[parts[0]] = " ".join(parts[1:])
-    images = [
-        i.attributes.get("src") or i.attributes.get("data-src")
-        for i in tree.css("#viewad-image, .galleryimage-element img")
-    ]
+    # every gallery image carries id="viewad-image", so a combined selector would return each
+    # photo twice; dedupe while keeping the order
+    images = list(
+        dict.fromkeys(
+            i.attributes.get("src") or i.attributes.get("data-src") or ""
+            for i in tree.css("#viewad-image, .galleryimage-element img")
+        )
+    )
     seller = tree.css_first("#viewad-contact")
     return {
         "description": scrub_text(node.text().strip()),

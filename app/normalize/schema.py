@@ -62,7 +62,8 @@ class NormalizedListing(BaseModel):
             if isinstance(v, str):
                 object.__setattr__(self, f, clean_text(v))
         object.__setattr__(self, "raw", clean_json(self.raw))
-        object.__setattr__(self, "photos", [p for p in (clean_text(x) for x in self.photos) if p])
+        photos = [p for p in (clean_text(x) for x in self.photos) if p]
+        object.__setattr__(self, "photos", list(dict.fromkeys(photos)))  # no repeats, order kept
         return self
 
     @property
