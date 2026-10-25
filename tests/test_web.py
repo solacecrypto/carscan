@@ -501,6 +501,7 @@ def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, d
     db.commit()
     page = client.get(f"/listings/{row.id}").text
     assert "Starred by" in page and "No notes yet" in page and 'href="/sellers/Auto%20M' in page
+    assert "Notes" in page and 'hx-post="/listings/' in page
     token = _csrf(page)
     r = client.post(
         f"/listings/{row.id}/watch",

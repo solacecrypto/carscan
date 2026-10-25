@@ -1,14 +1,13 @@
-<div id="notes-{{ listing.id }}" class="card mt-4 p-4">
-  <h2>Notes <span class="text-xs font-normal text-ink-300">shared with the group</span></h2>
-  <ul class="mt-2 space-y-2 text-sm">
-    {% for n in listing.notes|sort(attribute='created_at') %}
+<div id="notes-{{ listing.id }}">
+  <ul class="max-h-64 space-y-1.5 overflow-y-auto text-sm">
+    {% for n in listing.notes|sort(attribute='created_at', reverse=true) %}
     <li class="rounded-lg bg-ink-50 px-3 py-2"><span class="whitespace-pre-wrap">{{ n.text }}</span>
       <span class="block text-[11px] text-ink-400">{{ n.user.username }} · {{ n.created_at|timeago }}</span></li>
-    {% else %}<li class="text-xs text-ink-300">No notes yet.</li>{% endfor %}
+    {% else %}<li class="text-xs text-ink-400">No notes yet. Anything the group should know about this car: calls, prices named, viewing dates.</li>{% endfor %}
   </ul>
-  <form hx-post="/listings/{{ listing.id }}/notes" hx-target="#notes-{{ listing.id }}" hx-swap="outerHTML" method="post" action="/listings/{{ listing.id }}/notes" class="mt-3 flex gap-2">
+  <form hx-post="/listings/{{ listing.id }}/notes" hx-target="#notes-{{ listing.id }}" hx-swap="outerHTML" method="post" action="/listings/{{ listing.id }}/notes" class="mt-2 flex gap-2">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="text" name="text" placeholder="e.g. called, seller wants 5.800, viewing Saturday" class="input !mt-0 flex-1" maxlength="2000">
-    <button class="btn-outline shrink-0">Add</button>
+    <input type="text" name="text" placeholder="Add a note…" class="input !mt-0 flex-1" maxlength="2000" autocomplete="off">
+    <button class="btn-primary shrink-0 !px-3">Add</button>
   </form>
 </div>

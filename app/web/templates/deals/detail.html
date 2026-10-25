@@ -72,7 +72,7 @@
       <ul class="text-sm">{% for nc, km in near_cars %}<li><a href="/listings/{{ nc.id }}" class="underline">{{ nc.make }} {{ nc.model }} {{ nc.first_registration.year if nc.first_registration }}</a> · {{ nc.price_eur|eur }} · +{{ nc.spread_eur|eur }} · {{ nc.city or '' }} · {{ km }} km</li>{% endfor %}</ul>
       {% endif %}
       <h2 class="mt-4 font-semibold">Notes on the car</h2>
-      {% with listing=d.listing %}{% include "listings/_notes.html" %}{% endwith %}
+      <div class="mt-2 rounded-xl border border-ink-100 p-3">{% with listing=d.listing %}{% include "listings/_notes.html" %}{% endwith %}</div>
       <h2 class="mt-4 font-semibold">History</h2>
       <ul class="mt-2 space-y-1 text-sm">
         {% for e in d.events|reverse %}
