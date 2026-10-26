@@ -293,3 +293,12 @@ def test_bytbil_unknown_page_still_raises() -> None:
 
     with pytest.raises(ParseError):
         parse_items("<html><body>Access denied</body></html>")
+
+
+def test_kleinanzeigen_number_regexes_need_a_digit() -> None:
+    from app.scrapers.kleinanzeigen import _KM_RE, _parse_price
+
+    assert _parse_price("12.500 € VB") == (12500, True)
+    assert _parse_price(". €") == (None, False)  # used to raise int("")
+    assert _KM_RE.search("ca. km, genau 150.000 km").group(1) == "150.000"
+    assert _KM_RE.search("ca. km") is None

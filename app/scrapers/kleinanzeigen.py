@@ -18,8 +18,9 @@ log = structlog.get_logger()
 
 ORIGIN = "https://www.kleinanzeigen.de"
 MAX_PAGES = 50
-_PRICE_RE = re.compile(r"([\d.]+)\s*€")
-_KM_RE = re.compile(r"([\d.]+)\s*km")
+# a digit is required: "[\\d.]+" alone also matched a lone dot ("ca. … km") → int("") crash
+_PRICE_RE = re.compile(r"(\d[\d.]*)\s*€")
+_KM_RE = re.compile(r"(\d[\d.]*)\s*km")
 _EZ_RE = re.compile(r"EZ\s*(\d{2})/(\d{4})")
 _LOC_RE = re.compile(r"^(\d{5})\s+(.+)$")
 BODY_HINTS = (
