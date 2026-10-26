@@ -153,3 +153,44 @@ def test_geocode_address_and_user_home_overrides_the_base(db: Session) -> None:
     assert (
         trip(db, car, base, TRAVEL, user=User(username="n", password_hash="x"))["from"] == "Utrecht"
     )  # type: ignore[index]
+
+
+def test_max_km_filter(db: Session) -> None:
+    from sqlalchemy import select
+
+    from app.storage.filters import apply_sql, parse_filters
+
+    near = _car(db, "k1", "Hannover", "DE")  # ~315 km straight from Utrecht
+    far = _car(db, "k2", "Milano", "IT")
+    _car(db, "k3", "Atlantis", "DE")  # never placed on the map
+    client = httpx.Client(transport=httpx.MockTransport(_handler))
+    geocode_backlog(db, client, base=("Utrecht", "", "NL"), sleep=lambda _s: None)
+    utrecht = (52.09, 5.12)
+    f = parse_filters({"max_km": "450", "profitable": "false"})
+    assert f["max_km"] == 450
+    ids = set(db.scalars(apply_sql(select(Listing.id), f, utrecht)))
+    assert ids == {near.id}
+    ids = set(
+        db.scalars(
+            apply_sql(
+                select(Listing.id),
+                parse_filters({"max_km": "2000", "profitable": "false"}),
+                utrecht,
+            )
+        )
+    )
+    assert ids == {near.id, far.id}
+    assert (
+        set(
+            db.scalars(
+                apply_sql(
+                    select(Listing.id),
+                    parse_filters({"max_km": "300", "profitable": "false"}),
+                    utrecht,
+                )
+            )
+        )
+        == set()
+    )
+    # without a viewer point the filter is ignored (alert matching, no location)
+    assert len(list(db.scalars(apply_sql(select(Listing.id), f, None)))) == 3

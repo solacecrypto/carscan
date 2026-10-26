@@ -43,7 +43,8 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         page = max(1, int(request.query_params.get("page") or 1))
     except ValueError:
         page = 1
-    stmt = _filtered_stmt(f)
+    here = _here(db, user) if f.get("max_km") else None
+    stmt = _filtered_stmt(f, here)
     if f.get("starred"):
         stmt = stmt.join(Watch, (Watch.listing_id == Listing.id) & (Watch.user_id == user.id))
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
@@ -77,6 +78,7 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "colors": COLORS,
         "swatches": SWATCHES,
         "starred_ids": set(db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))),
+        "here_missing": bool(f.get("max_km")) and here is None,
         "presets": list(
             db.scalars(
                 select(FilterPreset)
@@ -99,8 +101,21 @@ def _clean_query(request: Request) -> str:
     return urlencode(pairs)
 
 
-def _filtered_stmt(f: dict) -> Select:  # type: ignore[type-arg]
-    stmt = apply_sql(select(Listing), f)
+def _here(db: DB, user: object) -> tuple[float, float] | None:
+    """The viewer's point for the distance filter: their home, else the configured base."""
+    from app.config import get_settings
+    from app.geo import base_point
+
+    st = get_settings()
+    pt = base_point(db, user, (st.base_city, st.base_postcode, st.base_country))
+    return (pt[0], pt[1]) if pt else None
+
+
+def _filtered_stmt(f: dict, here: tuple[float, float] | None = None) -> Select:  # type: ignore[type-arg]
+    from app.costs import get_cost_config
+
+    detour = float((get_cost_config().travel or {}).get("detour_factor", 1.25))
+    stmt = apply_sql(select(Listing), f, here, detour)
     if not f.get("include_inactive"):
         stmt = stmt.where(Listing.is_active.is_(True))
     if not f.get("include_duplicates"):
@@ -163,7 +178,8 @@ def listings_new_count(request: Request, db: DB, user: CurrentUser, since: str) 
     f = parse_filters(request.query_params, _models())
     f["new_hours"] = None
     f["price_dropped"] = False
-    stmt = _filtered_stmt(f).where(Listing.first_seen > since_dt)
+    here = _here(db, user) if f.get("max_km") else None
+    stmt = _filtered_stmt(f, here).where(Listing.first_seen > since_dt)
     count = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
     query = "&".join(
         p for p in _clean_query(request).split("&") if p and not p.startswith("since=")

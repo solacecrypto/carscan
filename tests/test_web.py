@@ -554,6 +554,19 @@ def test_color_and_body_filters(client: TestClient, seeded: dict, db: Session) -
     page = client.get("/listings?color=black").text
     assert 'name="color" value="black" class="peer sr-only" checked' in page
     assert "Body and colour" in page
+    # max distance: without a placed viewer the limit is ignored with a hint; with one, the
+    # seeded car's town is not geocoded, so a limit hides it; blank shows it
+    page = client.get("/listings?max_km=200&profitable=false").text
+    assert "320i" in page.split('id="results"')[1] and "not placed on the map yet" in page
+    seeded["user"].home_lat, seeded["user"].home_lon, seeded["user"].home_label = (
+        52.09,
+        5.12,
+        "Utrecht",
+    )
+    db.commit()
+    page = client.get("/listings?max_km=200&profitable=false").text
+    assert "No listings match" in page and "≤ 200 km" in page
+    assert "320i" in results("/listings?max_km=&profitable=false")
 
 
 def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Session) -> None:

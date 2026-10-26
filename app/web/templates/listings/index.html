@@ -13,7 +13,7 @@
   'gearbox': f.gearbox and true,
   'bodycolor': (f.body or f.color) and true,
   'seller': f.seller_type and true,
-  'country': f.country and true,
+  'country': (f.country or f.max_km) and true,
   'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok or f.tuv_min_months) and true,
   'listed': (f.new_hours or f.price_dropped) and true,
   'more': (f.include_inactive or f.include_duplicates or f.starred) and true,
@@ -193,7 +193,7 @@
         {{ pills('seller_type', [('', 'any'), ('dealer', 'dealer'), ('private', 'private')], f.seller_type) }}
       {% endcall %}
 
-      {% call row('country', 'Location', (f.country|join(', ')) if g.country else '') %}
+      {% call row('country', 'Location', (((f.country or [])|join(', ')) ~ (' · ' if f.country and f.max_km) ~ ('≤ ' ~ f.max_km ~ ' km' if f.max_km)) if g.country else '') %}
         <div class="flex flex-wrap gap-1.5">
           {% for c, t in [('DE', 'Germany'), ('BE', 'Belgium'), ('IT', 'Italy'), ('SE', 'Sweden')] %}
           <label class="cursor-pointer">
@@ -202,6 +202,11 @@
           </label>
           {% endfor %}
         </div>
+        <label class="label mt-3 block text-xs">Max distance from {{ 'you' if user.home_lat is not none else 'the base' }}
+          <div class="relative"><input type="number" name="max_km" value="{{ f.max_km or '' }}" min="10" step="10" placeholder="any distance" class="input !pr-10"><span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-400">km</span></div>
+        </label>
+        {% if here_missing %}<p class="mt-1 text-[11px] text-brand-300">Your location is not placed on the map yet, so the limit is ignored. Set it with the globe in the header.</p>{% endif %}
+        <p class="mt-1 text-[11px] text-ink-400">Road kilometres{% if user.home_lat is none %}; set your own location with the globe in the header{% endif %}. Cars whose town is not placed on the map yet are left out while this is set.</p>
       {% endcall %}
 
       {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ('papers ok' if f.papers_ok), ('TÜV ≥ ' ~ f.tuv_min_months ~ ' mo' if f.tuv_min_months)]|select|join(', ')) if g.condition else '') %}

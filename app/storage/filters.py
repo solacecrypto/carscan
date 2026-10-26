@@ -1,12 +1,13 @@
 """Saved-search filter criteria (the `filters` JSON), applied in Python for alerting
 and translated to SQL for the listings page."""
 
+import math
 from datetime import date
 from typing import Any
 
 from sqlalchemy import Select, extract, func
 
-from app.db.models import Listing, ListingInsight, SellerType
+from app.db.models import GeoCache, Listing, ListingInsight, SellerType
 from app.normalize.attrs import BODIES, COLORS
 
 FILTER_KEYS = (
@@ -34,6 +35,7 @@ FILTER_KEYS = (
     "body",
     "starred",
     "q",
+    "max_km",
 )
 
 
@@ -116,6 +118,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "starred": flag("starred") or None,  # only my starred cars (joined in the route)
         "q": text("q") or None,  # free words over make, model, variant, city, description
         "tuv_min_months": num("tuv_min_months"),  # inspection valid for at least this long
+        "max_km": num("max_km"),  # road km from the viewer; needs a base point, see apply_sql
         "price_dropped": flag("price_dropped"),
         "include_inactive": flag("include_inactive"),
         "include_duplicates": flag("include_duplicates"),
@@ -197,8 +200,17 @@ def _months_ahead(months: int) -> date:
     return date(today.year + y, m + 1, min(today.day, 28))
 
 
-def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
+def apply_sql(
+    stmt: Select,
+    filters: dict[str, Any],
+    here: tuple[float, float] | None = None,
+    detour: float = 1.25,
+) -> Select:
+    """`here` is the viewer's (lat, lon); without it `max_km` is ignored, since distance only
+    means something from a point. Alert matching has no viewer, so it never applies."""
     f = filters or {}
+    if f.get("max_km") and here is not None:
+        stmt = _within_km(stmt, here, float(f["max_km"]), detour)
     makes = _list(f.get("make"))
     if makes:
         stmt = stmt.where(func.lower(Listing.make).in_([m.lower() for m in makes]))
@@ -276,3 +288,26 @@ def apply_sql(stmt: Select, filters: dict[str, Any]) -> Select:
         if f.get("service_full"):
             stmt = stmt.where(ListingInsight.service_history == "full")
     return stmt
+
+
+def _within_km(stmt: Select, here: tuple[float, float], max_km: float, detour: float) -> Select:
+    """Cars whose geocoded place lies within `max_km` road kilometres of `here`: a bounding box
+    plus an equirectangular distance (good to ~1% at these scales) times the detour factor,
+    the same factor the pickup line on the car page uses."""
+    from app.geo import _key_sql
+
+    lat, lon = here
+    straight = max_km / max(detour, 1.0)
+    dlat = straight / 111.0
+    cos = max(0.2, math.cos(math.radians(lat)))
+    dlon = straight / (111.0 * cos)
+    dist_km = func.sqrt(
+        func.power((GeoCache.lat - lat) * 111.0, 2)
+        + func.power((GeoCache.lon - lon) * 111.0 * cos, 2)
+    )
+    return (
+        stmt.join(GeoCache, GeoCache.key == _key_sql())
+        .where(GeoCache.lat.between(lat - dlat, lat + dlat))
+        .where(GeoCache.lon.between(lon - dlon, lon + dlon))
+        .where(dist_km * detour <= max_km)
+    )
