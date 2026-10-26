@@ -79,6 +79,10 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     telegram_username: Mapped[str | None] = mapped_column(String(64))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # where this person drives from; distances and pickup costs are measured from here
+    home_label: Mapped[str | None] = mapped_column(String(200))
+    home_lat: Mapped[float | None] = mapped_column(Float)
+    home_lon: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

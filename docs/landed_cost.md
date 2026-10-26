@@ -114,7 +114,10 @@ can change once the translation arrives. Deliberately coarse: a flag, not a quot
 
 `app/geo.py` geocodes each car's city/postcode once through Nominatim (cached in
 `geo_cache`, one request per second, worker job every 5 minutes) and the base location from
-`BASE_CITY`/`BASE_POSTCODE`/`BASE_COUNTRY`. The detail and deal pages show road distance
+`BASE_CITY`/`BASE_POSTCODE`/`BASE_COUNTRY`. Each user can override that with their own
+address, postcode or city on `/account` (`users.home_lat/lon/label`, geocoded once through
+Nominatim free-text search); every distance, drive time and pickup cost they see is then
+measured from there. The detail and deal pages show road distance
 (straight line × `travel.detour_factor`), drive time at `travel.avg_speed_kmh`, fuel for the
 trip there and the drive back at `travel.fuel_eur_per_km`, and round-trip tolls per country.
 The transport line in the landed cost already assumes a pickup, so this is a planning aid and

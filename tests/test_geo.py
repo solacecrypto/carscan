@@ -4,7 +4,15 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.db import GeoCache, Listing, SellerType
-from app.geo import cache_key, geocode_backlog, geocode_live, haversine_km, nearby, trip
+from app.geo import (
+    cache_key,
+    geocode_address,
+    geocode_backlog,
+    geocode_live,
+    haversine_km,
+    nearby,
+    trip,
+)
 
 NOW = datetime(2026, 10, 16, tzinfo=UTC)
 TRAVEL = {
@@ -23,6 +31,13 @@ PLACES = {
 
 def _handler(request: httpx.Request) -> httpx.Response:
     p = request.url.params
+    if "q" in p:  # free-text search (a person's home)
+        q = p["q"].lower()
+        if "hannover" in q:
+            return httpx.Response(
+                200, json=[{"lat": "52.37", "lon": "9.73", "display_name": "Hannover, DE"}]
+            )
+        return httpx.Response(200, json=[])
     key = f"{p['countrycodes']}|{p.get('postalcode', '')}|{p.get('city', '').lower()}"
     hit = PLACES.get(key)
     return httpx.Response(200, json=[{"lat": str(hit[0]), "lon": str(hit[1])}] if hit else [])
@@ -114,3 +129,27 @@ def test_nearby_condition_filters(db: Session) -> None:
     y.description = "Unfallwagen, ohne Brief."
     apply_rules(y, NOW)
     assert not _passes_condition(y, ["accident_free"]) and not _passes_condition(y, ["papers_ok"])
+
+
+def test_geocode_address_and_user_home_overrides_the_base(db: Session) -> None:
+    from app.db import User
+
+    client = httpx.Client(transport=httpx.MockTransport(_handler))
+    assert geocode_address(client, "  Bahnhof  Hannover ") == (52.37, 9.73, "Hannover, DE")
+    assert geocode_address(client, "nowhere at all") is None
+    assert geocode_address(client, "   ") is None
+    car = _car(db, "h1", "Braunschweig", "DE", "38112")
+    geocode_backlog(db, client, base=("Utrecht", "", "NL"), sleep=lambda _s: None)
+    base = ("Utrecht", "", "NL")
+    from_base = trip(db, car, base, TRAVEL)
+    assert from_base and from_base["from"] == "Utrecht" and from_base["km"] > 300
+    u = User(
+        username="h", password_hash="x", home_lat=52.37, home_lon=9.73, home_label="Hannover, DE"
+    )
+    db.add(u)
+    db.flush()
+    mine = trip(db, car, base, TRAVEL, user=u)
+    assert mine and mine["from"] == "Hannover, DE" and mine["km"] < 100
+    assert (
+        trip(db, car, base, TRAVEL, user=User(username="n", password_hash="x"))["from"] == "Utrecht"
+    )  # type: ignore[index]

@@ -30,14 +30,18 @@ from app.web.templating import templates
 router = APIRouter(dependencies=[Depends(csrf_protect)])
 
 
-def _trip(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]
+def _trip(db: DB, listing: Listing, user: object = None) -> dict | None:  # type: ignore[type-arg]
     from app.config import get_settings
     from app.costs import get_cost_config
     from app.geo import trip
 
     st = get_settings()
     return trip(
-        db, listing, (st.base_city, st.base_postcode, st.base_country), get_cost_config().travel
+        db,
+        listing,
+        (st.base_city, st.base_postcode, st.base_country),
+        get_cost_config().travel,
+        user,
     )
 
 
@@ -57,7 +61,7 @@ def deals_index(
     all_deals = list(db.scalars(stmt))
     deals = [d for d in all_deals if not owner or d.owner.username == owner]
     now = datetime.now(UTC)
-    trips = {d.id: _trip(db, d.listing) for d in deals}
+    trips = {d.id: _trip(db, d.listing, user) for d in deals}
     groups = [(stage, [d for d in deals if d.stage is stage]) for stage in STAGE_ORDER[:-1]]
     sold = sorted(
         (d for d in deals if d.stage is DealStage.sold),
@@ -152,7 +156,7 @@ def deal_detail(request: Request, db: DB, user: CurrentUser, deal_id: int) -> HT
         {
             "title": f"Deal · {deal.listing.make} {deal.listing.model}",
             "deal": deal,
-            "trip": _trip(db, deal.listing),
+            "trip": _trip(db, deal.listing, user),
             "checklist": checklist_for(deal),
             "near_deals": [(by_listing[x.id], km) for x, km in near_deals if x.id in by_listing],
             "near_cars": near_cars,

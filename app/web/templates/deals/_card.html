@@ -12,7 +12,7 @@
       <div class="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
         <span class="pill bg-ink-900 text-white" title="owner">{{ d.owner.username }}</span>
         <span class="pill {{ 'bg-bad-100 text-bad-700' if stale else 'bg-ink-100 text-ink-600' }}" title="days in this stage">{{ days }} d{% if stale %} · stuck{% endif %}</span>
-        {% if trips[d.id] %}<span class="pill bg-ink-100 text-ink-600" title="from the base, one way">≈ {{ trips[d.id].km }} km</span>{% endif %}
+        {% if trips[d.id] %}<span class="pill bg-ink-100 text-ink-600" title="from your location, one way">≈ {{ trips[d.id].km }} km</span>{% endif %}
         {% if not l.is_active and d.stage.value in ('spotted', 'contacted', 'inspected') %}<span class="pill bg-bad-700 text-white">ad gone</span>{% endif %}
       </div>
     </div>

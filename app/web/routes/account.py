@@ -2,11 +2,13 @@
 
 from datetime import UTC, datetime
 
+import httpx
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from app.db import User
+from app.geo import geocode_address
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.security import hash_password, verify_password
 from app.web.templating import templates
@@ -124,3 +126,36 @@ def users_action(
         raise HTTPException(400)
     db.flush()
     return RedirectResponse(f"/users?msg={msg}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/account/location", dependencies=[Depends(csrf_protect)])
+def set_location(
+    request: Request, db: DB, user: CurrentUser, address: str = Form("")
+) -> HTMLResponse:
+    """Save where this person drives from; empty clears it (the configured base applies)."""
+    address = " ".join(address.split())[:200]
+    if not address:
+        user.home_label = user.home_lat = user.home_lon = None
+        db.flush()
+        return RedirectResponse(
+            "/account?msg=Location+cleared,+distances+use+the+default+base",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    try:
+        with httpx.Client() as client:
+            hit = geocode_address(client, address)
+    except httpx.HTTPError:
+        hit = None
+        err = "The map service did not answer; try again in a minute."
+    else:
+        err = None if hit else "That place was not found. Try a postcode, or add the country."
+    if err or hit is None:
+        return templates.TemplateResponse(
+            request,
+            "account/index.html",
+            {"title": "Account", "msg": None, "err": err, "address": address},
+            status_code=400,
+        )
+    user.home_lat, user.home_lon, user.home_label = hit[0], hit[1], hit[2][:200]
+    db.flush()
+    return RedirectResponse("/account?msg=Location+saved", status_code=status.HTTP_303_SEE_OTHER)

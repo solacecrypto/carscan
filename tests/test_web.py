@@ -639,6 +639,35 @@ def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Ses
     assert db.query(Subscription).count() == 0
 
 
+def test_account_location(client: TestClient, seeded: dict, db: Session, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    import app.web.routes.account as account
+
+    monkeypatch.setattr(
+        account,
+        "geocode_address",
+        lambda _c, text: (51.22, 4.40, "Antwerpen, BE") if "antwerp" in text.lower() else None,
+    )
+    token = _csrf(client.get("/account").text)
+    r = client.post(
+        "/account/location",
+        data={"csrf_token": token, "address": "Antwerpen"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and "Location+saved" in r.headers["location"]
+    db.expire_all()
+    u = db.get(User, seeded["user"].id)
+    assert u is not None and (u.home_lat, u.home_label) == (51.22, "Antwerpen, BE")
+    assert "Now: <b>Antwerpen, BE</b>" in client.get("/account").text
+    r = client.post("/account/location", data={"csrf_token": token, "address": "Narnia"})
+    assert r.status_code == 400 and "not found" in r.text
+    r = client.post(
+        "/account/location", data={"csrf_token": token, "address": ""}, follow_redirects=False
+    )
+    assert r.status_code == 303
+    db.expire_all()
+    assert db.get(User, seeded["user"].id).home_lat is None  # type: ignore[union-attr]
+
+
 def test_account_and_user_management(client: TestClient, seeded: dict, db: Session) -> None:
     from app.db import User
     from app.web.security import verify_password

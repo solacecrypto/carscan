@@ -12,6 +12,14 @@
     <label class="label block text-xs">Repeat new password<input type="password" name="repeat" class="input" autocomplete="new-password" minlength="8" required></label>
     <button class="btn-primary">Change password</button>
   </form>
+  <form method="post" action="/account/location" class="card space-y-3 p-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>Your location</h2>
+    <p class="text-sm text-ink-600">Distances, drive times and pickup costs on every car and deal are measured from here. Any address, postcode or city works.</p>
+    <label class="label block text-xs">Address or city<input name="address" value="{{ address if address is defined and address else (user.home_label or '') }}" placeholder="e.g. Amsterdamsestraatweg 1, Utrecht  ·  or 1012 AB  ·  or Antwerpen" class="input" autocomplete="street-address"></label>
+    <p class="text-xs text-ink-400">{% if user.home_lat is not none %}Now: <b>{{ user.home_label }}</b>{% else %}Now: the shared default base{% endif %}. Leave the field empty and save to go back to the default.</p>
+    <div class="flex gap-2"><button class="btn-primary">Save location</button></div>
+  </form>
   <div class="card space-y-3 p-4">
     <h2>Push notifications</h2>
     <p class="text-sm text-ink-600">Get the bell's notifications on this phone or computer even when the site is closed. On an iPhone, first add the site to the home screen (Share → Add to Home Screen), then enable it from there.</p>

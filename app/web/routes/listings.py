@@ -235,7 +235,7 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "nearest": [comps[i] for i in nearest_ids if i in comps],
             "deal": get_deal_for_listing(db, listing.id),
             "market": market_for_listing(db, listing, datetime.now(UTC)),
-            "trip": _trip(db, listing),
+            "trip": _trip(db, listing, user),
             "coords": _coords(db, listing),
             "starred_ids": {w.listing_id for w in listing.watches if w.user_id == user.id},
         },
@@ -258,14 +258,18 @@ def _coords(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]
     return {"lat": g.lat, "lon": g.lon}
 
 
-def _trip(db: DB, listing: Listing) -> dict | None:  # type: ignore[type-arg]
+def _trip(db: DB, listing: Listing, user: object = None) -> dict | None:  # type: ignore[type-arg]
     from app.config import get_settings
     from app.costs import get_cost_config
     from app.geo import trip
 
     st = get_settings()
     return trip(
-        db, listing, (st.base_city, st.base_postcode, st.base_country), get_cost_config().travel
+        db,
+        listing,
+        (st.base_city, st.base_postcode, st.base_country),
+        get_cost_config().travel,
+        user,
     )
 
 

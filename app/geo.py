@@ -65,6 +65,41 @@ def geocode_live(
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 
+def geocode_address(client: httpx.Client, text: str) -> tuple[float, float, str] | None:
+    """Free-text geocoding for a person's home: any address, postcode or city in Europe.
+    Returns (lat, lon, display name) or None when Nominatim finds nothing."""
+    text = " ".join(text.split())
+    if not text:
+        return None
+    r = client.get(
+        NOMINATIM,
+        params={"format": "json", "limit": "1", "q": text},
+        headers={"User-Agent": USER_AGENT},
+        timeout=20,
+    )
+    if r.status_code != 200:
+        raise httpx.HTTPStatusError(
+            f"nominatim HTTP {r.status_code}", request=r.request, response=r
+        )
+    data = r.json()
+    if not data:
+        return None
+    return float(data[0]["lat"]), float(data[0]["lon"]), str(data[0].get("display_name") or text)
+
+
+def base_point(
+    session: Session, user: Any, base: tuple[str | None, str | None, str]
+) -> tuple[float, float, str] | None:
+    """Where distances are measured from: the user's own location when set, otherwise the
+    configured base (BASE_CITY etc.) from the geocode cache."""
+    if user is not None and getattr(user, "home_lat", None) is not None:
+        return float(user.home_lat), float(user.home_lon), str(user.home_label or "home")
+    here = lookup(session, *base)
+    if here is None or here.lat is None:
+        return None
+    return here.lat, here.lon, " ".join(x for x in base[:2] if x) or base[2]  # type: ignore[return-value]
+
+
 def lookup(
     session: Session, city: str | None, postcode: str | None, country: str
 ) -> GeoCache | None:
@@ -132,13 +167,15 @@ def trip(
     listing: Listing,
     base: tuple[str | None, str | None, str],
     travel: dict[str, Any],
+    user: Any = None,
 ) -> dict[str, Any] | None:
-    """Distance, drive time and cost from the base to the car, or None when either is unknown."""
-    here = lookup(session, *base)
+    """Distance, drive time and cost from the base to the car, or None when either is unknown.
+    `user` with a saved home location overrides the configured base."""
+    here = base_point(session, user, base)
     there = lookup(session, listing.city, listing.postcode, listing.country)
-    if not here or not there or here.lat is None or there.lat is None:
+    if not here or not there or there.lat is None:
         return None
-    straight = haversine_km(here.lat, here.lon, there.lat, there.lon)  # type: ignore[arg-type]
+    straight = haversine_km(here[0], here[1], there.lat, there.lon)  # type: ignore[arg-type]
     km = round(straight * float(travel.get("detour_factor", 1.25)))
     one_way_h = km / float(travel.get("avg_speed_kmh", 85))
     fuel = km * 2 * float(travel.get("fuel_eur_per_km", 0.16))  # there by car, back driving the buy
@@ -149,7 +186,7 @@ def trip(
         "fuel_eur": round(fuel),
         "tolls_eur": round(tolls),
         "total_eur": round(fuel + tolls),
-        "from": " ".join(x for x in base[:2] if x) or base[2],
+        "from": here[2],
         "lat": there.lat,
         "lon": there.lon,
     }
