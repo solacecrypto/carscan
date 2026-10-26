@@ -653,13 +653,25 @@ def test_account_location(client: TestClient, seeded: dict, db: Session, monkeyp
         data={"csrf_token": token, "address": "Antwerpen"},
         follow_redirects=False,
     )
-    assert r.status_code == 303 and "Location+saved" in r.headers["location"]
+    assert r.status_code == 303 and r.headers["location"] == "/account?loc=saved"
     db.expire_all()
     u = db.get(User, seeded["user"].id)
     assert u is not None and (u.home_lat, u.home_label) == (51.22, "Antwerpen, BE")
     assert "Now: <b>Antwerpen, BE</b>" in client.get("/account").text
-    r = client.post("/account/location", data={"csrf_token": token, "address": "Narnia"})
-    assert r.status_code == 400 and "not found" in r.text
+    assert "Distances measured from Antwerpen, BE" in client.get("/listings").text  # globe
+    r = client.post(
+        "/account/location",
+        data={"csrf_token": token, "address": "Narnia", "next": "/deals"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and r.headers["location"] == "/deals?loc=notfound"
+    assert "Not found. Try a postcode" in client.get("/deals?loc=notfound").text
+    r = client.post(
+        "/account/location",
+        data={"csrf_token": token, "address": "x", "next": "//evil.example"},
+        follow_redirects=False,
+    )
+    assert r.headers["location"].startswith("/account?")  # open redirect refused
     r = client.post(
         "/account/location", data={"csrf_token": token, "address": ""}, follow_redirects=False
     )

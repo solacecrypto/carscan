@@ -88,6 +88,25 @@
       {% endfor %}
       <div class="ml-auto"></div>
       {% if unread_notifications is defined %}{% with unread=unread_notifications %}{% include "notifications/_bell.html" %}{% endwith %}{% endif %}
+      <details class="relative" id="location-pop" {{ 'open' if request.query_params.get('loc') in ('notfound', 'down') }}>
+          <summary class="flex cursor-pointer list-none items-center rounded-lg p-1 {{ 'text-brand-400' if user.home_lat is not none else 'text-ink-300' }} hover:text-white [&::-webkit-details-marker]:hidden" title="{{ 'Distances measured from ' ~ user.home_label if user.home_lat is not none else 'Set your location: distances are measured from the default base' }}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+          </summary>
+          <form method="post" action="/account/location" class="fixed right-3 top-12 z-[1150] w-72 rounded-xl bg-white p-3 text-ink-900 shadow-lg ring-1 ring-ink-900/10">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="next" value="{{ request.url.path }}">
+            <div class="label">Your location</div>
+            <p class="mt-0.5 text-[11px] text-ink-500">Distances, drive times and pickup costs are measured from here. Any address, postcode or city.</p>
+            <input name="address" value="{{ user.home_label or '' }}" placeholder="e.g. Antwerpen · 1012 AB · a street address" class="input !mt-2" autocomplete="street-address" autofocus>
+            {% if request.query_params.get('loc') == 'notfound' %}<p class="mt-1 text-[11px] text-bad-700">Not found. Try a postcode, or add the country.</p>
+            {% elif request.query_params.get('loc') == 'down' %}<p class="mt-1 text-[11px] text-bad-700">The map service did not answer; try again in a minute.</p>
+            {% elif request.query_params.get('loc') == 'saved' %}<p class="mt-1 text-[11px] text-good-700">Saved.</p>{% endif %}
+            <div class="mt-2 flex items-center justify-between gap-2">
+              <span class="text-[11px] text-ink-400">{{ 'now: ' ~ user.home_label if user.home_lat is not none else 'now: the default base' }}</span>
+              <span class="flex gap-1">{% if user.home_lat is not none %}<button name="address" value="" class="btn-ghost !px-2 !py-1 !text-xs">use default</button>{% endif %}<button class="btn-primary !px-2 !py-1 !text-xs">Save</button></span>
+            </div>
+          </form>
+        </details>
       <form method="post" action="/logout" class="flex shrink-0 items-center gap-2">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <a href="/account" class="hidden rounded-lg px-2 py-1 text-xs text-ink-300 hover:text-white sm:inline" title="account">{{ user.username }}</a>

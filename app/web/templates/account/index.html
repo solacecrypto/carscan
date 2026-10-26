@@ -2,6 +2,11 @@
 {% block content %}
 <div class="mb-4"><h1>Account</h1><p class="text-sm text-ink-400">Signed in as <b>{{ user.username }}</b>{% if user.is_admin %} · admin{% endif %}.</p></div>
 {% if msg %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">{{ msg }}</div>{% endif %}
+{% set loc = request.query_params.get('loc') %}
+{% if loc == 'saved' %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">Location saved: {{ user.home_label }}.</div>
+{% elif loc == 'cleared' %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">Location cleared; distances use the default base.</div>
+{% elif loc == 'notfound' %}<div class="mb-4 rounded-xl bg-bad-100 px-4 py-3 text-sm text-bad-700">That place was not found. Try a postcode, or add the country.</div>
+{% elif loc == 'down' %}<div class="mb-4 rounded-xl bg-bad-100 px-4 py-3 text-sm text-bad-700">The map service did not answer; try again in a minute.</div>{% endif %}
 {% if err %}<div class="mb-4 rounded-xl bg-bad-100 px-4 py-3 text-sm text-bad-700">{{ err }}</div>{% endif %}
 <div class="grid gap-4 lg:grid-cols-2">
   <form method="post" action="/account/password" class="card space-y-3 p-4">
@@ -16,7 +21,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <h2>Your location</h2>
     <p class="text-sm text-ink-600">Distances, drive times and pickup costs on every car and deal are measured from here. Any address, postcode or city works.</p>
-    <label class="label block text-xs">Address or city<input name="address" value="{{ address if address is defined and address else (user.home_label or '') }}" placeholder="e.g. Amsterdamsestraatweg 1, Utrecht  ·  or 1012 AB  ·  or Antwerpen" class="input" autocomplete="street-address"></label>
+    <label class="label block text-xs">Address or city<input name="address" value="{{ user.home_label or '' }}" placeholder="e.g. Amsterdamsestraatweg 1, Utrecht  ·  or 1012 AB  ·  or Antwerpen" class="input" autocomplete="street-address"></label>
     <p class="text-xs text-ink-400">{% if user.home_lat is not none %}Now: <b>{{ user.home_label }}</b>{% else %}Now: the shared default base{% endif %}. Leave the field empty and save to go back to the default.</p>
     <div class="flex gap-2"><button class="btn-primary">Save location</button></div>
   </form>

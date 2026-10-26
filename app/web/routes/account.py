@@ -128,34 +128,33 @@ def users_action(
     return RedirectResponse(f"/users?msg={msg}", status_code=status.HTTP_303_SEE_OTHER)
 
 
+def _loc_redirect(next_path: str, flag: str) -> RedirectResponse:
+    """Back to where the globe popover was opened, with a one-word result for it."""
+    path = next_path if next_path.startswith("/") and "//" not in next_path else "/account"
+    return RedirectResponse(f"{path}?loc={flag}", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.post("/account/location", dependencies=[Depends(csrf_protect)])
 def set_location(
-    request: Request, db: DB, user: CurrentUser, address: str = Form("")
+    request: Request,
+    db: DB,
+    user: CurrentUser,
+    address: str = Form(""),
+    next: str = Form("/account"),
 ) -> HTMLResponse:
     """Save where this person drives from; empty clears it (the configured base applies)."""
     address = " ".join(address.split())[:200]
     if not address:
         user.home_label = user.home_lat = user.home_lon = None
         db.flush()
-        return RedirectResponse(
-            "/account?msg=Location+cleared,+distances+use+the+default+base",
-            status_code=status.HTTP_303_SEE_OTHER,
-        )
+        return _loc_redirect(next, "cleared")
     try:
         with httpx.Client() as client:
             hit = geocode_address(client, address)
     except httpx.HTTPError:
-        hit = None
-        err = "The map service did not answer; try again in a minute."
-    else:
-        err = None if hit else "That place was not found. Try a postcode, or add the country."
-    if err or hit is None:
-        return templates.TemplateResponse(
-            request,
-            "account/index.html",
-            {"title": "Account", "msg": None, "err": err, "address": address},
-            status_code=400,
-        )
+        return _loc_redirect(next, "down")
+    if hit is None:
+        return _loc_redirect(next, "notfound")
     user.home_lat, user.home_lon, user.home_label = hit[0], hit[1], hit[2][:200]
     db.flush()
-    return RedirectResponse("/account?msg=Location+saved", status_code=status.HTTP_303_SEE_OTHER)
+    return _loc_redirect(next, "saved")
