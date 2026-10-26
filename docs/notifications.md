@@ -21,3 +21,14 @@ price). Each row shows the price now against the price when the star was set (fr
 notes count, who else favorited it, and buttons to track as a deal or remove. In the UI the
 feature is called "Favorites"; in code it remains the `watches` table and the `starred`
 filter.
+
+## Catch-up page (2026-10-26)
+
+`/digest` is now a personal catch-up computed on request (`app.digest.catch_up`), with a
+24 h / 2 days / week window: six count tiles (new cars and how many are profitable, price
+drops, favorites with news, wanted-model matches, deals needing attention, unread
+notifications), then the best new cars by spread, price drops (profitable first), red flags on
+new profitable cars, the user's favorites with what happened to them (from their
+notifications in the window), their open deals with the next action and stuck/ad-gone marks,
+new wanted-model matches, and the models whose median spread moved most in 7 days. The shared
+Telegram morning digests (`store_digest`, 07:00) are unchanged and kept in a fold underneath.

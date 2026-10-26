@@ -68,3 +68,41 @@ def test_digest_lists_new_cars_drops_and_flags(db: Session) -> None:
     assert row.day == NOW.date() and store_digest(db, NOW, "https://x").id == row.id
     assert db.query(Digest).count() == 1
     assert "Nothing worth a look" in render_text(build_digest(db, NOW + timedelta(days=3)), "", NOW)
+
+
+def test_catch_up_is_personal(db: Session) -> None:
+    from app.db import DealStage, Notification, Watch
+    from app.deals import create_deal, set_stage
+    from app.digest import catch_up
+
+    u, s, a, b = _setup(db)
+    other = User(username="other", password_hash="x")
+    db.add(other)
+    db.flush()
+    db.add(Watch(listing=a, user=u, created_at=NOW - timedelta(days=2)))
+    h1 = NOW - timedelta(hours=1)
+    n1 = Notification(user_id=u.id, kind="price_down", title="x: price dropped", body="was 7000")
+    n1.listing, n1.created_at = a, h1
+    n2 = Notification(user_id=u.id, kind="wanted", title="new car", listing=b, created_at=h1)
+    n3 = Notification(
+        user_id=other.id, kind="price_down", title="not mine", listing=a, created_at=NOW
+    )
+    n4 = Notification(user_id=u.id, kind="gone", title="old", listing=a)
+    n4.created_at = NOW - timedelta(days=3)
+    db.add_all([n1, n2, n3, n4])
+    deal = create_deal(db, a, u, NOW - timedelta(days=10))
+    set_stage(deal, DealStage.contacted, u, NOW - timedelta(days=9))
+    create_deal(db, b, other, NOW)
+    db.commit()
+    cu = catch_up(db, u, NOW, 24)
+    assert [x.id for x in cu["top_new"]] == [a.id] and [x.id for x in cu["drops"]] == [a.id]
+    assert cu["counts"]["new"] == 1 and cu["counts"]["drops"] == 1
+    assert len(cu["favorites"]) == 1 and [n.kind for n in cu["favorites"][0]["events"]] == [
+        "price_down"
+    ]
+    assert [n.listing_id for n in cu["wanted"]] == [b.id] and cu["counts"]["wanted"] == 1
+    assert [r["deal"].id for r in cu["deals"]] == [deal.id] and cu["deals"][0]["stale"]
+    assert cu["counts"]["deals_attention"] == 1 and cu["counts"]["unread"] == 2
+    assert cu["movers_up"] == [] and cu["movers_down"] == []
+    wide = catch_up(db, u, NOW, 168)
+    assert [n.kind for n in wide["favorites"][0]["events"]] == ["price_down", "gone"]

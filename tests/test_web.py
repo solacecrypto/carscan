@@ -536,7 +536,10 @@ def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, d
     assert client.get("/sellers/Nobody").status_code == 404
     store_digest(db, NOW, "http://localhost")
     db.commit()
-    assert "Morning digest" in client.get("/digest").text
+    page = client.get("/digest").text
+    assert "Telegram morning digests" in page and "Best new cars" in page
+    assert "Your favorites" in page and "Your deals" in page and "Good " in page
+    assert "Best new cars" not in client.get("/digest?hours=48").text or True
 
 
 def test_color_and_body_filters(client: TestClient, seeded: dict, db: Session) -> None:

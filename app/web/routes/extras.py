@@ -565,8 +565,22 @@ def seller_page(request: Request, db: DB, user: CurrentUser, name: str) -> HTMLR
 
 
 @router.get("/digest", response_class=HTMLResponse)
-def digest_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
+def digest_page(request: Request, db: DB, user: CurrentUser, hours: int = 24) -> HTMLResponse:
+    """Personal catch-up page; the stored Telegram digests are kept underneath."""
+    from app.digest import catch_up
+
+    hours = hours if hours in (24, 48, 168) else 24
+    now = datetime.now(UTC)
     digests = list(db.scalars(select(Digest).order_by(Digest.day.desc()).limit(14)))
+    starred = set(db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id)))
     return templates.TemplateResponse(
-        request, "digest/index.html", {"title": "Digest", "digests": digests}
+        request,
+        "digest/index.html",
+        {
+            "title": "Digest",
+            "digests": digests,
+            "now": now,
+            "starred_ids": starred,
+            **catch_up(db, user, now, hours),
+        },
     )

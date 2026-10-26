@@ -1,0 +1,21 @@
+{# compact car card for the catch-up page; expects l, optional note (text under the price) #}
+<li class="card flex gap-3 overflow-hidden p-2.5">
+  <a href="/listings/{{ l.id }}" class="relative block h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-ink-100">
+    {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" loading="lazy" class="h-full w-full object-cover">{% endif %}
+    <span class="pill absolute left-1 top-1 bg-ink-950/80 text-white backdrop-blur">{{ l.country }}</span>
+  </a>
+  <div class="min-w-0 flex-1">
+    <div class="flex items-start justify-between gap-2">
+      <a href="/listings/{{ l.id }}" class="min-w-0 truncate font-semibold leading-tight hover:underline">{{ l.make }} {{ l.model }} <span class="font-normal text-ink-400">{{ l.first_registration.year if l.first_registration }}</span></a>
+      {% if l.spread_eur is not none %}<span class="shrink-0 rounded-md px-1.5 py-0.5 text-xs font-bold {{ 'bg-good-100 text-good-700' if l.spread_eur > 0 else 'bg-bad-100 text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}</span>{% endif %}
+    </div>
+    <div class="truncate text-[11px] text-ink-400">{{ l.variant or '' }} · {{ l.mileage_km|km }}{% if l.gearbox %} · {{ l.gearbox }}{% endif %} · {{ l.city or l.country }}</div>
+    <div class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
+      <b>{{ l.price_eur|eur }}</b>
+      {% if l.previous_price_eur and l.previous_price_eur != l.price_eur %}<span class="{{ 'text-good-700' if l.previous_price_eur > l.price_eur else 'text-bad-700' }}"><s class="text-ink-400">{{ l.previous_price_eur|eur }}</s> {{ '▼' if l.previous_price_eur > l.price_eur else '▲' }} {{ ((l.previous_price_eur - l.price_eur)|abs)|eur }}</span>{% endif %}
+      {% if l.landed_cost_eur %}<span class="text-ink-400">landed ≈ {{ l.landed_cost_eur|eur }}</span>{% endif %}
+      {% if note %}<span class="text-ink-500">{{ note }}</span>{% endif %}
+    </div>
+    {% include "listings/_insight_badges.html" %}
+  </div>
+</li>
