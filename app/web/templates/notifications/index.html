@@ -27,7 +27,7 @@
   </div>
   <div id="wanted" class="min-w-0 space-y-4 lg:col-span-2">
     <div class="card p-4">
-      <h2>Wanted models <span class="text-xs font-normal text-ink-400">you are told when a new car matches</span></h2>
+      <h2 class="flex items-baseline justify-between gap-2">Wanted models <span class="text-xs font-normal text-ink-400">you are told when a new car matches</span><a href="/wanted" class="ml-auto text-xs font-normal normal-case tracking-normal underline">what is on the market now</a></h2>
       <ul class="mt-2 space-y-2 text-sm">
         {% for sub in subscriptions %}
         <li class="rounded-lg border border-ink-100 p-2 {{ 'opacity-60' if not sub.active }}">

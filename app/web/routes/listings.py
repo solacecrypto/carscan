@@ -1,8 +1,10 @@
+import csv
+import io
 from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qsl, urlencode
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import selectinload
 
@@ -18,6 +20,15 @@ from app.web.templating import templates
 
 router = APIRouter(dependencies=[Depends(csrf_protect)])
 PAGE_SIZE = 48
+EXPORT_LIMIT = 2000  # rows in a CSV export; the same filters as the page, no paging
+
+CSV_COLUMNS = (
+    "id", "source", "make", "model", "variant", "year", "mileage_km", "fuel", "gearbox",
+    "power_kw", "body", "color", "price_eur", "previous_price_eur", "landed_cost_eur",
+    "bpm_eur", "repair_cost_eur", "nl_value_eur", "spread_eur", "spread_pct", "country",
+    "city", "seller_type", "vat_deductible", "first_seen", "last_seen", "active", "ad_url",
+    "carscan_url",
+)  # fmt: skip
 
 SORTS = {
     "newest": Listing.first_seen.desc(),
@@ -93,6 +104,97 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         resp.headers["HX-Push-Url"] = "/listings" + (f"?{clean}" if clean else "")
         return resp
     return templates.TemplateResponse(request, "listings/index.html", ctx)
+
+
+@router.get("/listings.csv")
+def listings_export(request: Request, db: DB, user: CurrentUser) -> Response:
+    """The filtered list as CSV (same filters and sort as the page, up to EXPORT_LIMIT rows),
+    for sharing a shortlist outside the group or working in a spreadsheet."""
+    f = parse_filters(request.query_params, _models())
+    sort = request.query_params.get("sort") or "newest"
+    here = _here(db, user) if f.get("max_km") else None
+    stmt = _filtered_stmt(f, here)
+    if f.get("starred"):
+        stmt = stmt.join(Watch, (Watch.listing_id == Listing.id) & (Watch.user_id == user.id))
+    rows = db.scalars(
+        stmt.order_by(SORTS.get(sort, SORTS["newest"]), Listing.id.desc()).limit(EXPORT_LIMIT)
+    )
+    base = str(request.base_url).rstrip("/")
+    buf = io.StringIO()
+    w = csv.writer(buf, delimiter=";")  # Excel in NL opens ';' files as columns straight away
+    w.writerow(CSV_COLUMNS)
+    for x in rows:
+        w.writerow(
+            [
+                x.id,
+                x.source,
+                x.make,
+                x.model,
+                x.variant or "",
+                x.first_registration.year if x.first_registration else "",
+                x.mileage_km if x.mileage_km is not None else "",
+                x.fuel or "",
+                x.gearbox or "",
+                x.power_kw if x.power_kw is not None else "",
+                x.body_type or "",
+                x.color or "",
+                x.price_eur,
+                x.previous_price_eur if x.previous_price_eur is not None else "",
+                x.landed_cost_eur if x.landed_cost_eur is not None else "",
+                x.bpm_eur if x.bpm_eur is not None else "",
+                x.repair_cost_eur if x.repair_cost_eur is not None else "",
+                x.nl_value_eur if x.nl_value_eur is not None else "",
+                x.spread_eur if x.spread_eur is not None else "",
+                round(x.spread_pct, 1) if x.spread_pct is not None else "",
+                x.country,
+                x.city or "",
+                x.seller_type.value,
+                "" if x.vat_deductible is None else ("yes" if x.vat_deductible else "no"),
+                x.first_seen.strftime("%Y-%m-%d %H:%M"),
+                x.last_seen.strftime("%Y-%m-%d %H:%M"),
+                "yes" if x.is_active else "no",
+                x.url,
+                f"{base}/listings/{x.id}",
+            ]  # fmt: skip
+        )
+    name = f"carscan-{datetime.now(UTC):%Y%m%d-%H%M}.csv"
+    return Response(
+        "\ufeff" + buf.getvalue(),  # BOM so Excel reads the UTF-8 (ë, ü) correctly
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+    )
+
+
+@router.post("/listings/star-bulk", dependencies=[Depends(csrf_protect)])
+def star_bulk(
+    db: DB,
+    user: CurrentUser,
+    ids: str = Form(""),
+    op: str = Form("add"),
+    next: str = Form("/listings"),  # noqa: A002
+) -> RedirectResponse:
+    """Favorite or unfavorite the selected cars in one go (checkboxes on the listings page)."""
+    wanted = {int(v) for v in ids.replace(",", " ").split() if v.isdigit()}
+    if not wanted:
+        raise HTTPException(400, "select at least one car")
+    mine = {
+        w.listing_id: w
+        for w in db.scalars(
+            select(Watch).where(Watch.user_id == user.id, Watch.listing_id.in_(wanted))
+        )
+    }
+    now = datetime.now(UTC)
+    if op == "remove":
+        for w in mine.values():
+            db.delete(w)
+    else:
+        existing = set(db.scalars(select(Listing.id).where(Listing.id.in_(wanted))))
+        for lid in existing - mine.keys():
+            db.add(Watch(user_id=user.id, listing_id=lid, created_at=now))
+    db.flush()
+    if not next.startswith("/") or next.startswith("//"):
+        next = "/listings"  # noqa: A001
+    return RedirectResponse(next, status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _clean_query(request: Request) -> str:

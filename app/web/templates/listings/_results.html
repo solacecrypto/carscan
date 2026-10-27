@@ -1,6 +1,22 @@
 <div id="results">
   {% with count=0, query=query|replace('page=' ~ page, '')|trim('&') %}{% include "listings/_poller.html" %}{% endwith %}
-  <p class="mb-3 text-sm text-ink-400">{{ total }} listing{{ '' if total == 1 else 's' }}</p>
+  {% set q = query|replace('page=' ~ page, '')|trim('&') %}
+  <div class="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink-400">
+    <span>{{ total }} listing{{ '' if total == 1 else 's' }}</span>
+    <span class="ml-auto flex items-center gap-1">
+      <span id="bulk-bar" class="hidden items-center gap-1">
+        <span id="bulk-count" class="mr-1 text-xs">0 selected</span>
+        <button type="button" class="btn-outline !px-2 !py-1 !text-xs" data-bulk="all" title="select every car on this page">all</button>
+        <button type="button" class="btn-outline !px-2 !py-1 !text-xs" data-bulk="add">★ favorite</button>
+        <button type="button" class="btn-outline !px-2 !py-1 !text-xs" data-bulk="remove">☆ unfavorite</button>
+      </span>
+      <button type="button" id="bulk-toggle" class="btn-outline !px-2 !py-1 !text-xs" aria-pressed="false" title="tick cars to favorite or unfavorite them together">select</button>
+      <a href="/listings.csv{{ '?' ~ q if q }}" class="btn-outline !px-2 !py-1 !text-xs" title="download this list (every page, up to 2.000 cars) as a spreadsheet file" download>⤓ CSV</a>
+    </span>
+  </div>
+  <form id="bulk-form" method="post" action="/listings/star-bulk" class="hidden">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="ids"><input type="hidden" name="op"><input type="hidden" name="next">
+  </form>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for l in listings %}
     <article class="card group relative overflow-visible border-t-4 transition hover:-translate-y-0.5 hover:shadow-lg {{ 'opacity-60' if not l.is_active }} {{ 'border-good-700' if l.spread_eur is not none and l.spread_eur > 0 else ('border-bad-700/70' if l.spread_eur is not none else 'border-ink-200') }}">
@@ -20,6 +36,7 @@
         {% endif %}
       </a>
       <div class="absolute right-2 top-2">{% with size='' %}{% include "listings/_star.html" %}{% endwith %}</div>
+      <label class="bulk-pick absolute right-2 top-12 hidden h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow backdrop-blur" title="select this car"><input type="checkbox" value="{{ l.id }}" class="h-5 w-5 rounded border-ink-300 text-brand-500 focus:ring-brand-400"></label>
       <div class="space-y-1.5 p-3.5">
         <div class="flex items-start justify-between gap-2">
           <a href="/listings/{{ l.id }}" class="min-w-0 font-semibold leading-tight">{{ l.make }} {{ l.model }}
@@ -54,10 +71,37 @@
   </div>
   {% if pages > 1 %}
   <nav class="mt-5 flex items-center justify-center gap-3 text-sm">
-    {% set q = query.replace('page=' ~ page, '') %}
     {% if page > 1 %}<a class="btn-outline" href="/listings?{{ q }}&page={{ page - 1 }}">← Prev</a>{% endif %}
     <span class="text-ink-400">Page {{ page }} / {{ pages }}</span>
     {% if page < pages %}<a class="btn-outline" href="/listings?{{ q }}&page={{ page + 1 }}">Next →</a>{% endif %}
   </nav>
   {% endif %}
+  <script>
+    (function () {
+      // Select mode: the "select" button shows a checkbox on every card; favorite/unfavorite
+      // post the ticked ids and come back to this exact page.
+      const root = document.getElementById('results'), bar = document.getElementById('bulk-bar');
+      const toggle = document.getElementById('bulk-toggle'), form = document.getElementById('bulk-form');
+      const boxes = () => Array.from(root.querySelectorAll('.bulk-pick input'));
+      const picked = () => boxes().filter(b => b.checked).map(b => b.value);
+      function count() { document.getElementById('bulk-count').textContent = picked().length + ' selected'; }
+      toggle.addEventListener('click', () => {
+        const on = toggle.getAttribute('aria-pressed') !== 'true';
+        toggle.setAttribute('aria-pressed', String(on));
+        toggle.classList.toggle('!border-brand-400', on); toggle.classList.toggle('!bg-brand-50', on);
+        bar.classList.toggle('hidden', !on); bar.classList.toggle('flex', on);
+        root.querySelectorAll('.bulk-pick').forEach(l => { l.classList.toggle('hidden', !on); l.classList.toggle('flex', on); });
+        if (!on) boxes().forEach(b => { b.checked = false; });
+        count();
+      });
+      root.addEventListener('change', e => { if (e.target.matches('.bulk-pick input')) count(); });
+      bar.querySelectorAll('[data-bulk]').forEach(btn => btn.addEventListener('click', () => {
+        const what = btn.dataset.bulk;
+        if (what === 'all') { const all = boxes().every(b => b.checked); boxes().forEach(b => { b.checked = !all; }); count(); return; }
+        const ids = picked();
+        if (!ids.length) { alert('Tick at least one car first.'); return; }
+        form.ids.value = ids.join(','); form.op.value = what; form.next.value = location.pathname + location.search; form.submit();
+      }));
+    })();
+  </script>
 </div>

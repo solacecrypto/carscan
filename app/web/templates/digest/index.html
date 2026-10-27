@@ -19,7 +19,7 @@
     ('New cars', c.new, c.new_positive ~ ' with positive return', '/listings?new_hours=' ~ hours ~ '&sort=spread_desc', 'good' if c.new_positive else ''),
     ('Price drops', c.drops, 'across all cars', '/listings?price_dropped=true&profitable=false&sort=price_change', 'good' if c.drops else ''),
     ('Favorites', c.favorites, 'with news', '/favorites', 'brand' if c.favorites else ''),
-    ('Wanted models', c.wanted, 'new matches', '/notifications', 'brand' if c.wanted else ''),
+    ('Wanted models', c.wanted, 'new matches', '/wanted', 'brand' if c.wanted else ''),
     ('Deals', c.deals_attention, 'need attention', '/deals', 'bad' if c.deals_attention else ''),
     ('Unread', c.unread, 'notifications', '/notifications', '')] %}
   <a href="{{ href }}" class="card block p-3 transition hover:-translate-y-0.5 hover:shadow-lg">

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import Alert, AlertStatus, Listing, PriceHistory, SavedSearch, SellerType, User
+from app.db import Alert, AlertStatus, Listing, PriceHistory, SavedSearch, SellerType, User, Watch
 from app.web.main import app
 from app.web.ratelimit import login_limiter
 from app.web.security import hash_password
@@ -924,3 +924,69 @@ def test_listings_page_has_no_nested_forms(client: TestClient, seeded: dict, db:
         depth += -1 if m.group(1) else 1
         assert depth in (0, 1), "nested <form>"
     assert depth == 0
+
+
+def test_listings_csv_export(client: TestClient, seeded: dict) -> None:
+    r = client.get("/listings.csv?profitable=false&include_inactive=1")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/csv")
+    assert 'filename="carscan-' in r.headers["content-disposition"]
+    lines = r.text.lstrip("﻿").splitlines()
+    assert lines[0].startswith("id;source;make;model;variant;year;mileage_km")
+    assert len(lines) == 3  # header + both seeded cars
+    assert f"/listings/{seeded['a'].id}" in r.text and seeded["a"].url in r.text
+    # the filters apply: only active cars by default
+    assert len(client.get("/listings.csv?profitable=false").text.splitlines()) == 2
+
+
+def test_bulk_star(client: TestClient, seeded: dict, db: Session) -> None:
+    token = _csrf(client.get("/listings").text)
+    a, b = seeded["a"], seeded["b"]
+    r = client.post(
+        "/listings/star-bulk",
+        data={
+            "csrf_token": token,
+            "ids": f"{a.id},{b.id},999999",
+            "op": "add",
+            "next": "/listings?x=1",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and r.headers["location"] == "/listings?x=1"
+    assert {w.listing_id for w in db.query(Watch).all()} == {a.id, b.id}
+    # adding again does not duplicate, an outside redirect falls back to /listings
+    r = client.post(
+        "/listings/star-bulk",
+        data={"csrf_token": token, "ids": str(a.id), "op": "add", "next": "//evil.example"},
+        follow_redirects=False,
+    )
+    assert r.headers["location"] == "/listings" and db.query(Watch).count() == 2
+    client.post(
+        "/listings/star-bulk", data={"csrf_token": token, "ids": f"{a.id} {b.id}", "op": "remove"}
+    )
+    assert db.query(Watch).count() == 0
+    r = client.post("/listings/star-bulk", data={"csrf_token": token, "ids": ""})
+    assert r.status_code == 400
+    assert 'id="bulk-toggle"' in client.get("/listings").text
+
+
+def test_wanted_page(client: TestClient, seeded: dict, db: Session) -> None:
+    assert "No wanted models yet" in client.get("/wanted").text
+    for key in ("a", "b"):
+        db.get(Listing, seeded[key].id).model_key = "bmw-3er-e90"
+    db.commit()
+    token = _csrf(client.get("/listings").text)
+    client.post(
+        "/wanted",
+        data={"csrf_token": token, "name": "any E90", "model_key": "bmw-3er-e90"},
+        follow_redirects=False,
+    )
+    page = client.get("/wanted").text
+    assert "any E90" in page and "1</b> on the market" in page
+    assert f"/listings/{seeded['a'].id}" in page and f"/listings/{seeded['b'].id}" not in page
+    assert "/listings?model_key=bmw-3er-e90&amp;profitable=false" in page
+    client.post(
+        "/wanted",
+        data={"csrf_token": token, "name": "pricey", "model_key": "bmw-3er-e90", "max_price": "1"},
+        follow_redirects=False,
+    )
+    assert "Nothing on the market matches" in client.get("/wanted").text

@@ -32,3 +32,19 @@ new profitable cars, the user's favorites with what happened to them (from their
 notifications in the window), their open deals with the next action and stuck/ad-gone marks,
 new wanted-model matches, and the models whose median spread moved most in 7 days. The shared
 Telegram morning digests (`store_digest`, 07:00) are unchanged and kept in a fold underneath.
+
+## Wanted page, bulk favorites, CSV export (2026-10-27)
+
+- `/wanted` shows, per wanted-model subscription of the viewer, the cars on the market right
+  now that match it (active, not duplicates, same `app.notify.matches` rules as the alerts),
+  best spread first, with counts (on the market, new today, positive spread, best spread) and
+  an "open in listings" link that translates the criteria into listing filters. Linked from the
+  wanted card on `/notifications` and the wanted tile on the digest.
+- Listings page: the **select** button in the results header shows a checkbox on every card;
+  **all** ticks the page, **★ favorite** / **☆ unfavorite** post the ids to
+  `POST /listings/star-bulk` (`ids`, `op` add|remove, `next` same-site path) and return to the
+  same page and filters. Favoriting an already favorited car is a no-op.
+- **⤓ CSV** downloads the current filters and sort (every page, up to 2.000 rows) from
+  `GET /listings.csv`: semicolon separated with a UTF-8 BOM so Excel opens it as columns
+  straight away; one row per car with price, landed cost, NL value, spread, the ad URL and the
+  carscan URL.

@@ -1,6 +1,6 @@
 """Watches, notes, seller pages and the digest page."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from statistics import median
 from typing import Any
 
@@ -18,6 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db import Digest, Listing, ListingNote, Notification, PushSubscription, Subscription, Watch
 from app.notify import KINDS, push, unread_count
+from app.notify import matches as wanted_matches
 from app.push import enabled as push_enabled
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.routes.listings import _models
@@ -273,6 +274,83 @@ def notification_open(db: DB, user: CurrentUser, notification_id: int) -> Redire
     n.read_at = n.read_at or datetime.now(UTC)
     db.flush()
     return RedirectResponse(n.url or "/notifications", status_code=status.HTTP_303_SEE_OTHER)
+
+
+WANTED_TOP = 12  # cars shown per wanted model; the rest is one click away in listings
+
+
+@router.get("/wanted", response_class=HTMLResponse)
+def wanted_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
+    """Every wanted model of the viewer with the cars on the market right now that match it,
+    best spread first; the notifications only tell about new arrivals."""
+
+    subs = list(
+        db.scalars(
+            select(Subscription)
+            .where(Subscription.user_id == user.id)
+            .order_by(Subscription.active.desc(), Subscription.created_at)
+        )
+    )
+    groups = []
+    for sub in subs:
+        c = sub.criteria or {}
+        stmt = select(Listing).where(Listing.is_active.is_(True), Listing.duplicate_of_id.is_(None))
+        if c.get("model_keys"):
+            stmt = stmt.where(Listing.model_key.in_(c["model_keys"]))
+        if c.get("countries"):
+            stmt = stmt.where(Listing.country.in_(c["countries"]))
+        if c.get("max_price"):
+            stmt = stmt.where(Listing.price_eur <= int(c["max_price"]))
+        if c.get("positive_only") or c.get("min_spread"):
+            stmt = stmt.where(Listing.spread_eur >= max(1, int(c.get("min_spread") or 0)))
+        cars = [x for x in db.scalars(stmt) if wanted_matches(c, x)]
+        cars.sort(
+            key=lambda x: x.spread_eur if x.spread_eur is not None else -(10**9), reverse=True
+        )
+        new_24h = sum(1 for x in cars if x.first_seen >= datetime.now(UTC) - timedelta(hours=24))
+        groups.append(
+            {
+                "sub": sub,
+                "total": len(cars),
+                "new_24h": new_24h,
+                "positive": sum(1 for x in cars if x.spread_eur is not None and x.spread_eur > 0),
+                "best": cars[0].spread_eur if cars and cars[0].spread_eur is not None else None,
+                "cars": cars[:WANTED_TOP],
+                "query": _wanted_query(c),
+            }
+        )
+    return templates.TemplateResponse(
+        request,
+        "wanted/index.html",
+        {
+            "title": "Wanted",
+            "groups": groups,
+            "starred_ids": set(
+                db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))
+            ),
+        },
+    )
+
+
+def _wanted_query(c: dict[str, Any]) -> str:
+    """The listings filters that come closest to a subscription's criteria."""
+    from urllib.parse import urlencode
+
+    pairs: list[tuple[str, str]] = [("model_key", k) for k in c.get("model_keys", [])]
+    pairs += [("country", k) for k in c.get("countries", [])]
+    if c.get("query"):
+        pairs.append(("q", str(c["query"])))
+    if c.get("max_price"):
+        pairs.append(("price_max", str(c["max_price"])))
+    if c.get("max_km"):
+        pairs.append(("mileage_max", str(c["max_km"])))
+    if c.get("year_min"):
+        pairs.append(("year_min", str(c["year_min"])))
+    if c.get("min_spread"):
+        pairs.append(("spread_min", str(c["min_spread"])))
+    if not c.get("positive_only") and not c.get("min_spread"):
+        pairs.append(("profitable", "false"))
+    return urlencode(pairs)
 
 
 @router.post("/wanted", dependencies=[Depends(csrf_protect)])

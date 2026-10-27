@@ -136,6 +136,12 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Wanted page, bulk favorites, CSV export (2026-10-27)
+
+`/wanted` lists current market matches per wanted-model subscription; listings results have a
+select mode with bulk favorite/unfavorite (`POST /listings/star-bulk`) and a CSV download of the
+filtered list (`GET /listings.csv`, `EXPORT_LIMIT` rows). See `docs/notifications.md`.
+
 ## Models and favorites pages (2026-10-25)
 
 `/models` + `/models/{key}` rebuilt on `app/market/overview.py` (live per-model stats,
