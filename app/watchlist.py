@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import SavedSearch, User
 from app.paths import config_file
+from app.valuation.engine import engine_token
 
 MODELS_PATH = config_file("models.yaml")
 
@@ -322,3 +323,156 @@ def sync(
                 paused += 1
     session.flush()
     return {"created": created, "updated": updated, "paused": paused}
+
+
+# ---------------------------------------------------------------------------------------
+# Recency sweeps: one newest-first query per brand per site, instead of one per model.
+# Everything the sweep brings in is stored; `classify` stamps the watchlist model on the cars
+# we track, the rest are kept for spotters and valued by model name only.
+
+SWEEP_INTERVAL_MINUTES = 15
+SWEEP_MAX_PAGES = 5
+SWEEP_SOURCES = ("autoscout24_de", "kleinanzeigen")
+
+
+def _norm(text: str | None) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (text or "").lower()).strip()
+
+
+def _same_make(a: str | None, b: str | None) -> bool:
+    x, y = _norm(a), _norm(b)
+    return bool(x and y) and (x == y or x.startswith(y) or y.startswith(x))
+
+
+def classify(
+    make: str | None,
+    model: str | None,
+    variant: str | None,
+    url: str | None,
+    year: int | None,
+    fuel: str | None,
+    body: str | None,
+    models: list[dict[str, Any]] | None = None,
+) -> str | None:
+    """The watchlist key a car belongs to, from what a search page shows: the make, the
+    model line (AutoScout24 puts it in the ad URL, Kleinanzeigen in the title), the engine
+    designation, the registration year and the fuel. None when we do not track it."""
+    entries = models if models is not None else load_models()
+    text = " ".join(_norm(t) for t in (make, model, variant))
+    url_tokens = set(_norm((url or "").rsplit("/", 1)[-1]).split())
+    motor = engine_token(variant, model)
+    best: tuple[int, str, float] | None = None
+    for m in entries:
+        if not _same_make(make, m.get("make")):
+            continue
+        lo, hi = m.get("years") or (None, None)
+        if year is not None and lo is not None and not (lo <= year <= hi):
+            continue
+        if fuel and m.get("fuel") and fuel != m["fuel"]:
+            continue
+        if body and m.get("bodies") and body not in m["bodies"]:
+            continue
+        lines = set()
+        as24 = (m.get("autoscout24") or {}).get("path") or ""
+        if as24:
+            lines.add(_norm(as24.rsplit("/", 1)[-1]))
+        ka = (m.get("kleinanzeigen") or {}).get("model")
+        if ka:
+            lines.add(_norm(str(ka)))
+        line_hit = any(ln and (ln in url_tokens or f" {ln} " in f" {text} ") for ln in lines)
+        motor_hit = bool(motor) and any(engine_token(x) == motor for x in m.get("motors") or [])
+        if not line_hit and not motor_hit:
+            continue
+        # a chassis code in the key ("e90", "f30", "w204", "b8") named in the ad settles it
+        codes = [t for t in m["key"].split("-") if re.fullmatch(r"[a-z]\d{1,3}", t)]
+        code_hit = any(c in url_tokens or f" {c} " in f" {text} " for c in codes)
+        # overlapping generations (an LCI E90 and an early F30 share 2012-2014): prefer the
+        # entry whose years sit closest to the car's
+        mid = (lo + hi) / 2 if lo is not None else None
+        closeness = -abs(year - mid) if (year is not None and mid is not None) else 0.0
+        score = (4 if code_hit else 0) + (2 if motor_hit else 0) + (1 if line_hit else 0)
+        if best is None or (score, closeness) > (best[0], best[2]):
+            best = (score, m["key"], closeness)
+    return best[1] if best else None
+
+
+def build_sweep_specs(models: list[dict[str, Any]] | None = None) -> list[SearchSpec]:
+    """One newest-first sweep per brand for each sweep source: years from the oldest model
+    we track, a price cap only when every model of the brand has one, fuel only when the
+    brand's models agree. Pages stop early at the first page of already-known ads."""
+    entries = models if models is not None else load_models()
+    by_make: dict[str, list[dict[str, Any]]] = {}
+    for m in entries:
+        by_make.setdefault(m["make"], []).append(m)
+    specs: list[SearchSpec] = []
+    for make, group in sorted(by_make.items()):
+        y0 = min(m["years"][0] for m in group)
+        fuels = {m.get("fuel", "petrol") for m in group}
+        caps = [m.get("price_max") for m in group]
+        common: dict[str, Any] = {"max_pages": SWEEP_MAX_PAGES}
+        if all(caps):
+            common["priceto"] = max(caps)
+        as24_paths = [(m.get("autoscout24") or {}).get("path") for m in group]
+        slugs = {p.split("/")[2] for p in as24_paths if p and p.count("/") >= 2}
+        if slugs and "autoscout24_de" in SWEEP_SOURCES:
+            params = {"path": f"/lst/{sorted(slugs)[0]}", "cy": "D", "fregfrom": y0, **common}
+            if len(fuels) == 1:
+                params["fuel"] = AS24_FUEL.get(next(iter(fuels)), "B")
+            specs.append(
+                SearchSpec(
+                    f"Sweep · {make} · autoscout24_de",
+                    "autoscout24_de",
+                    "sweep",
+                    params,
+                    SWEEP_INTERVAL_MINUTES,
+                )
+            )
+        ka_makes = {(m.get("kleinanzeigen") or {}).get("make") for m in group}
+        ka_makes.discard(None)
+        if ka_makes and "kleinanzeigen" in SWEEP_SOURCES:
+            params = {"make": sorted(ka_makes)[0], "ez_from": y0, "ez_to": "", **common}
+            params.pop("priceto", None)
+            specs.append(
+                SearchSpec(
+                    f"Sweep · {make} · kleinanzeigen",
+                    "kleinanzeigen",
+                    "sweep",
+                    params,
+                    SWEEP_INTERVAL_MINUTES,
+                )
+            )
+    return specs
+
+
+def sync_sweeps(
+    session: Session, owner: User, models: list[dict[str, Any]] | None = None
+) -> dict[str, int]:
+    """Create or update the sweep searches (matched by name). Sweeps never alert on their
+    own: spotters and favorites decide what deserves attention."""
+    specs = build_sweep_specs(models)
+    existing = {
+        s.name: s for s in session.scalars(select(SavedSearch).where(SavedSearch.role == "sweep"))
+    }
+    created = updated = 0
+    for spec in specs:
+        row = existing.get(spec.name)
+        if row is None:
+            session.add(
+                SavedSearch(
+                    name=spec.name,
+                    owner=owner,
+                    source=spec.source,
+                    role="sweep",
+                    source_params=spec.params,
+                    filters={},
+                    interval_minutes=spec.interval_minutes,
+                    alerts_enabled=False,
+                    active=True,
+                )
+            )
+            created += 1
+        elif row.source_params != spec.params or row.interval_minutes != spec.interval_minutes:
+            row.source_params, row.interval_minutes = spec.params, spec.interval_minutes
+            updated += 1
+    session.flush()
+    return {"created": created, "updated": updated, "sweeps": len(specs)}

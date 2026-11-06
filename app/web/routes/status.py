@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
@@ -26,6 +28,26 @@ router = APIRouter()
 @router.get("/status", response_class=HTMLResponse)
 def status_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
     sources = []
+    day_ago = datetime.now(UTC) - timedelta(hours=24)
+    traffic = {
+        src: (int(n or 0), int(b or 0))
+        for src, n, b in db.execute(
+            select(ScrapeRun.source, func.count(), func.sum(ScrapeRun.bytes_fetched))
+            .where(ScrapeRun.started_at >= day_ago)
+            .group_by(ScrapeRun.source)
+        )
+    }
+    sweeps = db.execute(
+        select(
+            ScrapeRun.source,
+            func.count(),
+            func.sum(ScrapeRun.bytes_fetched),
+            func.sum(ScrapeRun.listings_new),
+        )
+        .join(SavedSearch, SavedSearch.id == ScrapeRun.saved_search_id)
+        .where(ScrapeRun.started_at >= day_ago, SavedSearch.role == "sweep")
+        .group_by(ScrapeRun.source)
+    ).all()
     for name in sorted(all_scrapers()):
         last = db.scalar(
             select(ScrapeRun)
@@ -56,8 +78,11 @@ def status_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
                 "last_ok": last_ok,
                 "active": active or 0,
                 "comps": comps or 0,
+                "runs_24h": traffic.get(name, (0, 0))[0],
+                "mb_24h": round(traffic.get(name, (0, 0))[1] / 1e6, 1),
             }
         )
+    total_mb = round(sum(b for _, b in traffic.values()) / 1e6, 1)
     analysed = (
         db.scalar(
             select(func.count()).select_from(ListingInsight).where(ListingInsight.status == "ok")
@@ -124,6 +149,15 @@ def status_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "last_snapshot": last_snapshot,
         "translate_provider": get_settings().translate_provider,
     }
+    sweep_rows = [
+        {
+            "source": src,
+            "runs": int(n or 0),
+            "mb": round(int(b or 0) / 1e6, 1),
+            "new": int(new or 0),
+        }
+        for src, n, b, new in sweeps
+    ]
     issues = check(db)
     heartbeats = list(db.scalars(select(Heartbeat).order_by(Heartbeat.job)))
     runs = list(db.scalars(select(ScrapeRun).order_by(ScrapeRun.started_at.desc()).limit(30)))
@@ -138,6 +172,8 @@ def status_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
             "searches": searches,
             "insights": insights,
             "pipeline": pipeline,
+            "total_mb": total_mb,
+            "sweeps": sweep_rows,
             "issues": issues,
             "heartbeats": heartbeats,
         },

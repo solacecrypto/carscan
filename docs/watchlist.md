@@ -36,3 +36,26 @@ adds a price cap to the AutoScout24 queries (fewer pages).
    the backbone) so valuation and dedup work for any model.
 3. **Capacity**: per-site rate budgets, several workers, residential proxies for sites that
    block datacenter IPs (Gaspedaal, mobile.de), Claude gating on spread + batch API.
+
+
+## Recency sweeps (2026-11-06)
+
+Step 1 of the roadmap above, for AutoScout24.de and Kleinanzeigen. `carscan models sweeps
+--owner <user>` creates one saved search with role `sweep` per brand in `models.yaml` and per
+site ("Sweep · BMW · autoscout24_de"), every 15 minutes (`SWEEP_INTERVAL_MINUTES`). A sweep
+asks for the brand's ads newest-first (years from the oldest model we track, the brand's fuel
+when its models agree, a price cap only when every model has one), fetches at most
+`SWEEP_MAX_PAGES` pages, and stops at the first page that holds only ads we already have
+(`known_ids` in the params, filled by the worker; both scrapers honour it). It stores every ad
+it sees, stamps the watchlist model on the ones we track (`watchlist.classify`: make, the model
+line from the AutoScout24 URL or the Kleinanzeigen title, chassis code, engine designation,
+year, fuel, body), fetches details and runs the Claude pass only for those, and never
+deactivates anything: a sweep sees only the newest ads, so absence means nothing. The
+per-model searches keep doing deactivation; untracked cars are valued by model name only and
+show up for spotters and the free-text search. Sweeps never queue Telegram alerts
+(`alerts_enabled=False`); spotters and favorites decide what deserves attention.
+
+**Bytes.** `PoliteClient.bytes_received` counts what came over the wire (compressed), stored
+per run in `scrape_runs.bytes_fetched`. `carscan scrape traffic [--days N]` prints bytes per
+source and role with a monthly projection; the Status page shows the last 24 h per source and
+a sweep table. These numbers are what a proxy plan would bill.

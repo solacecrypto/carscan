@@ -53,6 +53,7 @@ class PoliteClient:
             limits=httpx.Limits(max_keepalive_connections=0, max_connections=1),
         )
         self.requests_made = 0
+        self.bytes_received = 0  # bytes on the wire (compressed), what a proxy would bill
 
     def close(self) -> None:
         self._client.close()
@@ -85,6 +86,8 @@ class PoliteClient:
                     raise ScrapeError(f"network error after {attempt} attempts: {e}") from e
                 self._backoff(attempt, url, str(e))
                 continue
+            # num_bytes_downloaded is the wire size (compressed); mocks report 0, so fall back
+            self.bytes_received += resp.num_bytes_downloaded or len(resp.content)
             if resp.status_code in (403, 429) or resp.status_code >= 500:
                 if attempt > self.retries:
                     if resp.status_code in (403, 429):

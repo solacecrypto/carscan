@@ -139,6 +139,7 @@ class Kleinanzeigen:
 
     def search(self, params: dict[str, Any], client: PoliteClient) -> list[RawListing]:
         motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
+        known = set(params.get("known_ids") or ())  # sweeps: stop once a page holds only old ads
         seen: dict[str, RawListing] = {}
         page = 1
         while page <= min(int(params.get("max_pages") or MAX_PAGES), MAX_PAGES):
@@ -168,6 +169,8 @@ class Kleinanzeigen:
             log.info("kleinanzeigen.search.page", page=page, items=len(items), kept=len(seen))
             if not items or f"seite:{page + 1}/" not in resp.text:
                 break
+            if known and all(item.get("id") in known for item in items):
+                break  # newest-first: everything from here on was seen before
             page += 1
         return list(seen.values())
 

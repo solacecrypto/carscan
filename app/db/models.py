@@ -5,6 +5,7 @@ from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     Date,
@@ -648,6 +649,9 @@ class ScrapeRun(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[ScrapeStatus] = mapped_column(_enum(ScrapeStatus, "scrape_status"))
     pages_fetched: Mapped[int] = mapped_column(Integer, default=0)
+    bytes_fetched: Mapped[int] = mapped_column(
+        BigInteger, default=0, server_default="0"
+    )  # network bytes, to size a proxy plan
     listings_seen: Mapped[int] = mapped_column(Integer, default=0)
     listings_new: Mapped[int] = mapped_column(Integer, default=0)
     listings_price_changed: Mapped[int] = mapped_column(Integer, default=0)

@@ -77,7 +77,7 @@ BODY = {
 }
 
 
-CLIENT_SIDE_PARAMS = ("path", "models", "motor_regex")
+CLIENT_SIDE_PARAMS = ("path", "models", "motor_regex", "known_ids", "max_pages")
 
 
 def build_search_url(params: dict[str, Any], page: int, origin: str = ORIGIN) -> str:
@@ -160,8 +160,10 @@ class AutoScout24DE:
         seen: dict[str, RawListing] = {}
         models = {str(m).lower() for m in params.get("models") or []}
         motor = re.compile(params["motor_regex"], re.I) if params.get("motor_regex") else None
+        known = set(params.get("known_ids") or ())  # sweeps: stop once a page holds only old ads
+        max_pages = min(int(params.get("max_pages") or MAX_PAGES), MAX_PAGES)
         page, total_pages = 1, 1
-        while page <= min(total_pages, MAX_PAGES):
+        while page <= min(total_pages, max_pages):
             url = build_search_url(params, page, origin=self.origin)
             resp = client.get(url, headers=self.headers)
             if resp.status_code != 200:
@@ -191,8 +193,10 @@ class AutoScout24DE:
             log.info("as24.search.page", page=page, total_pages=total_pages, items=len(listings))
             if not listings:
                 break
+            if known and all(item.get("id") in known for item in listings):
+                break  # newest-first: everything from here on was seen before
             page += 1
-        if total_pages > MAX_PAGES:
+        if total_pages > max_pages and not known:
             log.warning("as24.search.truncated", total_pages=total_pages, max_pages=MAX_PAGES)
         return list(seen.values())
 

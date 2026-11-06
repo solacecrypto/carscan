@@ -45,6 +45,7 @@ class RunSummary:
     price_dropped: int = 0
     deactivated: int = 0
     alerts_queued: int = 0
+    bytes: int = 0
     error: str | None = None
 
 
@@ -85,6 +86,12 @@ def run_saved_search(
     scraper = get_scraper(source)
     own_client = client is None
     client = client or PoliteClient()
+    if role == "sweep":
+        # newest-first paging stops at the first page made only of ads we already have
+        with db_session() as s:
+            params["known_ids"] = list(
+                s.scalars(select(Listing.source_listing_id).where(Listing.source == source))
+            )
     try:
         raws = scraper.search(params, client)
         with db_session() as s:
@@ -99,6 +106,10 @@ def run_saved_search(
                     run_id, ScrapeStatus.ok, seen=cres.seen, new=cres.new, deactivated=gone
                 )
                 price_changed = 0
+            elif role == "sweep":
+                summary, price_changed = _store_sweep(
+                    s, scraper, client, raws, search, now, run_id, settings, detail_budget
+                )
             else:
                 items = _apply_watchlist(params, _parse_all(scraper, raws))
                 chosen = _select_for_enrichment(s, raws, items, settings.detail_min_spread_eur)
@@ -148,6 +159,8 @@ def run_saved_search(
             run.finished_at = now
             run.status = ScrapeStatus.ok
             run.pages_fetched = client.requests_made
+            run.bytes_fetched = client.bytes_received
+            summary.bytes = client.bytes_received
             run.listings_seen = summary.seen
             run.listings_new = summary.new
             run.listings_price_changed = price_changed
@@ -163,6 +176,7 @@ def run_saved_search(
             run.finished_at = datetime.now(UTC)
             run.status = ScrapeStatus.failed
             run.pages_fetched = client.requests_made
+            run.bytes_fetched = client.bytes_received
             run.error = err
         kind = (
             "BLOCKED"
@@ -182,6 +196,89 @@ def run_saved_search(
     finally:
         if own_client:
             client.close()
+
+
+def _store_sweep(
+    s: Session,
+    scraper: Any,
+    client: PoliteClient,
+    raws: list[RawListing],
+    search: SavedSearch,
+    now: datetime,
+    run_id: int,
+    settings: Any,
+    detail_budget: int,
+) -> tuple[RunSummary, int]:
+    """A sweep stores every ad it saw (the per-model searches and spotters decide what
+    matters), fetches details only for cars on the watchlist, and never deactivates: a
+    sweep sees only the newest ads, so absence means nothing."""
+    from app.watchlist import classify
+
+    models = _models_by_key()
+    entries = list(models.values())
+
+    def stamp(items: list[NormalizedListing]) -> list[NormalizedListing]:
+        for it in items:
+            year = it.first_registration.year if it.first_registration else None
+            it.model_key = classify(
+                it.make, it.model, it.variant, it.url, year, it.fuel, it.body_type, entries
+            )
+            if it.model_key and models[it.model_key].get("make"):
+                it.make = models[it.model_key]["make"]
+            it.body_type = canonical_body(it.body_type, _model_bodies().get(it.model_key or ""))
+        return items
+
+    items = stamp(_parse_all(scraper, raws))
+    keyed = {it.source_listing_id for it in items if it.model_key}
+    tracked_raws = [r for r in raws if r.source_listing_id in keyed]
+    tracked_items = [it for it in items if it.model_key]
+    chosen = _select_for_enrichment(s, tracked_raws, tracked_items, settings.detail_min_spread_eur)
+    _enrich_new(s, scraper, client, chosen, detail_budget)
+    items = stamp(_parse_all(scraper, raws))
+    result = upsert_listings(s, items, search, now)
+    dedup = link_duplicates(s, result.new, now)
+    if dedup.linked:
+        log.info("scrape.dedup", linked=dedup.linked, checked=dedup.checked)
+    keys = {x.model_key for x in result.new if x.model_key}
+    for key in keys:
+        spreads_before = starred_spreads(s, key)
+        recompute_values(s, now, model_key=key)
+        spread_events(s, spreads_before, now)
+    insights_budget = settings.insights_per_run
+    analyzer = default_analyzer() if insights_budget else None
+    if analyzer and result.new:
+        floor = settings.insights_min_spread_eur
+        ids = [
+            x.id
+            for x in result.new
+            if x.model_key and (floor is None or x.spread_eur is None or x.spread_eur >= floor)
+        ]
+        if ids:
+            counts = analyze_pending(s, analyzer, now, insights_budget, ids)
+            log.info("scrape.insights", candidates=len(ids), **counts)
+    alerts = check_watches(s, result, [], now)
+    notified = favorite_events(s, result, [], now)
+    notified += subscription_events(s, result.new, now)
+    if notified:
+        log.info("notify.events", count=notified)
+    log.info(
+        "sweep.done",
+        search=search.name,
+        seen=result.seen,
+        new=len(result.new),
+        tracked_new=sum(1 for x in result.new if x.model_key),
+        pages=client.requests_made,
+        bytes=client.bytes_received,
+    )
+    summary = RunSummary(
+        run_id,
+        ScrapeStatus.ok,
+        seen=result.seen,
+        new=len(result.new),
+        price_dropped=len(result.price_dropped),
+        alerts_queued=len(alerts),
+    )
+    return summary, len(result.price_dropped) + len(result.price_raised)
 
 
 def _parse_all(scraper: Any, raws: list[RawListing]) -> list[NormalizedListing]:

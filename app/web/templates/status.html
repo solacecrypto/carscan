@@ -23,7 +23,15 @@
   <div class="card p-3"><div class="text-xs text-ink-400">{{ label }}</div><div class="text-xl font-bold">{{ value }}</div><div class="text-[11px] text-ink-400">{{ note }}</div></div>
   {% endfor %}
 </div>
-<h2 class="mt-6 font-semibold">Sources</h2>
+<h2 class="mt-6 font-semibold">Sources <span class="text-xs font-normal text-ink-400">· {{ total_mb }} MB fetched in the last 24 h, about {{ (total_mb * 30)|round|int }} MB a month at this pace</span></h2>
+{% if sweeps %}
+<div class="mt-2 card p-4 text-sm">
+  <h2 class="font-semibold">Recency sweeps, last 24 h</h2>
+  <p class="text-xs text-ink-400">One newest-first query per brand per site every 15 minutes, stopping at the first page of known ads. These numbers are what a proxy plan would bill.</p>
+  <table class="mt-2 w-full text-sm"><thead class="text-left"><tr><th class="p-1">source</th><th class="p-1">runs</th><th class="p-1">new cars</th><th class="p-1">MB</th><th class="p-1">MB / month</th></tr></thead>
+  <tbody>{% for w in sweeps %}<tr class="border-t border-ink-100"><td class="p-1">{{ w.source }}</td><td class="p-1">{{ w.runs }}</td><td class="p-1">{{ w.new }}</td><td class="p-1">{{ w.mb }}</td><td class="p-1">{{ (w.mb * 30)|round|int }}</td></tr>{% endfor %}</tbody></table>
+</div>
+{% endif %}
 <div class="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
   {% for s in sources %}
   <div class="card p-4 {{ 'opacity-60' if not s.searches }}">
@@ -34,6 +42,7 @@
       <dd>{% if s.last %}{{ s.last.started_at|timeago }} ·
         <span class="{{ 'text-good-700' if s.last.status.value == 'ok' else 'text-bad-700' }} font-semibold">{{ s.last.status.value }}</span>{% else %}never{% endif %}</dd>
       <dt class="text-ink-400">Last successful</dt><dd>{{ s.last_ok.finished_at|timeago if s.last_ok else 'never' }}</dd>
+      <dt class="text-ink-400">Last 24 h</dt><dd>{{ s.runs_24h }} run{{ '' if s.runs_24h == 1 else 's' }} · {{ s.mb_24h }} MB</dd>
       {% if s.last and s.last.error and s.searches %}<dt class="text-ink-400">Error</dt><dd class="break-words text-bad-700">{{ s.last.error[:300] }}</dd>{% endif %}
     </dl>
   </div>

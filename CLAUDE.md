@@ -136,6 +136,14 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Recency sweeps (2026-11-06)
+
+Saved-search role `sweep` (one newest-first query per brand per site, AutoScout24.de +
+Kleinanzeigen, 15 min, early stop at known ads, no deactivation): `watchlist.build_sweep_specs`,
+`sync_sweeps`, `classify`; worker `_store_sweep`; `carscan models sweeps --owner`. Bytes per
+run in `scrape_runs.bytes_fetched` (`PoliteClient.bytes_received`), `carscan scrape traffic`,
+traffic on the Status page. See `docs/watchlist.md`.
+
 ## Cleanup (2026-11-06)
 
 Claim/Pass/Contacted web strip removed (`/listings/{id}/status` route gone): tracking a deal

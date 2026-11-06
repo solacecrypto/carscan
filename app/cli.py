@@ -441,6 +441,64 @@ def models_sync(
         typer.echo("(updated includes hand-made searches adopted into the watchlist)")
 
 
+@models.command("sweeps")
+def models_sweeps(
+    owner: str = typer.Option(..., help="username that owns created searches"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="only print the sweeps"),
+) -> None:
+    """Create the recency sweeps: one newest-first query per brand on AutoScout24.de and
+    Kleinanzeigen, every 15 minutes, stopping at the first page of known ads."""
+    from app.db import User, db_session
+    from app.watchlist import build_sweep_specs, sync_sweeps
+
+    if dry_run:
+        for sp in build_sweep_specs():
+            typer.echo(f"{sp.source:16} every {sp.interval_minutes:>3} min  {sp.name}  {sp.params}")
+        return
+    with db_session() as s:
+        user = s.scalar(select(User).where(User.username == owner))
+        if not user:
+            raise typer.BadParameter(f"no such user {owner!r}")
+        r = sync_sweeps(s, user)
+    typer.echo(f"sweeps: {r['sweeps']}  created {r['created']}  updated {r['updated']}")
+
+
+@scrape.command("traffic")
+def scrape_traffic(days: int = typer.Option(1, help="window in days")) -> None:
+    """Bytes fetched per source and role in the last N days: what a proxy plan would bill."""
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import func
+
+    from app.db import SavedSearch, ScrapeRun, db_session
+
+    since = datetime.now(UTC) - timedelta(days=days)
+    with db_session() as s:
+        rows = s.execute(
+            select(
+                ScrapeRun.source,
+                SavedSearch.role,
+                func.count(),
+                func.sum(ScrapeRun.pages_fetched),
+                func.sum(ScrapeRun.bytes_fetched),
+            )
+            .join(SavedSearch, SavedSearch.id == ScrapeRun.saved_search_id, isouter=True)
+            .where(ScrapeRun.started_at >= since)
+            .group_by(ScrapeRun.source, SavedSearch.role)
+            .order_by(ScrapeRun.source, SavedSearch.role)
+        ).all()
+    total = 0
+    for source, role, runs, pages, nbytes in rows:
+        total += int(nbytes or 0)
+        typer.echo(
+            f"{source:16} {role or '-':12} runs={runs:<5} pages={int(pages or 0):<6} "
+            f"MB={int(nbytes or 0) / 1e6:8.1f}"
+        )
+    typer.echo(
+        f"total {total / 1e6:.1f} MB in {days} day(s) = {total / 1e6 * 30 / days:.0f} MB/month"
+    )
+
+
 @models.command("list")
 def models_list() -> None:
     """Show the watchlist."""
@@ -889,8 +947,8 @@ def scrape_run(
     for r in summaries:
         typer.echo(
             f"run {r.run_id}: {r.status.value} seen={r.seen} new={r.new} "
-            f"drops={r.price_dropped} deactivated={r.deactivated} alerts={r.alerts_queued}"
-            + (f" error={r.error}" if r.error else "")
+            f"drops={r.price_dropped} deactivated={r.deactivated} alerts={r.alerts_queued} "
+            f"kb={r.bytes // 1024}" + (f" error={r.error}" if r.error else "")
         )
 
 
