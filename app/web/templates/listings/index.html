@@ -119,11 +119,6 @@
           {% else %}<span class="text-[11px] text-ink-500">Set filters, then “+ save current” to keep them as a named preset.</span>{% endfor %}
         </div>
       </div>
-      <div class="px-3 pb-3">
-        <input type="search" name="q" value="{{ f.q or '' }}" placeholder="Search words: GTI, Touring, Xenon, Dortmund…" class="input !mt-0 !rounded-xl"
-               hx-get="/listings" hx-trigger="keyup changed delay:400ms, search" hx-target="#results" hx-swap="outerHTML" hx-include="#filters" hx-push-url="true">
-      </div>
-
       {% call row('brand', 'Brand and model', ((f.make or [])|join(', ')) ~ ((' · ' if f.make and selected_models) ~ (selected_models|length ~ ' model' ~ ('' if selected_models|length == 1 else 's') if selected_models else '')) if g.brand else '') %}
         <div class="chips" data-name="make" data-list="brand-list">
           <span class="label text-xs">Brand</span>
@@ -234,7 +229,13 @@
   </aside>
 
   <div class="min-w-0 flex-1">
-    <div class="mb-3 flex items-center justify-end gap-2 text-sm text-ink-500">
+    <div class="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink-500">
+      <label class="relative block w-full sm:max-w-xs" title="narrows the list as you type: brand, model, trim, city, words from the ad">
+        <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" name="q" form="filters" value="{{ f.q or '' }}" placeholder="Search: Audi, Golf GTI, Xenon, Dortmund…" class="input !mt-0 !py-1.5 !pl-9" autocomplete="off"
+               hx-get="/listings" hx-trigger="keyup changed delay:300ms, search" hx-target="#results" hx-swap="outerHTML" hx-include="#filters" hx-push-url="true">
+      </label>
+      <span class="ml-auto"></span>
       <label for="sort">Sort by</label>
       <select id="sort" name="sort" form="filters" class="input !mt-0 !w-auto !py-1.5">
         {% for v, t in [('newest', 'newest first'), ('spread_desc', 'spread, highest first'), ('price_asc', 'price, lowest first'), ('price_desc', 'price, highest first'), ('landed_asc', 'landed cost, lowest first'), ('mileage', 'mileage, lowest first'), ('year_desc', 'year, newest first'), ('price_change', 'recent price change')] %}
