@@ -2,7 +2,7 @@
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (e) { data = { title: event.data && event.data.text() }; }
-  const title = data.title || 'Car Scanner';
+  const title = data.title || 'MERQANTILE';
   const options = {
     body: data.body || '',
     icon: '/static/icon-192.png',
