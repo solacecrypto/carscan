@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import Alert, AlertStatus, Listing, PriceHistory, SavedSearch, SellerType, User, Watch
+from app.storage.filters import matches, parse_filters
 from app.web.main import app
 from app.web.ratelimit import login_limiter
 from app.web.security import hash_password
@@ -453,6 +454,14 @@ def test_paperwork_filter_and_box(client: TestClient, seeded: dict, db: Session)
     assert "Seller says papers are missing" in client.get(f"/listings/{row.id}").text
     assert "No listings match" in results("/listings?papers_ok=true")
     assert "320i" in results("/listings")
+    # hide warning light: from the repair estimator's findings, not from the Claude pass
+    assert "320i" in results("/listings?no_warning_light=true")
+    row.repair_breakdown = {"items": [{"key": "warning_light", "label": "warning light on"}]}
+    db.commit()
+    assert "No listings match" in results("/listings?no_warning_light=true")
+    assert "318i" in results("/listings?no_warning_light=true&include_inactive=1&profitable=false")
+    assert "hide warning light" in client.get("/listings").text
+    assert not matches(row, parse_filters({"no_warning_light": "true", "profitable": "false"}))
 
 
 def test_tuv_months_filter(client: TestClient, seeded: dict, db: Session) -> None:

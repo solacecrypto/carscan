@@ -110,6 +110,11 @@ range under `repairs:` in costs.yaml; the midpoint is used. Negated mentions ("k
 "no rust") are ignored. Both the original and the English text are scanned, so the estimate
 can change once the translation arrives. Deliberately coarse: a flag, not a quote.
 
+The listings filter **hide warning light** (`no_warning_light`, under Condition) drops every ad
+in which the estimator found the `warning_light` item (engine lamp, "Fehlerspeicher",
+"storingslamp", "spia accesa", ...). It reads `repair_breakdown.items`, so it works without
+the Claude pass; alerts and wanted matches honour it like the other condition flags.
+
 ## Pickup trip (not part of the landed cost)
 
 `app/geo.py` geocodes each car's city/postcode once through Nominatim (cached in

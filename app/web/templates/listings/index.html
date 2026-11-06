@@ -14,7 +14,7 @@
   'bodycolor': (f.body or f.color) and true,
   'seller': f.seller_type and true,
   'country': (f.country or f.max_km) and true,
-  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok or f.tuv_min_months) and true,
+  'condition': (f.no_accident or f.no_export_only or f.chain_replaced or f.service_full or f.papers_ok or f.no_warning_light or f.tuv_min_months) and true,
   'listed': (f.new_hours or f.price_dropped) and true,
   'more': (f.include_inactive or f.include_duplicates or f.starred) and true,
 } %}
@@ -204,8 +204,8 @@
         <p class="mt-1 text-[11px] text-ink-400">Road kilometres{% if user.home_lat is none %}; set your own location with the globe in the header{% endif %}. Cars whose town is not placed on the map yet are left out while this is set.</p>
       {% endcall %}
 
-      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ('papers ok' if f.papers_ok), ('TÜV ≥ ' ~ f.tuv_min_months ~ ' mo' if f.tuv_min_months)]|select|join(', ')) if g.condition else '') %}
-        {{ checks([('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('papers_ok', 'hide "papers missing"'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')]) }}
+      {% call row('condition', 'Condition', ([('no accident' if f.no_accident), ('no export-only' if f.no_export_only), ('chain replaced' if f.chain_replaced), ('full history' if f.service_full), ('papers ok' if f.papers_ok), ('no warning light' if f.no_warning_light), ('TÜV ≥ ' ~ f.tuv_min_months ~ ' mo' if f.tuv_min_months)]|select|join(', ')) if g.condition else '') %}
+        {{ checks([('no_accident', 'hide accident cars'), ('no_export_only', 'hide export-only'), ('papers_ok', 'hide "papers missing"'), ('no_warning_light', 'hide warning light'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')]) }}
         {{ num('tuv_min_months', 'TÜV / inspection valid for at least (months)', f.tuv_min_months, 1, 'e.g. 12') }}
       {% endcall %}
 
