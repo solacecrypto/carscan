@@ -31,6 +31,7 @@ FILTER_KEYS = (
     "service_full",
     "papers_ok",
     "no_warning_light",
+    "no_repairs",
     "tuv_min_months",
     "color",
     "body",
@@ -117,6 +118,7 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "service_full": flag("service_full") or None,
         "papers_ok": flag("papers_ok") or None,  # hide ads that say the papers are missing
         "no_warning_light": flag("no_warning_light") or None,  # hide ads admitting a lit lamp
+        "no_repairs": flag("no_repairs") or None,  # hide ads with any admitted defect
         "starred": flag("starred") or None,  # only my starred cars (joined in the route)
         "q": text("q") or None,  # free words over make, model, variant, city, description
         "tuv_min_months": num("tuv_min_months"),  # inspection valid for at least this long
@@ -177,6 +179,8 @@ def matches(listing: Listing, filters: dict[str, Any]) -> bool:
         if "papers_missing" in keys:
             return False
     if f.get("no_warning_light") and _has_repair(listing, "warning_light"):
+        return False
+    if f.get("no_repairs") and listing.repair_cost_eur:
         return False
     if f.get("q"):
         hay = " ".join(
@@ -268,6 +272,9 @@ def apply_sql(
         stmt = stmt.where(Listing.color.in_(f["color"]))
     if f.get("body"):
         stmt = stmt.where(Listing.body_type.in_(f["body"]))
+    if f.get("no_repairs"):
+        # the repair estimator found nothing to fix in the ad text
+        stmt = stmt.where((Listing.repair_cost_eur.is_(None)) | (Listing.repair_cost_eur == 0))
     if f.get("no_warning_light"):
         # the repair estimator stores every defect it read as {"key": ...} under items
         stmt = stmt.where(

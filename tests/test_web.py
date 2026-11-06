@@ -461,6 +461,13 @@ def test_paperwork_filter_and_box(client: TestClient, seeded: dict, db: Session)
     assert "No listings match" in results("/listings?no_warning_light=true")
     assert "318i" in results("/listings?no_warning_light=true&include_inactive=1&profitable=false")
     assert "hide warning light" in client.get("/listings").text
+    # hide needs repair: anything the estimator priced, not only a warning light
+    assert "320i" in results("/listings?no_repairs=true")
+    row.repair_cost_eur = 400
+    db.commit()
+    assert "No listings match" in results("/listings?no_repairs=true")
+    assert "hide needs repair" in client.get("/listings").text
+    assert not matches(row, parse_filters({"no_repairs": "true", "profitable": "false"}))
     assert not matches(row, parse_filters({"no_warning_light": "true", "profitable": "false"}))
 
 

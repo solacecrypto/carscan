@@ -114,6 +114,8 @@ The listings filter **hide warning light** (`no_warning_light`, under Condition)
 in which the estimator found the `warning_light` item (engine lamp, "Fehlerspeicher",
 "storingslamp", "spia accesa", ...). It reads `repair_breakdown.items`, so it works without
 the Claude pass; alerts and wanted matches honour it like the other condition flags.
+**Hide needs repair** (`no_repairs`) goes further and drops every ad in which the estimator
+priced anything at all (`repair_cost_eur` set), so only cars with no admitted defects remain.
 
 ## Pickup trip (not part of the landed cost)
 
