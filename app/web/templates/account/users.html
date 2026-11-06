@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="mb-4"><h1>Users</h1><p class="text-sm text-ink-400">Everyone who can sign in. Admins can add users, reset passwords and remove accounts.</p></div>
+<div class="mb-4"><h1>Users</h1><p class="text-sm text-ink-400">Everyone who can sign in. Admins can add users, reset passwords, remove accounts and group people into teams. On the <b>team</b> plan the members share one deals board; on the <b>individual</b> plan (or with no team) each person sees only their own deals.</p></div>
 {% if msg %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">{{ msg }}</div>{% endif %}
 <div class="grid gap-4 lg:grid-cols-3">
   <div class="card overflow-x-auto lg:col-span-2">
     <table class="w-full text-sm">
-      <thead class="bg-ink-50 text-left"><tr><th class="p-2">user</th><th class="p-2">telegram</th><th class="p-2">admin</th><th class="p-2">since</th><th class="p-2">reset password</th><th class="p-2"></th></tr></thead>
+      <thead class="bg-ink-50 text-left"><tr><th class="p-2">user</th><th class="p-2">telegram</th><th class="p-2">admin</th><th class="p-2">team</th><th class="p-2">since</th><th class="p-2">reset password</th><th class="p-2"></th></tr></thead>
       <tbody>
         {% for u in users %}
         <tr class="border-t border-ink-100">
           <td class="p-2 font-medium">{{ u.username }}{% if u.id == user.id %} <span class="text-xs text-ink-400">(you)</span>{% endif %}</td>
           <td class="p-2 text-ink-600">{{ '@' ~ u.telegram_username if u.telegram_username else '–' }}</td>
           <td class="p-2">{% if u.id != user.id %}<form method="post" action="/users/{{ u.id }}/toggle_admin"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="pill {{ 'bg-brand-100 text-brand-800' if u.is_admin else 'bg-ink-100 text-ink-500' }}">{{ 'admin' if u.is_admin else 'member' }}</button></form>{% else %}<span class="pill bg-brand-100 text-brand-800">admin</span>{% endif %}</td>
+          <td class="p-2"><form method="post" action="/users/{{ u.id }}/team"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><select name="team_id" class="input !mt-0 !w-auto !py-1 !text-xs" onchange="this.form.submit()"><option value="">alone</option>{% for t in teams %}<option value="{{ t.id }}" {{ 'selected' if t.id == u.team_id }}>{{ t.name }} ({{ t.plan.value }})</option>{% endfor %}</select></form></td>
           <td class="p-2 text-ink-500">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '–' }}</td>
           <td class="p-2"><form method="post" action="/users/{{ u.id }}/reset" class="flex gap-1"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="password" name="password" placeholder="new password" minlength="8" class="input !mt-0 !w-36 !py-1" required><button class="btn-ghost !py-1 !text-xs">Reset</button></form></td>
           <td class="p-2">{% if u.id != user.id %}<form method="post" action="/users/{{ u.id }}/delete" onsubmit="return confirm('Delete {{ u.username }}?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="text-xs text-bad-700 underline">delete</button></form>{% endif %}</td>
@@ -26,9 +27,36 @@
     <label class="label block text-xs">Username<input type="text" name="username" class="input" required></label>
     <label class="label block text-xs">Temporary password (8+)<input type="text" name="password" class="input" minlength="8" required></label>
     <label class="label block text-xs">Telegram handle (optional)<input type="text" name="telegram_username" class="input" placeholder="without @"></label>
+    <label class="label block text-xs">Team<select name="team_id" class="input"><option value="">none (works alone)</option>{% for t in teams %}<option value="{{ t.id }}">{{ t.name }} ({{ t.plan.value }})</option>{% endfor %}</select></label>
     <label class="check !px-0"><input type="checkbox" name="is_admin" value="true"> admin</label>
     <button class="btn-primary w-full">Add user</button>
     <p class="text-[11px] text-ink-400">Tell them to change the password on their Account page.</p>
+  </form>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-3">
+  <div class="card p-4 lg:col-span-2">
+    <h2>Teams</h2>
+    <table class="mt-2 w-full text-sm">
+      <thead class="text-left"><tr><th class="p-2">team</th><th class="p-2">plan</th><th class="p-2">members</th><th class="p-2"></th></tr></thead>
+      <tbody>
+        {% for t in teams %}
+        <tr class="border-t border-ink-100">
+          <td class="p-2 font-medium">{{ t.name }}</td>
+          <td class="p-2"><form method="post" action="/teams/{{ t.id }}/plan"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><select name="plan" class="input !mt-0 !w-auto !py-1 !text-xs" onchange="this.form.submit()">{% for pl in plans %}<option value="{{ pl.value }}" {{ 'selected' if pl == t.plan }}>{{ pl.value }}</option>{% endfor %}</select></form></td>
+          <td class="p-2 text-ink-600">{{ t.members|map(attribute='username')|join(', ') or '–' }}</td>
+          <td class="p-2"><form method="post" action="/teams/{{ t.id }}/delete" onsubmit="return confirm('Delete team {{ t.name|e }}? Its members keep their accounts and deals, but work alone.')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="text-xs text-bad-700 underline">delete</button></form></td>
+        </tr>
+        {% else %}<tr><td colspan="4" class="p-2 text-xs text-ink-400">No teams yet: everyone works alone.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <form method="post" action="/teams" class="card space-y-3 p-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>Add a team</h2>
+    <label class="label block text-xs">Name<input type="text" name="name" class="input" required maxlength="80"></label>
+    <label class="label block text-xs">Plan<select name="plan" class="input"><option value="team">team · members share one deals board</option><option value="individual">individual · each member sees only their own deals</option></select></label>
+    <button class="btn-primary w-full">Add team</button>
   </form>
 </div>
 {% endblock %}

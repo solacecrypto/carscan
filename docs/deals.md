@@ -57,3 +57,26 @@ summed over open deals in the tiles and shown on every card.
 **Reminders** (`app/deals/reminders.py`, daily 08:00 Amsterdam, notification kind `deal` to
 the owner): stuck in a stage past `STALE_DAYS`; the ad of a not-yet-bought deal disappeared;
 its asking price changed since tracking. Same-day repeats refresh the unread notification.
+
+## Teams and board filters (2026-11-06)
+
+**Who sees what.** `teams` (name, plan) and `users.team_id`. A user without a team, or on a
+team with the **individual** plan, sees and owns only their own deals: the board, the deal
+pages, the owner handover list and the "deal" line on a car page are all limited to them. On
+the **team** plan every member sees the whole board and can hand deals to each other
+(`app/teams.py`: `teammates`, `visible_user_ids`). A car can be tracked once; tracking a car
+that someone outside your team already has answers 409. The migration put every existing user
+on one team named "Carscan" with the team plan, so nothing changed for the current group.
+There is no billing: the plan is a flag an admin sets.
+
+**Admin.** `/users` gained a team column per user, a Teams table (change plan, delete; members
+keep their accounts and deals) and an "Add a team" form. CLI: `carscan teams create NAME
+[--plan individual|team]`, `carscan teams assign USER [TEAM]`, `carscan teams list`. The
+account page tells each user their plan and who they share deals with.
+
+**Filters and sort on `/deals`.** Person (only on a shared team, with a deal count per
+person), stage, country of the car, site (when more than one), free text over make, model,
+variant, city, country and the deal notes, and sort by last activity, expected profit, asking
+price, longest in stage or country. The summary tiles follow the filter; "n of m deals" says
+how much is hidden; show/hide closed keeps the filters. Drag and drop needs two adjacent
+columns, so it does nothing while a single stage is selected.

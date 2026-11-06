@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from app.db import User
+from app.db import Team, TeamPlan, User
 from app.geo import geocode_address
+from app.teams import plan_label, team_of, teammates
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.security import hash_password, verify_password
 from app.web.templating import templates
@@ -28,7 +29,14 @@ def account_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "account/index.html",
-        {"title": "Account", "msg": request.query_params.get("msg"), "err": None},
+        {
+            "title": "Account",
+            "msg": request.query_params.get("msg"),
+            "err": None,
+            "plan": plan_label(db, user),
+            "team": team_of(db, user),
+            "teammates": [u for u in teammates(db, user) if u.id != user.id],
+        },
     )
 
 
@@ -64,11 +72,64 @@ def change_password(
 def users_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
     _admin(user)
     users = list(db.scalars(select(User).order_by(User.id)))
+    teams = list(db.scalars(select(Team).order_by(Team.name)))
     return templates.TemplateResponse(
         request,
         "account/users.html",
-        {"title": "Users", "users": users, "msg": request.query_params.get("msg")},
+        {
+            "title": "Users",
+            "users": users,
+            "teams": teams,
+            "plans": list(TeamPlan),
+            "msg": request.query_params.get("msg"),
+        },
     )
+
+
+@router.post("/teams", dependencies=[Depends(csrf_protect)])
+def teams_create(
+    db: DB, user: CurrentUser, name: str = Form(""), plan: str = Form("team")
+) -> RedirectResponse:
+    _admin(user)
+    name = name.strip()[:80]
+    if not name:
+        raise HTTPException(400, "a team needs a name")
+    if db.scalar(select(Team).where(Team.name == name)):
+        raise HTTPException(409, "that team exists")
+    db.add(Team(name=name, plan=_plan(plan), created_at=datetime.now(UTC)))
+    db.flush()
+    return RedirectResponse(
+        f"/users?msg=Created+team+{name}", status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@router.post("/teams/{team_id}/{action}", dependencies=[Depends(csrf_protect)])
+def teams_action(
+    db: DB, user: CurrentUser, team_id: int, action: str, plan: str = Form("")
+) -> RedirectResponse:
+    _admin(user)
+    team = db.get(Team, team_id)
+    if team is None:
+        raise HTTPException(404)
+    if action == "plan":
+        team.plan = _plan(plan)
+        msg = f"{team.name}+is+on+the+{team.plan.value}+plan"
+    elif action == "delete":
+        for member in team.members:  # members stay, they just work alone from now on
+            member.team_id = None
+        db.delete(team)
+        msg = f"Deleted+team+{team.name}"
+    else:
+        raise HTTPException(400)
+    db.flush()
+    return RedirectResponse(f"/users?msg={msg}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _plan(value: str) -> TeamPlan:
+    try:
+        return TeamPlan(value)
+    except ValueError:
+        raise HTTPException(400, "plan must be individual or team") from None
 
 
 @router.post("/users", dependencies=[Depends(csrf_protect)])
@@ -79,6 +140,7 @@ def users_create(
     password: str = Form(""),
     telegram_username: str = Form(""),
     is_admin: str = Form(""),
+    team_id: str = Form(""),
 ) -> RedirectResponse:
     _admin(user)
     username = username.strip()
@@ -92,6 +154,7 @@ def users_create(
             password_hash=hash_password(password),
             telegram_username=telegram_username.strip().lstrip("@") or None,
             is_admin=is_admin == "true",
+            team_id=int(team_id) if team_id.isdigit() else None,
             created_at=datetime.now(UTC),
         )
     )
@@ -101,13 +164,25 @@ def users_create(
 
 @router.post("/users/{user_id}/{action}", dependencies=[Depends(csrf_protect)])
 def users_action(
-    db: DB, user: CurrentUser, user_id: int, action: str, password: str = Form("")
+    db: DB,
+    user: CurrentUser,
+    user_id: int,
+    action: str,
+    password: str = Form(""),
+    team_id: str = Form(""),
 ) -> RedirectResponse:
     _admin(user)
     target = db.get(User, user_id)
     if target is None:
         raise HTTPException(404)
-    if action == "reset":
+    if action == "team":
+        team = db.get(Team, int(team_id)) if team_id.isdigit() else None
+        if team_id and team is None:
+            raise HTTPException(404, "no such team")
+        target.team = team
+        joined = "joined+" + team.name.replace(" ", "+") if team else "works+alone+now"
+        msg = f"{target.username}+{joined}"
+    elif action == "reset":
         if len(password) < MIN_PASSWORD:
             raise HTTPException(400, f"a password of {MIN_PASSWORD}+ characters")
         target.password_hash = hash_password(password)

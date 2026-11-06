@@ -71,6 +71,31 @@ listing_searches = Table(
 )
 
 
+class TeamPlan(enum.StrEnum):
+    """What an account can see on the deals board: only its own deals, or the whole team's."""
+
+    individual = "individual"
+    team = "team"
+
+
+class Team(Base):
+    """A group of accounts that work the same deals. A user without a team, or on a team
+    with the individual plan, sees and hands over only their own deals."""
+
+    __tablename__ = "teams"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(80), unique=True)
+    plan: Mapped[TeamPlan] = mapped_column(_enum(TeamPlan, "team_plan"), default=TeamPlan.team)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    members: Mapped[list[User]] = relationship(back_populates="team", order_by="User.username")
+
+    @property
+    def shared(self) -> bool:
+        return self.plan is TeamPlan.team
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -79,11 +104,16 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     telegram_username: Mapped[str | None] = mapped_column(String(64))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id", ondelete="SET NULL"), index=True
+    )
     # where this person drives from; distances and pickup costs are measured from here
     home_label: Mapped[str | None] = mapped_column(String(200))
     home_lat: Mapped[float | None] = mapped_column(Float)
     home_lon: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    team: Mapped[Team | None] = relationship(back_populates="members")
 
 
 class Listing(Base):

@@ -197,6 +197,16 @@ def star_bulk(
     return RedirectResponse(next, status_code=status.HTTP_303_SEE_OTHER)
 
 
+def _visible_deal(db: DB, listing_id: int, user: object) -> object | None:
+    """The deal on this car, unless it belongs to someone outside the viewer's team."""
+    from app.teams import visible_user_ids
+
+    deal = get_deal_for_listing(db, listing_id)
+    if deal is not None and deal.owner_id not in visible_user_ids(db, user):  # type: ignore[arg-type]
+        return None
+    return deal
+
+
 def _clean_query(request: Request) -> str:
     """The query string without empty values, so pushed URLs and the poller stay short."""
     pairs = [(k, v) for k, v in request.query_params.multi_items() if v not in ("", None)]
@@ -351,7 +361,7 @@ def listing_detail(request: Request, db: DB, user: CurrentUser, listing_id: int)
             "title": listing.make + " " + listing.model,
             "listing": listing,
             "nearest": [comps[i] for i in nearest_ids if i in comps],
-            "deal": get_deal_for_listing(db, listing.id),
+            "deal": _visible_deal(db, listing.id, user),
             "market": market_for_listing(db, listing, datetime.now(UTC)),
             "trip": _trip(db, listing, user),
             "coords": _coords(db, listing),

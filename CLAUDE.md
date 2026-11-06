@@ -136,6 +136,13 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Teams and deal filters (2026-11-06)
+
+`teams` (plan individual | team) + `users.team_id`; `app/teams.py` decides whose deals a user
+sees and may own (own only, or the whole team on the team plan). Existing users were migrated
+onto one shared team. Admin on `/users` and `carscan teams`. `/deals` filters: owner, stage,
+country, source, text, sort. No billing; the plan is a flag. See `docs/deals.md`.
+
 ## Wanted page, bulk favorites, CSV export (2026-10-27)
 
 `/wanted` lists current market matches per wanted-model subscription; listings results have a

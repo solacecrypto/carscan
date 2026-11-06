@@ -7,7 +7,18 @@ from sqlalchemy.orm import Session
 from typer.testing import CliRunner
 
 from app.cli import app as cli
-from app.db import Alert, AlertStatus, Deal, DealStage, Listing, SavedSearch, SellerType, User
+from app.db import (
+    Alert,
+    AlertStatus,
+    Deal,
+    DealStage,
+    Listing,
+    SavedSearch,
+    SellerType,
+    Team,
+    TeamPlan,
+    User,
+)
 from app.deals import calibrate, create_deal, set_stage, sync_from_alert_status, update_actuals
 from app.web.main import app
 from app.web.security import hash_password
@@ -244,9 +255,20 @@ def test_web_deal_flow(db: Session) -> None:
         follow_redirects=False,
     )
     assert r.headers["location"] == "/deals"
-    # hand the deal to another user
+    # hand the deal to another user: refused while they are not on a shared team
     other = User(username="w", password_hash="x")
     db.add(other)
+    db.commit()
+    r = c.post(
+        f"{deal_url}/owner",
+        data={"csrf_token": token, "owner_id": other.id},
+        follow_redirects=False,
+    )
+    assert r.status_code == 404
+    team = Team(name="crew", plan=TeamPlan.team)
+    db.add(team)
+    db.get(User, u.id).team = team
+    db.get(User, other.id).team = team
     db.commit()
     r = c.post(
         f"{deal_url}/owner",
@@ -379,3 +401,77 @@ def test_deal_reminders(db: Session) -> None:
     # a second run the same day refreshes instead of duplicating
     assert deal_reminders(db, NOW) == 3
     assert db.scalar(select(Notification).where(Notification.id > rows[-1].id)) is None
+
+
+def test_team_scope_filters_and_admin(db: Session) -> None:
+    """Individual accounts see only their own deals; a shared team sees everyone's and can
+    filter by person, country, stage, source and text."""
+    admin = User(username="q", password_hash=hash_password("pw12345678"), is_admin=True)
+    mate = User(username="w", password_hash="x")
+    stranger = User(username="z", password_hash="x")
+    db.add_all([admin, mate, stranger])
+    db.commit()
+    a = _listing(db, "a", country="DE", city="Berlin")
+    b = _listing(db, "b", country="BE", city="Gent", source="autoscout24_be")
+    z = _listing(db, "z", country="IT", city="Roma")
+    now = datetime.now(UTC)
+    mine = create_deal(db, a, admin, now)
+    theirs = create_deal(db, b, mate, now)
+    far = create_deal(db, z, stranger, now)
+    db.commit()
+    c = TestClient(app, base_url="http://localhost")
+    c.post(
+        "/login",
+        data={"username": "q", "password": "pw12345678", "csrf_token": _csrf(c.get("/login").text)},
+        follow_redirects=False,
+    )
+    # alone: only my own deal, no owner filter offered
+    page = c.get("/deals").text
+    assert f"/deals/{mine.id}" in page and f"/deals/{theirs.id}" not in page
+    assert 'name="owner"' not in page and "every country" in page
+    assert c.get(f"/deals/{theirs.id}").status_code == 404
+    assert c.get(f"/deals/{mine.id}").status_code == 200
+    token = _csrf(c.get("/users").text)
+    # admin creates a team and puts q and w on it
+    r = c.post(
+        "/teams", data={"csrf_token": token, "name": "crew", "plan": "team"}, follow_redirects=False
+    )
+    assert r.status_code == 303
+    team = db.query(Team).one()
+    for uid in (admin.id, mate.id):
+        c.post(f"/users/{uid}/team", data={"csrf_token": token, "team_id": str(team.id)})
+    db.expire_all()
+    assert db.get(User, mate.id).team_id == team.id
+    page = c.get("/deals").text
+    assert f"/deals/{mine.id}" in page and f"/deals/{theirs.id}" in page
+    assert f"/deals/{far.id}" not in page and 'name="owner"' in page
+    assert c.get(f"/deals/{theirs.id}").status_code == 200
+    assert c.get(f"/deals/{far.id}").status_code == 404
+    # filters
+    assert f"/deals/{theirs.id}" not in c.get("/deals?owner=q").text
+    assert f"/deals/{mine.id}" not in c.get("/deals?country=be").text
+    assert f"/deals/{theirs.id}" in c.get("/deals?country=be").text
+    assert f"/deals/{mine.id}" not in c.get("/deals?source=autoscout24_be").text
+    assert f"/deals/{theirs.id}" not in c.get("/deals?q=berlin").text
+    assert f"/deals/{mine.id}" in c.get("/deals?q=berlin").text
+    assert "1 of 2 deals" in c.get("/deals?q=berlin").text
+    assert f"/deals/{mine.id}" in c.get("/deals?stage=spotted&sort=country").text
+    assert "No open deals match these filters" in c.get("/deals?stage=bought").text
+    # account page tells the plan; the users page lists the team
+    assert (
+        "team · crew" in c.get("/account").text and "deals shared with w" in c.get("/account").text
+    )
+    assert "crew" in c.get("/users").text
+    # individual plan: back to own deals only
+    c.post(f"/teams/{team.id}/plan", data={"csrf_token": token, "plan": "individual"})
+    assert f"/deals/{theirs.id}" not in c.get("/deals").text
+    assert "individual · crew" in c.get("/account").text
+    # the car tracked by an outsider cannot be tracked again
+    r = c.post(
+        "/deals", data={"csrf_token": token, "listing_id": str(z.id)}, follow_redirects=False
+    )
+    assert r.status_code == 409
+    # deleting the team leaves the members in place
+    c.post(f"/teams/{team.id}/delete", data={"csrf_token": token})
+    db.expire_all()
+    assert db.query(Team).count() == 0 and db.get(User, mate.id).team_id is None

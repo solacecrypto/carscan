@@ -76,6 +76,53 @@ def users_create(
     typer.echo(f"created user {username}")
 
 
+teams = typer.Typer(no_args_is_help=True, help="Teams: who shares a deals board")
+app.add_typer(teams, name="teams")
+
+
+@teams.command("create")
+def teams_create(
+    name: str, plan: str = typer.Option("team", help="team (shared board) or individual")
+) -> None:
+    """Create a team."""
+    from app.db import Team, TeamPlan, db_session
+
+    with db_session() as s:
+        if s.scalar(select(Team).where(Team.name == name)):
+            raise typer.BadParameter(f"team {name!r} already exists")
+        s.add(Team(name=name, plan=TeamPlan(plan)))
+    typer.echo(f"created team {name} ({plan})")
+
+
+@teams.command("assign")
+def teams_assign(
+    username: str, team: str = typer.Argument("", help="team name; empty = alone")
+) -> None:
+    """Put a user on a team, or take them off every team."""
+    from app.db import Team, User, db_session
+
+    with db_session() as s:
+        u = s.scalar(select(User).where(User.username == username))
+        if u is None:
+            raise typer.BadParameter(f"no user {username!r}")
+        t = s.scalar(select(Team).where(Team.name == team)) if team else None
+        if team and t is None:
+            raise typer.BadParameter(f"no team {team!r}")
+        u.team = t
+    typer.echo(f"{username} -> {team or 'alone'}")
+
+
+@teams.command("list")
+def teams_list() -> None:
+    from app.db import Team, db_session
+
+    with db_session() as s:
+        for t in s.scalars(select(Team).order_by(Team.name)):
+            typer.echo(
+                f"{t.name} ({t.plan.value}): {', '.join(u.username for u in t.members) or '-'}"
+            )
+
+
 @users.command("set-password")
 def users_set_password(
     username: str,

@@ -4,13 +4,6 @@
 <div class="flex flex-wrap items-end justify-between gap-3">
   <div><h1>Deals</h1><p class="text-sm text-ink-400">Every car someone is working on, from first contact to sold. Each card says what to do next.</p></div>
   <div class="flex flex-wrap items-center gap-2 text-sm">
-    <form method="get" action="/deals" class="flex items-center gap-1">
-      {% if show_closed %}<input type="hidden" name="show_closed" value="true">{% endif %}
-      <select name="owner" class="input !mt-0 !w-auto !py-1.5" onchange="this.form.submit()">
-        <option value="">everyone</option>
-        {% for o in owners %}<option value="{{ o }}" {{ 'selected' if o == owner }}>{{ o }}{{ ' (me)' if o == user.username }}</option>{% endfor %}
-      </select>
-    </form>
     <a href="/calibration" class="btn-outline !py-1.5">Calibration</a>
     <form method="post" action="/deals" class="flex items-center gap-1">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -19,6 +12,39 @@
     </form>
   </div>
 </div>
+
+<form method="get" action="/deals" id="deal-filters" class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+  {% if show_closed %}<input type="hidden" name="show_closed" value="true">{% endif %}
+  {% if shared %}
+  <select name="owner" class="input !mt-0 !w-auto !py-1.5" title="whose deals" onchange="this.form.submit()">
+    <option value="">everyone</option>
+    {% for o in owners %}<option value="{{ o }}" {{ 'selected' if o == owner }}>{{ o }}{{ ' (me)' if o == user.username }} · {{ counts.get(o, 0) }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  <select name="stage" class="input !mt-0 !w-auto !py-1.5" title="stage" onchange="this.form.submit()">
+    <option value="">every stage</option>
+    {% for st in stages %}{% if st.value != 'dropped' %}<option value="{{ st.value }}" {{ 'selected' if st.value == f.stage }}>{{ st.value }}</option>{% endif %}{% endfor %}
+  </select>
+  <select name="country" class="input !mt-0 !w-auto !py-1.5" title="country the car is in" onchange="this.form.submit()">
+    <option value="">every country</option>
+    {% for c in countries %}<option value="{{ c }}" {{ 'selected' if c == f.country }}>{{ c }}</option>{% endfor %}
+  </select>
+  {% if sources|length > 1 %}
+  <select name="source" class="input !mt-0 !w-auto !py-1.5" title="site the ad is on" onchange="this.form.submit()">
+    <option value="">every site</option>
+    {% for sname in sources %}<option value="{{ sname }}" {{ 'selected' if sname == f.source }}>{{ sname }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  <input type="search" name="q" value="{{ f.q }}" placeholder="make, model, city, note…" class="input !mt-0 !w-44 !py-1.5">
+  <label class="flex items-center gap-1 text-ink-500">sort
+    <select name="sort" class="input !mt-0 !w-auto !py-1.5" onchange="this.form.submit()">
+      {% for v, t in sorts.items() %}<option value="{{ v }}" {{ 'selected' if v == sort }}>{{ t }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="btn-ghost !py-1.5">Apply</button>
+  {% if filtered or sort != 'updated' %}<a href="/deals{{ '?show_closed=true' if show_closed }}" class="text-xs text-ink-500 underline">clear</a>{% endif %}
+  {% if filtered %}<span class="ml-auto text-xs text-ink-400">{{ (groups|map(attribute=1)|map('length')|sum) + sold|length + dropped|length }} of {{ total }} deals</span>{% endif %}
+</form>
 
 <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
   {% for label, value, sub, tone in [
@@ -42,7 +68,7 @@
 {% set total_open = groups|map(attribute=1)|map('length')|sum %}
 {% if total_open == 0 %}
 <div class="mt-6 rounded-2xl border border-dashed border-ink-200 p-10 text-center text-ink-400">
-  <p class="font-medium text-ink-600">No open deals{{ ' for ' ~ owner if owner }}.</p>
+  <p class="font-medium text-ink-600">No open deals{{ ' for ' ~ owner if owner }}{{ ' match these filters' if filtered and not owner }}.</p>
   <p class="mt-1 text-sm">Open a car and press <b>Track as deal</b>, or paste its id or link above. The board then walks it from spotted to sold.</p>
 </div>
 {% else %}
@@ -115,7 +141,7 @@
 
 <div class="mt-8 flex items-center justify-between">
   <h2 class="text-xs font-semibold uppercase tracking-wider text-ink-500">Closed · {{ sold|length }} sold, {{ dropped|length }} dropped</h2>
-  <a href="/deals?show_closed={{ 'false' if show_closed else 'true' }}{% if owner %}&owner={{ owner }}{% endif %}" class="text-sm underline">{{ 'hide' if show_closed else 'show' }}</a>
+  <a href="/deals?show_closed={{ 'false' if show_closed else 'true' }}{% if qs %}&{{ qs }}{% endif %}" class="text-sm underline">{{ 'hide' if show_closed else 'show' }}</a>
 </div>
 {% if show_closed %}
 {% if sold %}

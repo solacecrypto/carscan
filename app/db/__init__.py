@@ -22,11 +22,15 @@ from app.db.models import (
     ScrapeStatus,
     SellerType,
     Subscription,
+    Team,
+    TeamPlan,
     User,
     Watch,
 )
 
 __all__ = [
+    "Team",
+    "TeamPlan",
     "Digest",
     "FilterPreset",
     "Notification",

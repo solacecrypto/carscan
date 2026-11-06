@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="mb-4"><h1>Account</h1><p class="text-sm text-ink-400">Signed in as <b>{{ user.username }}</b>{% if user.is_admin %} · admin{% endif %}.</p></div>
+<div class="mb-4"><h1>Account</h1><p class="text-sm text-ink-400">Signed in as <b>{{ user.username }}</b>{% if user.is_admin %} · admin{% endif %} · plan <b>{{ plan }}</b>{% if teammates %} · deals shared with {{ teammates|map(attribute='username')|join(', ') }}{% elif team %} · you see only your own deals{% else %} · you see only your own deals; an admin can put you on a team{% endif %}.</p></div>
 {% if msg %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">{{ msg }}</div>{% endif %}
 {% set loc = request.query_params.get('loc') %}
 {% if loc == 'saved' %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">Location saved: {{ user.home_label }}.</div>
