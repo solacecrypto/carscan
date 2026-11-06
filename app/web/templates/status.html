@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="mb-4"><h1>Status</h1><p class="text-sm text-ink-400">What the scrapers and background jobs are doing.</p></div>
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3"><div><h1>Status</h1><p class="text-sm text-ink-400">What the scrapers and background jobs are doing.</p></div><a href="/searches" class="btn-ghost">Scraper searches</a></div>
 {% if issues %}
 <div class="mb-4 space-y-2">
   {% for i in issues %}

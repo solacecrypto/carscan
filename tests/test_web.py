@@ -647,24 +647,26 @@ def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Ses
     assert ">1</span>" not in client.get("/listings").text
 
     r = client.post(
-        "/wanted",
+        "/spotter",
         data={
             "csrf_token": token,
             "name": "cheap E90",
             "model_key": "bmw-3er-e90",
-            "max_price": "8.000",
-            "positive_only": "true",
+            "price_max": "8.000",
+            "profitable": "true",
         },
         follow_redirects=False,
     )
-    assert r.status_code == 303
+    assert r.status_code == 303 and r.headers["location"] == "/spotter?msg=saved"
     sub = db.query(Subscription).one()
-    assert sub.criteria == {"model_keys": ["bmw-3er-e90"], "max_price": 8000, "positive_only": True}
+    assert sub.criteria == {
+        "filters": {"model_key": ["bmw-3er-e90"], "price_max": 8000, "profitable": True}
+    }
     assert "cheap E90" in client.get("/notifications").text
-    client.post(f"/wanted/{sub.id}/toggle", data={"csrf_token": token})
+    client.post(f"/spotter/{sub.id}/toggle", data={"csrf_token": token})
     db.expire_all()
     assert db.get(Subscription, sub.id).active is False
-    client.post(f"/wanted/{sub.id}/delete", data={"csrf_token": token})
+    client.post(f"/spotter/{sub.id}/delete", data={"csrf_token": token})
     assert db.query(Subscription).count() == 0
 
 
@@ -1034,24 +1036,59 @@ def test_bulk_star(client: TestClient, seeded: dict, db: Session) -> None:
     assert 'id="bulk-toggle"' in client.get("/listings").text
 
 
-def test_wanted_page(client: TestClient, seeded: dict, db: Session) -> None:
-    assert "No wanted models yet" in client.get("/wanted").text
+def test_spotter_page_and_spot_this(client: TestClient, seeded: dict, db: Session) -> None:
+    from app.db import Subscription
+    from app.notify import matches, subscription_events
+
+    assert client.get("/wanted", follow_redirects=False).headers["location"] == "/spotter"
+    assert "No spotters yet" in client.get("/spotter").text
     for key in ("a", "b"):
         db.get(Listing, seeded[key].id).model_key = "bmw-3er-e90"
     db.commit()
     token = _csrf(client.get("/listings").text)
-    client.post(
-        "/wanted",
-        data={"csrf_token": token, "name": "any E90", "model_key": "bmw-3er-e90"},
+    # from the listings page: the current filters become a spotter
+    r = client.post(
+        "/spotter",
+        data={
+            "csrf_token": token,
+            "name": "318i under 200k",
+            "query": "make=BMW&mileage_max=200000&year_min=2010&profitable=false&sort=newest",
+        },
         follow_redirects=False,
     )
-    page = client.get("/wanted").text
-    assert "any E90" in page and "1</b> on the market" in page
-    assert f"/listings/{seeded['a'].id}" in page and f"/listings/{seeded['b'].id}" not in page
-    assert "/listings?model_key=bmw-3er-e90&amp;profitable=false" in page
-    client.post(
-        "/wanted",
-        data={"csrf_token": token, "name": "pricey", "model_key": "bmw-3er-e90", "max_price": "1"},
-        follow_redirects=False,
+    assert r.status_code == 303
+    assert (
+        r.headers["location"].startswith("/listings?make=BMW")
+        and "spotter=saved" in r.headers["location"]
     )
-    assert "Nothing on the market matches" in client.get("/wanted").text
+    assert "Spotter saved" in client.get(r.headers["location"]).text
+    sub = db.query(Subscription).one()
+    assert sub.criteria["filters"] == {
+        "make": ["BMW"], "mileage_max": 200000, "year_min": 2010, "profitable": False
+    }  # fmt: skip
+    page = client.get("/spotter").text
+    assert "318i under 200k" in page and "BMW · from 2010 · ≤ 200.000 km" in page
+    assert f"/listings/{seeded['a'].id}" in page and "1</b> on the market" in page
+    assert (
+        "/listings?make=BMW&amp;profitable=false&amp;mileage_max=200000&amp;year_min=2010" in page
+    )
+    # the notifier uses the same filters
+    assert matches(sub.criteria, seeded["a"])
+    seeded["a"].mileage_km = 250000
+    assert not matches(sub.criteria, seeded["a"])
+    seeded["a"].mileage_km = 120000
+    assert subscription_events(db, [seeded["a"]], datetime.now(UTC)) == 1
+    db.commit()
+    assert "Spotted for “318i under 200k”" in client.get("/notifications").text
+    # nothing chosen -> note, no spotter
+    r = client.post(
+        "/spotter", data={"csrf_token": token, "query": "sort=newest"}, follow_redirects=False
+    )
+    assert r.headers["location"] == "/listings?spotter=empty"
+    r = client.post("/spotter", data={"csrf_token": token, "name": "x"}, follow_redirects=False)
+    assert r.headers["location"] == "/spotter?msg=empty"
+    assert db.query(Subscription).count() == 1
+    assert (
+        "+ spot this" in client.get("/listings").text
+        and ">Spotter<" in client.get("/listings").text
+    )

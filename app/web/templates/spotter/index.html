@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+{% macro chips(name, values, selected=[]) -%}
+<div class="mt-1 flex flex-wrap gap-1.5">
+  {% for item in values %}{% set v = item if item is string else item[0] %}{% set label = item if item is string else item[1] %}
+  <label class="cursor-pointer"><input type="checkbox" name="{{ name }}" value="{{ v }}" class="peer sr-only" {{ 'checked' if v in selected }}><span class="pill inline-block border border-ink-200 px-3 py-1.5 text-xs text-ink-600 peer-checked:border-brand-400 peer-checked:bg-brand-500 peer-checked:text-ink-950">{{ label }}</span></label>
+  {% endfor %}
+</div>
+{%- endmacro %}
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+  <div>
+    <h1>Spotter</h1>
+    <p class="mt-1 text-sm text-ink-500">Describe the car you are after, as precisely as you like. The moment a matching ad is scraped you get a notification, so you never have to scroll for it. Below each spotter: what is on the market right now.</p>
+  </div>
+  <a href="/listings" class="btn-ghost">or set filters on the listings and press “+ spot this”</a>
+</div>
+{% if msg == 'saved' %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">Spotter saved. You are notified when a new car matches.</div>
+{% elif msg == 'empty' %}<div class="mb-4 rounded-xl bg-brand-100 px-4 py-3 text-sm text-brand-800">Nothing saved: pick at least one thing about the car (brand, model, words, year, price…).</div>{% endif %}
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="min-w-0 space-y-4 lg:col-span-2">
+    {% if not groups %}
+    <p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">No spotters yet. Fill in the form to describe a car, and we tell you the moment one is listed.</p>
+    {% endif %}
+    {% for g in groups %}{% set sub = g.sub %}
+    <section class="card p-4 {{ 'opacity-60' if not sub.active }}">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 class="!text-base !normal-case !tracking-normal !text-ink-900">{{ sub.name }}{% if not sub.active %} <span class="pill bg-ink-100 text-ink-500">paused</span>{% endif %}</h2>
+        <span class="flex gap-2 text-xs">
+          <form method="post" action="/spotter/{{ sub.id }}/toggle"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="underline">{{ 'pause' if sub.active else 'resume' }}</button></form>
+          <form method="post" action="/spotter/{{ sub.id }}/delete" onsubmit="return confirm('Delete spotter “{{ sub.name|e }}”?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="text-bad-700 underline">delete</button></form>
+        </span>
+      </div>
+      <div class="mt-0.5 text-xs text-ink-500">{{ g.parts|join(' · ') or 'any car' }} · {{ sub.hits }} spotted so far{% if sub.last_hit_at %}, last {{ sub.last_hit_at|timeago }}{% endif %}</div>
+      <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
+        <span><b class="text-ink-900">{{ g.total }}</b> on the market</span>
+        {% if g.new_24h %}<span class="text-brand-700"><b>{{ g.new_24h }}</b> new today</span>{% endif %}
+        <span><b class="text-ink-900">{{ g.positive }}</b> with positive spread</span>
+        {% if g.best is not none %}<span>best <b class="{{ 'text-good-700' if g.best > 0 else 'text-ink-900' }}">{{ '+' if g.best > 0 }}{{ g.best|eur }}</b></span>{% endif %}
+        <a href="/listings?{{ g.query }}" class="underline">open in listings</a>
+      </div>
+      {% if g.cars %}
+      <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {% for l in g.cars %}
+        <a href="/listings/{{ l.id }}" class="flex gap-3 rounded-xl border border-ink-100 p-2 transition hover:border-ink-300 hover:bg-ink-50">
+          {% if l.photos %}<img src="{{ l.photos[0] }}" alt="" loading="lazy" class="h-16 w-20 shrink-0 rounded-lg object-cover">{% else %}<div class="flex h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-[10px] text-ink-400">no photo</div>{% endif %}
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 truncate text-sm font-semibold">{{ l.make }} {{ l.model }} <span class="font-normal text-ink-400">{{ l.variant or '' }}</span></div>
+              {% if l.id in starred_ids %}<span class="shrink-0 text-brand-500" title="favorite">★</span>{% endif %}
+            </div>
+            <div class="text-xs text-ink-500">{{ l.first_registration.year if l.first_registration else '–' }} · {{ l.mileage_km|km }} · {{ l.country }} · {{ l.source }}</div>
+            <div class="mt-0.5 flex items-baseline justify-between gap-2 text-sm">
+              <span class="font-bold">{{ l.price_eur|eur }}</span>
+              {% if l.spread_eur is not none %}<span class="text-xs font-semibold {{ 'text-good-700' if l.spread_eur > 0 else 'text-bad-700' }}">{{ '+' if l.spread_eur > 0 }}{{ l.spread_eur|eur }}</span>{% endif %}
+              <span class="text-[11px] text-ink-400">{{ l.first_seen|timeago }}</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% if g.total > g.cars|length %}<p class="mt-2 text-xs text-ink-400">{{ g.total - g.cars|length }} more · <a href="/listings?{{ g.query }}" class="underline">see all in listings</a></p>{% endif %}
+      {% else %}
+      <p class="mt-3 text-sm text-ink-400">Nothing on the market matches right now. You hear about it the moment something is listed.</p>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="/spotter" class="card space-y-3 p-4 self-start">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>New spotter</h2>
+    <label class="label block text-xs">Name <span class="font-normal text-ink-400">(optional)</span><input type="text" name="name" class="input" placeholder="e.g. 318i under 200k"></label>
+    <div class="grid grid-cols-2 gap-2">
+      <label class="label block text-xs">Brand<input list="brand-list" name="make" class="input" placeholder="BMW" autocomplete="off"></label>
+      <label class="label block text-xs">Model<input list="model-list" name="model_key" class="input" placeholder="pick from the list" autocomplete="off"></label>
+    </div>
+    <datalist id="brand-list">{% for b in brands %}<option value="{{ b }}">{% endfor %}</datalist>
+    <datalist id="model-list">{% for key, label in models %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</datalist>
+    <label class="label block text-xs">Words in the ad<input type="text" name="q" class="input" placeholder="e.g. 318i Touring, or xenon"></label>
+    <div class="grid grid-cols-2 gap-2">
+      <label class="label block text-xs">Year from<input type="number" name="year_min" class="input" placeholder="2010"></label>
+      <label class="label block text-xs">Year until<input type="number" name="year_max" class="input" placeholder="2015"></label>
+      <label class="label block text-xs">Max km<input type="number" name="mileage_max" step="1000" class="input" placeholder="200000"></label>
+      <label class="label block text-xs">Max price €<input type="number" name="price_max" step="100" class="input"></label>
+      <label class="label block text-xs">Min price €<input type="number" name="price_min" step="100" class="input"></label>
+      <label class="label block text-xs">Spread at least €<input type="number" name="spread_min" step="100" class="input"></label>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <label class="label block text-xs">Gearbox<select name="gearbox" class="input"><option value="">any</option><option value="manual">manual</option><option value="automatic">automatic</option></select></label>
+      <label class="label block text-xs">Seller<select name="seller_type" class="input"><option value="">any</option><option value="dealer">dealer</option><option value="private">private</option></select></label>
+    </div>
+    <div><span class="label text-xs">Countries</span>{{ chips('country', ['DE', 'BE', 'IT', 'SE']) }}</div>
+    <div><span class="label text-xs">Body</span>{{ chips('body', bodies) }}</div>
+    <div class="space-y-1">
+      <span class="label text-xs">Condition</span>
+      {% for k, label in [('no_accident', 'no accident'), ('no_export_only', 'no export-only'), ('papers_ok', 'papers ok'), ('no_warning_light', 'no warning light'), ('no_repairs', 'no repairs needed'), ('chain_replaced', 'timing chain replaced'), ('service_full', 'full service history')] %}
+      <label class="check !px-0"><input type="checkbox" name="{{ k }}" value="true"> {{ label }}</label>
+      {% endfor %}
+    </div>
+    <label class="check !px-0"><input type="hidden" name="profitable" value="false"><input type="checkbox" name="profitable" value="true"> positive return only</label>
+    <button class="btn-primary w-full">Start spotting</button>
+    <p class="text-[11px] text-ink-400">Spotters match every car a scrape brings in, across all sites. Pause one when you have found your car.</p>
+  </form>
+</div>
+{% endblock %}

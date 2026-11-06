@@ -209,7 +209,11 @@ def _visible_deal(db: DB, listing_id: int, user: object) -> object | None:
 
 def _clean_query(request: Request) -> str:
     """The query string without empty values, so pushed URLs and the poller stay short."""
-    pairs = [(k, v) for k, v in request.query_params.multi_items() if v not in ("", None)]
+    pairs = [
+        (k, v)
+        for k, v in request.query_params.multi_items()
+        if v not in ("", None) and k not in ("preset", "spotter")  # one-off notes, not filters
+    ]
     return urlencode(pairs)
 
 
@@ -279,7 +283,9 @@ def _preset_pairs(query: str) -> list[tuple[str, str]]:
     pairs = [
         (k, v)
         for k, v in parse_qsl(query.lstrip("?"), keep_blank_values=False)
-        if k not in ("page", "since", "preset", "profitable") and v and (k, v) != ("sort", "newest")
+        if k not in ("page", "since", "preset", "spotter", "profitable")
+        and v
+        and (k, v) != ("sort", "newest")
     ]
     profitable = [v for k, v in parse_qsl(query.lstrip("?")) if k == "profitable"]
     if profitable and not any(v.lower() in ("1", "true", "on", "yes") for v in profitable):

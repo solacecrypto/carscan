@@ -48,3 +48,17 @@ Telegram morning digests (`store_digest`, 07:00) are unchanged and kept in a fol
   `GET /listings.csv`: semicolon separated with a UTF-8 BOM so Excel opens it as columns
   straight away; one row per car with price, landed cost, NL value, spread, the ad URL and the
   carscan URL.
+
+## Spotter (2026-11-06)
+
+"Wanted models" became **Spotter** and took the Searches slot in the nav (the scraper
+searches moved behind a button on the Status page). A spotter is a saved set of listings
+filters (`storage.filters.SPOTTER_KEYS`: brand, model, words, year, mileage, price, landed
+cost, spread, gearbox, seller, countries, body, colour, condition flags, TÜV) stored on
+`subscriptions.criteria` as `{"filters": {...}}`; the older wanted-model shape still matches.
+Two ways to create one: the form on `/spotter`, or "+ spot this" next to the presets on the
+listings page, which saves the current filters (`POST /spotter` with `query`). Matching uses
+the same `storage.filters.matches` as the listings and alerts, runs over every new car right
+after each scrape (`subscription_events`), and lands as a notification (kind `wanted`, title
+"Spotted for …") plus web push when enabled. `/spotter` also shows what is on the market now
+per spotter with "open in listings". `/wanted` redirects to `/spotter`.

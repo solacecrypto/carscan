@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from statistics import median
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
@@ -15,11 +16,14 @@ from fastapi.responses import (
 )
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from starlette.datastructures import QueryParams
 
 from app.db import Digest, Listing, ListingNote, Notification, PushSubscription, Subscription, Watch
+from app.normalize.attrs import BODIES
 from app.notify import KINDS, push, unread_count
 from app.notify import matches as wanted_matches
 from app.push import enabled as push_enabled
+from app.storage.filters import apply_sql, describe_filters, filters_to_query, spotter_filters
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.routes.listings import _models
 from app.web.templating import STATIC_DIR, templates
@@ -276,66 +280,88 @@ def notification_open(db: DB, user: CurrentUser, notification_id: int) -> Redire
     return RedirectResponse(n.url or "/notifications", status_code=status.HTTP_303_SEE_OTHER)
 
 
-WANTED_TOP = 12  # cars shown per wanted model; the rest is one click away in listings
+SPOTTER_TOP = 12  # cars shown per spotter; the rest is one click away in listings
 
 
-@router.get("/wanted", response_class=HTMLResponse)
-def wanted_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
-    """Every wanted model of the viewer with the cars on the market right now that match it,
-    best spread first; the notifications only tell about new arrivals."""
+@router.get("/wanted")
+def wanted_redirect() -> RedirectResponse:
+    return RedirectResponse("/spotter", status_code=status.HTTP_301_MOVED_PERMANENTLY)
 
+
+@router.get("/spotter", response_class=HTMLResponse)
+def spotter_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
+    """Every spotter of the viewer (a saved set of listing filters) with the cars on the
+    market right now that match it, best spread first. New arrivals become notifications
+    the moment a scrape brings them in."""
+    models = _models()
+    labels = dict(models)
     subs = list(
         db.scalars(
             select(Subscription)
             .where(Subscription.user_id == user.id)
-            .order_by(Subscription.active.desc(), Subscription.created_at)
+            .order_by(Subscription.active.desc(), Subscription.created_at.desc())
         )
     )
+    now = datetime.now(UTC)
     groups = []
     for sub in subs:
-        c = sub.criteria or {}
-        stmt = select(Listing).where(Listing.is_active.is_(True), Listing.duplicate_of_id.is_(None))
+        cars = _spotter_cars(db, sub.criteria or {})
+        groups.append(
+            {
+                "sub": sub,
+                "total": len(cars),
+                "new_24h": sum(1 for x in cars if x.first_seen >= now - timedelta(hours=24)),
+                "positive": sum(1 for x in cars if x.spread_eur is not None and x.spread_eur > 0),
+                "best": cars[0].spread_eur if cars and cars[0].spread_eur is not None else None,
+                "cars": cars[:SPOTTER_TOP],
+                "query": criteria_query(sub.criteria or {}),
+                "parts": describe_criteria(sub.criteria or {}, labels),
+            }
+        )
+    from app.web.routes.listings import _brands
+
+    return templates.TemplateResponse(
+        request,
+        "spotter/index.html",
+        {
+            "title": "Spotter",
+            "groups": groups,
+            "brands": _brands(models),
+            "models": models,
+            "bodies": BODIES,
+            "starred_ids": set(
+                db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))
+            ),
+            "msg": request.query_params.get("msg"),
+        },
+    )
+
+
+def _spotter_cars(db: DB, c: dict[str, Any]) -> list[Listing]:
+    """Active, non-duplicate cars matching a spotter, best spread first. The SQL narrows
+    on the cheap columns; the Python matcher applies the rest (it is the source of truth
+    for the notifications too)."""
+    stmt = select(Listing).where(Listing.is_active.is_(True), Listing.duplicate_of_id.is_(None))
+    f = c.get("filters")
+    if f is not None:
+        stmt = apply_sql(stmt, dict(f))
+        cars = list(db.scalars(stmt.options(selectinload(Listing.insight))))
+    else:  # the older wanted-model shape
         if c.get("model_keys"):
             stmt = stmt.where(Listing.model_key.in_(c["model_keys"]))
         if c.get("countries"):
             stmt = stmt.where(Listing.country.in_(c["countries"]))
         if c.get("max_price"):
             stmt = stmt.where(Listing.price_eur <= int(c["max_price"]))
-        if c.get("positive_only") or c.get("min_spread"):
-            stmt = stmt.where(Listing.spread_eur >= max(1, int(c.get("min_spread") or 0)))
         cars = [x for x in db.scalars(stmt) if wanted_matches(c, x)]
-        cars.sort(
-            key=lambda x: x.spread_eur if x.spread_eur is not None else -(10**9), reverse=True
-        )
-        new_24h = sum(1 for x in cars if x.first_seen >= datetime.now(UTC) - timedelta(hours=24))
-        groups.append(
-            {
-                "sub": sub,
-                "total": len(cars),
-                "new_24h": new_24h,
-                "positive": sum(1 for x in cars if x.spread_eur is not None and x.spread_eur > 0),
-                "best": cars[0].spread_eur if cars and cars[0].spread_eur is not None else None,
-                "cars": cars[:WANTED_TOP],
-                "query": _wanted_query(c),
-            }
-        )
-    return templates.TemplateResponse(
-        request,
-        "wanted/index.html",
-        {
-            "title": "Wanted",
-            "groups": groups,
-            "starred_ids": set(
-                db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))
-            ),
-        },
-    )
+    cars.sort(key=lambda x: x.spread_eur if x.spread_eur is not None else -(10**9), reverse=True)
+    return cars
 
 
-def _wanted_query(c: dict[str, Any]) -> str:
-    """The listings filters that come closest to a subscription's criteria."""
-    from urllib.parse import urlencode
-
+def criteria_query(c: dict[str, Any]) -> str:
+    """The listings filters that come closest to a spotter's criteria."""
+    if "filters" in c:
+        return filters_to_query(c["filters"])
     pairs: list[tuple[str, str]] = [("model_key", k) for k in c.get("model_keys", [])]
     pairs += [("country", k) for k in c.get("countries", [])]
     if c.get("query"):
@@ -353,53 +379,56 @@ def _wanted_query(c: dict[str, Any]) -> str:
     return urlencode(pairs)
 
 
-@router.post("/wanted", dependencies=[Depends(csrf_protect)])
-def wanted_create(
-    request: Request,
-    db: DB,
-    user: CurrentUser,
-    name: str = Form(""),
-    model_key: list[str] = Form([]),  # noqa: B008
-    query: str = Form(""),
-    country: list[str] = Form([]),  # noqa: B008
-    max_price: str = Form(""),
-    max_km: str = Form(""),
-    year_min: str = Form(""),
-    min_spread: str = Form(""),
-    positive_only: str = Form(""),
-) -> RedirectResponse:
-    def num(v: str) -> int | None:
-        v = v.replace(".", "").strip()
-        return int(v) if v.isdigit() else None
+def describe_criteria(c: dict[str, Any], labels: dict[str, str]) -> list[str]:
+    if "filters" in c:
+        return describe_filters(c["filters"], labels)
+    parts = [
+        ", ".join(labels.get(k, k) for k in c["model_keys"]) if c.get("model_keys") else "",
+        f'"{c["query"]}"' if c.get("query") else "",
+        "/".join(c["countries"]) if c.get("countries") else "",
+        f"≤ € {c['max_price']}" if c.get("max_price") else "",
+        f"≤ {c['max_km']} km" if c.get("max_km") else "",
+        f"from {c['year_min']}" if c.get("year_min") else "",
+        f"spread ≥ € {c['min_spread']}" if c.get("min_spread") else "",
+        "positive return" if c.get("positive_only") else "",
+    ]
+    return [x for x in parts if x]
 
-    criteria: dict[str, Any] = {
-        k: v
-        for k, v in {
-            "model_keys": [m for m in model_key if m],
-            "query": query.strip(),
-            "countries": [c for c in country if c],
-            "max_price": num(max_price),
-            "max_km": num(max_km),
-            "year_min": num(year_min),
-            "min_spread": num(min_spread),
-            "positive_only": positive_only == "true",
-        }.items()
-        if v
-    }
-    if not criteria:
-        raise HTTPException(400, "give at least one criterion")
-    label = name.strip() or (
-        ", ".join(criteria.get("model_keys", [])) or criteria.get("query") or "any model"
-    )
+
+@router.post("/spotter", dependencies=[Depends(csrf_protect)])
+async def spotter_create(request: Request, db: DB, user: CurrentUser) -> RedirectResponse:
+    """Create a spotter from the form on the spotter page, or from the listings page
+    (`query` = the current filters as a query string, via "+ spot this")."""
+    form = await request.form()
+    name = str(form.get("name") or "").strip()[:120]
+    query = str(form.get("query") or "").strip("?")
+    models = _models()
+    params = QueryParams(query) if query else form
+    filters = spotter_filters(params, models)
+    chosen = {k: v for k, v in filters.items() if k != "profitable"}
+    if not chosen:
+        back = "/listings?spotter=empty" if query else "/spotter?msg=empty"
+        return RedirectResponse(back, status_code=status.HTTP_303_SEE_OTHER)
+    label = name or " · ".join(describe_filters(filters, dict(models))[:3]) or "any car"
     db.add(
-        Subscription(user=user, name=label[:120], criteria=criteria, created_at=datetime.now(UTC))
+        Subscription(
+            user_id=user.id,
+            name=label[:120],
+            criteria={"filters": filters},
+            created_at=datetime.now(UTC),
+        )
     )
     db.flush()
-    return RedirectResponse("/notifications#wanted", status_code=status.HTTP_303_SEE_OTHER)
+    if query:
+        return RedirectResponse(
+            f"/listings?{filters_to_query(filters)}&spotter=saved",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return RedirectResponse("/spotter?msg=saved", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.post("/wanted/{sub_id}/{action}", dependencies=[Depends(csrf_protect)])
-def wanted_action(db: DB, user: CurrentUser, sub_id: int, action: str) -> RedirectResponse:
+@router.post("/spotter/{sub_id}/{action}", dependencies=[Depends(csrf_protect)])
+def spotter_action(db: DB, user: CurrentUser, sub_id: int, action: str) -> RedirectResponse:
     sub = db.get(Subscription, sub_id)
     if sub is None or sub.user_id != user.id:
         raise HTTPException(404)
@@ -410,7 +439,7 @@ def wanted_action(db: DB, user: CurrentUser, sub_id: int, action: str) -> Redire
     else:
         raise HTTPException(400)
     db.flush()
-    return RedirectResponse("/notifications#wanted", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse("/spotter", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/listings/{listing_id}/notes", dependencies=[Depends(csrf_protect)])

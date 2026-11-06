@@ -25,7 +25,7 @@ KINDS = {
     "back": "favorite car is back",
     "spread_up": "favorite car turned profitable",
     "spread_down": "favorite car no longer profitable",
-    "wanted": "new car for a wanted model",
+    "wanted": "spotter: a new car matches",
     "note": "note on a favorite car",
     "claimed": "someone claimed a favorite car",
     "deal": "one of your deals needs attention",
@@ -201,8 +201,13 @@ def spread_events(session: Session, before: dict[int, int | None], now: datetime
 
 
 def matches(criteria: dict[str, Any], x: Listing) -> bool:
-    """Does a new car match a wanted-model subscription?"""
+    """Does a new car match a spotter? New spotters store the listings filters under
+    `filters`; the older wanted-model shape (model_keys, max_price, ...) still works."""
     c = criteria or {}
+    if "filters" in c:
+        from app.storage.filters import matches as filter_matches
+
+        return filter_matches(x, c["filters"])
     if c.get("model_keys") and x.model_key not in c["model_keys"]:
         return False
     if c.get("make") and (x.make or "").lower() != str(c["make"]).lower():
@@ -246,7 +251,7 @@ def subscription_events(session: Session, new: list[Listing], now: datetime) -> 
                 session,
                 sub.user_id,
                 "wanted",
-                f"New for “{sub.name}”: {_title(x)} · {_eur(x.price_eur)}",
+                f"Spotted for “{sub.name}”: {_title(x)} · {_eur(x.price_eur)}",
                 f"{x.mileage_km:,} km".replace(",", ".") + f" · {x.country} · {x.source}{spread}"
                 if x.mileage_km is not None
                 else f"{x.country} · {x.source}{spread}",

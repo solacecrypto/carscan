@@ -4,6 +4,7 @@ and translated to SQL for the listings page."""
 import math
 from datetime import date
 from typing import Any
+from urllib.parse import urlencode
 
 from sqlalchemy import Select, extract, func
 
@@ -127,6 +128,81 @@ def parse_filters(params: Any, models: list[tuple[str, str]] | None = None) -> d
         "include_inactive": flag("include_inactive"),
         "include_duplicates": flag("include_duplicates"),
     }
+
+
+# What a spotter may remember: the car itself and its condition, not page state or things that
+# depend on who is looking (distance from home, "new in the last hours", favorites).
+SPOTTER_KEYS = (
+    "make", "model_key", "price_min", "price_max", "landed_max", "spread_min", "profitable",
+    "mileage_max", "year_min", "year_max", "gearbox", "seller_type", "country", "color", "body",
+    "no_accident", "no_export_only", "chain_replaced", "service_full", "papers_ok",
+    "no_warning_light", "no_repairs", "q", "tuv_min_months",
+)  # fmt: skip
+
+
+def spotter_filters(params: Any, models: list[tuple[str, str]] | None = None) -> dict[str, Any]:
+    """The filters a spotter stores: parsed like the listings page, reduced to SPOTTER_KEYS,
+    empty values dropped. `profitable` is kept as an explicit True/False."""
+    f = parse_filters(params, models)
+    out = {k: v for k, v in f.items() if k in SPOTTER_KEYS and v not in (None, False, [], "")}
+    out["profitable"] = bool(f.get("profitable"))
+    return out
+
+
+def filters_to_query(f: dict[str, Any]) -> str:
+    """Stored spotter filters back to a listings query string."""
+    pairs: list[tuple[str, str]] = []
+    for k in SPOTTER_KEYS:
+        v = f.get(k)
+        if k == "profitable":
+            if not v:
+                pairs.append(("profitable", "false"))
+        elif isinstance(v, list):
+            pairs += [(k, str(x)) for x in v]
+        elif v not in (None, False, ""):
+            pairs.append((k, "true" if v is True else str(v)))
+    return urlencode(pairs)
+
+
+def describe_filters(f: dict[str, Any], models: dict[str, str] | None = None) -> list[str]:
+    """Short human parts for a spotter's filters, in the order people read them."""
+    labels = models or {}
+    parts: list[str] = []
+    if f.get("make"):
+        parts.append(", ".join(f["make"]))
+    if f.get("model_key"):
+        parts.append(", ".join(labels.get(k, k) for k in f["model_key"]))
+    if f.get("q"):
+        parts.append(f'"{f["q"]}"')
+    if f.get("year_min") or f.get("year_max"):
+        lo, hi = f.get("year_min"), f.get("year_max")
+        parts.append(f"{lo}–{hi}" if lo and hi else (f"from {lo}" if lo else f"until {hi}"))
+    if f.get("mileage_max"):
+        parts.append(f"≤ {int(f['mileage_max']):,} km".replace(",", "."))
+    if f.get("price_min") or f.get("price_max"):
+        lo, hi = f.get("price_min"), f.get("price_max")
+        parts.append(f"€ {lo}–{hi}" if lo and hi else (f"≥ € {lo}" if lo else f"≤ € {hi}"))
+    if f.get("landed_max"):
+        parts.append(f"landed ≤ € {f['landed_max']}")
+    for k in ("gearbox", "seller_type"):
+        if f.get(k):
+            parts.append(str(f[k]))
+    for k in ("country", "body", "color"):
+        if f.get(k):
+            parts.append("/".join(f[k]))
+    if f.get("spread_min"):
+        parts.append(f"spread ≥ € {f['spread_min']}")
+    elif f.get("profitable"):
+        parts.append("positive return")
+    flags = {
+        "no_accident": "no accident", "no_export_only": "no export-only", "papers_ok": "papers ok",
+        "no_warning_light": "no warning light", "no_repairs": "no repairs",
+        "chain_replaced": "chain replaced", "service_full": "full history",
+    }  # fmt: skip
+    parts += [label for k, label in flags.items() if f.get(k)]
+    if f.get("tuv_min_months"):
+        parts.append(f"TÜV ≥ {f['tuv_min_months']} mo")
+    return parts
 
 
 def matches(listing: Listing, filters: dict[str, Any]) -> bool:
