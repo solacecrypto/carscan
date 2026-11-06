@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>{% block title %}{{ title }}{% endblock %} · MERQANTILE</title>
+  <title>{% block title %}{{ title }}{% endblock %} · MERQANTYLE</title>
   <meta name="csrf" content="{{ csrf_token }}">
   <meta name="theme-color" content="#0b1017">
   <link rel="manifest" href="/static/manifest.webmanifest">
   <link rel="icon" href="/static/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="MERQANTILE">
+  <meta name="apple-mobile-web-app-title" content="MERQANTYLE">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -80,7 +80,7 @@
       <a href="/listings" class="mr-3 flex shrink-0 items-center gap-2 font-bold tracking-tight text-white">
         <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 text-ink-950">
           <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2-5h14l2 5M4 13h16v5H4zM7 18v2M17 18v2"/><path d="M7 15.5h.01M17 15.5h.01"/></svg>
-        </span><span class="hidden sm:inline">MERQANTILE</span></a>
+        </span><span class="hidden sm:inline">MERQANTYLE</span></a>
       {% set path = request.url.path %}
       {% for href, text in [('/listings', 'Listings'), ('/deals', 'Deals'), ('/favorites', 'Favorites'), ('/models', 'Models'), ('/digest', 'Digest'), ('/spotter', 'Spotter'), ('/status', 'Status')] %}
       {% set on = path.startswith(href) or (href == '/deals' and path.startswith('/calibration')) or (href == '/listings' and (path == '/' or path.startswith('/sellers'))) or (href == '/status' and path.startswith('/searches')) %}

@@ -21,7 +21,7 @@ def create_app() -> FastAPI:
     problems = settings.check_production_secrets()
     if problems:
         raise RuntimeError("refusing to start with placeholder secrets: " + "; ".join(problems))
-    app = FastAPI(title="MERQANTILE", docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="MERQANTYLE", docs_url=None, redoc_url=None, openapi_url=None)
     secure = settings.domain not in ("localhost", "127.0.0.1")
     app.add_exception_handler(LoginRequired, login_required_handler)  # type: ignore[arg-type]
     app.add_exception_handler(StarletteHTTPException, http_error_handler)  # type: ignore[arg-type]
