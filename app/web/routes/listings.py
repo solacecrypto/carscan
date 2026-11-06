@@ -245,18 +245,22 @@ def _filtered_stmt(f: dict, here: tuple[float, float] | None = None) -> Select: 
 
 @router.post("/presets", dependencies=[Depends(csrf_protect)])
 def preset_save(
-    db: DB, user: CurrentUser, name: str = Form(""), query: str = Form("")
+    request: Request, db: DB, user: CurrentUser, name: str = Form(""), query: str = Form("")
 ) -> RedirectResponse:
-    """Save the current filters under a name (the listings query string, minus paging)."""
+    """Save the current filters under a name (the listings query string, minus paging).
+    The page fills `query` from the filter form; when that is empty (old page, script
+    blocked) the query string of the referring page is used instead."""
     name = name.strip()[:60]
-    pairs = [
-        (k, v)
-        for k, v in parse_qsl(query.lstrip("?"), keep_blank_values=False)
-        if k not in ("page", "since") and v
-    ]
-    clean = urlencode(pairs)
+    referer = request.headers.get("referer", "")
+    if not query.strip("?") and "?" in referer:
+        query = referer.split("?", 1)[1]
+    clean = urlencode(_preset_pairs(query))
     if not name or not clean:
-        raise HTTPException(400, "a name and at least one filter are needed")
+        # nothing to save: back to the listings with a note instead of an error page
+        return RedirectResponse(
+            "/listings?preset=" + ("noname" if not name else "empty"),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
     existing = db.scalar(
         select(FilterPreset).where(FilterPreset.user_id == user.id, FilterPreset.name == name)
     )
@@ -266,6 +270,21 @@ def preset_save(
         db.add(FilterPreset(user_id=user.id, name=name, query=clean, created_at=datetime.now(UTC)))
     db.flush()
     return RedirectResponse(f"/listings?{clean}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _preset_pairs(query: str) -> list[tuple[str, str]]:
+    """The query string reduced to what the preset should remember: no paging or poller
+    timestamp, no default sort, and `profitable` (on by default: the form sends a hidden
+    "false" plus "true" when ticked) only when it is switched off."""
+    pairs = [
+        (k, v)
+        for k, v in parse_qsl(query.lstrip("?"), keep_blank_values=False)
+        if k not in ("page", "since", "preset", "profitable") and v and (k, v) != ("sort", "newest")
+    ]
+    profitable = [v for k, v in parse_qsl(query.lstrip("?")) if k == "profitable"]
+    if profitable and not any(v.lower() in ("1", "true", "on", "yes") for v in profitable):
+        pairs.append(("profitable", "false"))
+    return pairs
 
 
 @router.post("/presets/{preset_id}/delete", dependencies=[Depends(csrf_protect)])

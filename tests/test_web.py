@@ -886,7 +886,7 @@ def test_filter_presets(client: TestClient, seeded: dict, db: Session) -> None:
     page = client.get("/listings").text
     assert "My presets" in page and "save current" in page
     token = _csrf(page)
-    q = "spread_min=1000&chain_replaced=true&sort=newest"
+    q = "spread_min=1000&chain_replaced=true"  # the default sort is not remembered
     r = client.post(
         "/presets",
         data={
@@ -908,10 +908,59 @@ def test_filter_presets(client: TestClient, seeded: dict, db: Session) -> None:
     db.expire_all()
     assert db.query(FilterPreset).count() == 1  # same name: updated, not duplicated
     assert db.query(FilterPreset).one().query == "spread_min=2000"
-    bad = {"name": "", "query": "x=1", "csrf_token": token}
-    assert client.post("/presets", data=bad).status_code == 400
-    client.post(f"/presets/{pr.id}/delete", data={"csrf_token": token})
-    assert db.query(FilterPreset).count() == 0
+    # no query captured: the referring page's filters are used
+    r = client.post(
+        "/presets",
+        data={"name": "from referer", "query": "", "csrf_token": token},
+        headers={"referer": "http://localhost/listings?make=Audi&page=2"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303 and r.headers["location"] == "/listings?make=Audi"
+    # what the page's script sends: hidden false + ticked true, default sort -> tidy query
+    r = client.post(
+        "/presets",
+        data={
+            "name": "tidy",
+            "query": "profitable=false&profitable=true&q=audi&sort=newest",
+            "csrf_token": token,
+        },
+        follow_redirects=False,
+    )
+    assert r.headers["location"] == "/listings?q=audi"
+    r = client.post(
+        "/presets",
+        data={
+            "name": "off",
+            "query": "profitable=false&make=Audi&sort=price_asc",
+            "csrf_token": token,
+        },
+        follow_redirects=False,
+    )
+    assert r.headers["location"] == "/listings?make=Audi&sort=price_asc&profitable=false"
+    # nothing at all: back to the listings with a note, not an error page
+    r = client.post(
+        "/presets", data={"name": "x", "query": "", "csrf_token": token}, follow_redirects=False
+    )
+    assert r.headers["location"] == "/listings?preset=empty"
+    assert "set at least one filter first" in client.get("/listings?preset=empty").text
+    r = client.post(
+        "/presets", data={"name": "", "query": "q=a", "csrf_token": token}, follow_redirects=False
+    )
+    assert r.headers["location"] == "/listings?preset=noname"
+    assert db.query(FilterPreset).count() == 4
+    r = client.post(f"/presets/{pr.id}/delete", data={"csrf_token": token}, follow_redirects=False)
+    assert (r.status_code, r.headers.get("location"), pr.id) == (303, "/listings", 1)
+    db.expire_all()
+    assert db.query(FilterPreset).count() == 3
+
+
+def test_html_error_page(client: TestClient, seeded: dict) -> None:
+    r = client.get("/listings/999999", headers={"accept": "text/html,*/*"})
+    assert r.status_code == 404 and "Not found" in r.text and "Go back" in r.text
+    r = client.get("/listings/999999", headers={"accept": "application/json"})
+    assert r.status_code == 404 and r.json() == {"detail": "Not Found"}
+    r = client.get("/listings/999999", headers={"accept": "text/html", "HX-Request": "true"})
+    assert r.json() == {"detail": "Not Found"}
 
 
 def test_listings_page_has_no_nested_forms(client: TestClient, seeded: dict, db: Session) -> None:

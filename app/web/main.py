@@ -2,12 +2,14 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.db import User, get_sessionmaker
 from app.logging import configure_logging, configure_sentry
 from app.web.deps import LoginRequired, login_required_handler
+from app.web.errors import http_error_handler
 from app.web.routes import account, auth, deals, extras, listings, models, searches, status
 from app.web.templating import STATIC_DIR, TEMPLATES_DIR
 
@@ -22,6 +24,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Car Scanner", docs_url=None, redoc_url=None, openapi_url=None)
     secure = settings.domain not in ("localhost", "127.0.0.1")
     app.add_exception_handler(LoginRequired, login_required_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(StarletteHTTPException, http_error_handler)  # type: ignore[arg-type]
 
     @app.middleware("http")
     async def attach_user(request: Request, call_next) -> Response:  # type: ignore[no-untyped-def]

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mx-auto mt-10 max-w-md card p-6 text-center">
+  <div class="label">{{ status }}</div>
+  <h1 class="mt-1">{{ title }}</h1>
+  <p class="mt-2 text-sm text-ink-600">{{ detail }}</p>
+  <div class="mt-5 flex justify-center gap-2">
+    <a href="{{ back }}" class="btn-primary">Go back</a>
+    <a href="/listings" class="btn-ghost">Listings</a>
+  </div>
+</div>
+{% endblock %}

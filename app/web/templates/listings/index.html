@@ -118,6 +118,8 @@
           </span>
           {% else %}<span class="text-[11px] text-ink-500">Set filters, then “+ save current” to keep them as a named preset.</span>{% endfor %}
         </div>
+        {% if request.query_params.get('preset') == 'empty' %}<p class="mt-1.5 text-[11px] text-brand-300">Nothing saved: set at least one filter first, then “+ save current”.</p>
+        {% elif request.query_params.get('preset') == 'noname' %}<p class="mt-1.5 text-[11px] text-brand-300">Nothing saved: give the preset a name.</p>{% endif %}
       </div>
       {% call row('brand', 'Brand and model', ((f.make or [])|join(', ')) ~ ((' · ' if f.make and selected_models) ~ (selected_models|length ~ ' model' ~ ('' if selected_models|length == 1 else 's') if selected_models else '')) if g.brand else '') %}
         <div class="chips" data-name="make" data-list="brand-list">
@@ -220,7 +222,7 @@
 
       <noscript><div class="p-3"><button class="btn-primary w-full">Apply</button></div></noscript>
     </form>
-    <form id="preset-save" method="post" action="/presets" class="hidden" onsubmit="this.query.value = location.search.slice(1)">
+    <form id="preset-save" method="post" action="/presets" class="hidden" onsubmit="this.query.value = presetQuery()">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="query" value="{{ query }}">
     </form>
     {% for pr in presets %}
@@ -233,7 +235,7 @@
       <label class="relative block w-full sm:max-w-xs" title="narrows the list as you type: brand, model, trim, city, words from the ad">
         <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="search" name="q" form="filters" value="{{ f.q or '' }}" placeholder="Search: Audi, Golf GTI, Xenon, Dortmund…" class="input !mt-0 !py-1.5 !pl-9" autocomplete="off"
-               hx-get="/listings" hx-trigger="keyup changed delay:300ms, search" hx-target="#results" hx-swap="outerHTML" hx-include="#filters" hx-push-url="true">
+               hx-get="/listings" hx-trigger="input changed delay:300ms, search" hx-target="#results" hx-swap="outerHTML" hx-include="#filters" hx-push-url="true">
       </label>
       <span class="ml-auto"></span>
       <label for="sort">Sort by</label>
@@ -248,6 +250,14 @@
 </div>
 
 <script>
+  // The filters as a query string, read from the form itself (the address bar can lag behind
+  // while a change is still being sent). Paging and the poller's timestamp are left out.
+  function presetQuery() {
+    const form = document.getElementById('filters');
+    const pairs = [];
+    new FormData(form).forEach((v, k) => { if (v !== '' && k !== 'page' && k !== 'since' && !(k === 'sort' && v === 'newest')) pairs.push([k, v]); });
+    return pairs.length ? new URLSearchParams(pairs).toString() : location.search.slice(1);
+  }
   (function () {
     // Mobile: the sidebar is a drawer behind the Filters button; on large screens it is always shown.
     const panel = document.getElementById('filter-panel'), toggle = document.getElementById('filters-toggle');
