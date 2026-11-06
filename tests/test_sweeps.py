@@ -54,6 +54,18 @@ def test_as24_sweep_stops_at_known_ads() -> None:
     assert "known_ids" not in hits[0] and "max_pages" not in hits[0]
 
 
+def test_kleinanzeigen_brand_sweep_urls() -> None:
+    from app.scrapers.kleinanzeigen import build_search_url
+
+    p = {"make": "bmw", "ez_from": 2007, "ez_to": ""}
+    assert build_search_url(p, 1).endswith("/s-autos/bmw/k0c216+autos.ez_i:2007,+autos.marke_s:bmw")
+    assert build_search_url(p, 2).endswith(
+        "/s-autos/bmw/seite:2/bmw/k0c216+autos.ez_i:2007,+autos.marke_s:bmw"
+    )
+    q = {"make": "bmw", "query": "320i", "ez_from": 2008, "ez_to": 2014}
+    assert "/s-autos/bmw/seite:2/320i/k0c216+autos.ez_i:2008,2014" in build_search_url(q, 2)
+
+
 def test_kleinanzeigen_sweep_stops_at_known_ads() -> None:
     scraper = get_scraper("kleinanzeigen")
     html = next(FIX.glob("kleinanzeigen/*search*.html")).read_text()

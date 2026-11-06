@@ -34,7 +34,11 @@ BODY_HINTS = (
 
 
 def build_search_url(params: dict[str, Any], page: int) -> str:
-    """/s-autos/bmw/[seite:N/]<query>/k0c216+autos.ez_i:2008,2014+autos.marke_s:bmw"""
+    """/s-autos/bmw/[seite:N/]<query>/k0c216+autos.ez_i:2008,2014+autos.marke_s:bmw
+
+    From page 2 on the site insists on a search-word segment after `seite:N`; without one
+    it answers an empty page. A brand sweep has no words, so the brand itself goes there,
+    which is exactly what the site's own "next page" link does."""
     base = params.get("path", "/s-autos")
     make = params.get("make", "bmw")
     query = params.get("query", "")
@@ -44,7 +48,8 @@ def build_search_url(params: dict[str, Any], page: int) -> str:
     ]
     for extra in params.get("attributes") or []:
         attrs.append(str(extra))
-    segments = [make] + ([f"seite:{page}"] if page > 1 else []) + ([query] if query else [])
+    word = query or (make if page > 1 else "")
+    segments = [make] + ([f"seite:{page}"] if page > 1 else []) + ([word] if word else [])
     return f"{ORIGIN}{base}/{'/'.join(segments)}/k0c216+{'+'.join(attrs)}"
 
 
