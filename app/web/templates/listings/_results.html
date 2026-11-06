@@ -62,7 +62,8 @@
         <p class="line-clamp-2 text-xs leading-snug text-ink-500" title="{{ (l.description_en or l.description)[:600] }}">{{ (l.description_en or l.description)|replace('\n', ' ') }}</p>
         {% endif %}
         {% include "listings/_insight_badges.html" %}
-        {% with listing=l %}{% include "listings/_status.html" %}{% endwith %}
+        {% set dl = (deals or {}).get(l.id) %}
+        {% if dl %}<a href="/deals/{{ dl.id }}" class="inline-flex items-center gap-1 pt-1 text-xs font-semibold text-ink-700 hover:underline"><span class="pill bg-ink-900 text-white">deal · {{ dl.stage.value }}</span>{{ dl.owner.username }}</a>{% endif %}
       </div>
     </article>
     {% else %}

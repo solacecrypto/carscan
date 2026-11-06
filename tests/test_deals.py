@@ -8,8 +8,6 @@ from typer.testing import CliRunner
 
 from app.cli import app as cli
 from app.db import (
-    Alert,
-    AlertStatus,
     Deal,
     DealStage,
     Listing,
@@ -301,18 +299,14 @@ def test_web_deal_flow(db: Session) -> None:
         ).status_code
         == 400
     )
-    assert "Calibration" in c.get("/calibration").text
-    # alert status set on the website moves the deal only for contacted/passed
-    r = c.post(
-        f"/listings/{lst.id}/status",
-        data={"status": "contacted", "csrf_token": token},
-        follow_redirects=False,
-    )
-    assert r.status_code == 303
+    r = c.get("/calibration", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/models#calibration"
+    assert "Estimate accuracy" in c.get("/models").text
+    # alert status from Telegram moves the deal only for contacted/passed
+    sync_from_alert_status(db, lst.id, "contacted", u, NOW)
     db.expire_all()
     deal = db.scalar(select(Deal))
     assert deal is not None and deal.stage is DealStage.sold  # already past contacted: unchanged
-    assert db.scalar(select(Alert)).status is AlertStatus.contacted  # type: ignore[union-attr]
 
 
 def test_pickup_checklist(db: Session) -> None:

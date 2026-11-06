@@ -136,6 +136,13 @@ tests/fixtures/<source>/ # saved HTML/JSON used by parser tests
 - At the end of phase 1: a README with step-by-step VPS deployment (fresh Ubuntu server → Docker
   → domain → running site), written for someone not used to server admin
 
+## Cleanup (2026-11-06)
+
+Claim/Pass/Contacted web strip removed (`/listings/{id}/status` route gone): tracking a deal
+is the single action and claims the alert (`deals._claim`). `/calibration` → fold on
+`/models#calibration`. Notifications page is a plain feed (spotters live on `/spotter`).
+Account page shows the Telegram card only when the bot is configured.
+
 ## Spotter (2026-11-06)
 
 Wanted models → **Spotter** (`/spotter`, nav slot of Searches; `/searches` now behind Status).

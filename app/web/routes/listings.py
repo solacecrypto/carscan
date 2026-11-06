@@ -8,12 +8,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import selectinload
 
-from app.db import Alert, AlertStatus, Comparable, FilterPreset, Listing, Watch
-from app.deals import get_deal_for_listing, sync_from_alert_status
+from app.db import Alert, Comparable, Deal, FilterPreset, Listing, Watch
+from app.deals import get_deal_for_listing
 from app.deals.calibration import model_accuracy
 from app.market import market_for_listing
 from app.normalize.attrs import BODIES, COLORS
-from app.notify import push
 from app.storage.filters import apply_sql, parse_filters
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -89,6 +88,7 @@ def listings_index(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
         "colors": COLORS,
         "swatches": SWATCHES,
         "starred_ids": set(db.scalars(select(Watch.listing_id).where(Watch.user_id == user.id))),
+        "deals": _deals_for(db, [x.id for x in rows], user),
         "here_missing": bool(f.get("max_km")) and here is None,
         "presets": list(
             db.scalars(
@@ -195,6 +195,20 @@ def star_bulk(
     if not next.startswith("/") or next.startswith("//"):
         next = "/listings"  # noqa: A001
     return RedirectResponse(next, status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _deals_for(db: DB, listing_ids: list[int], user: object) -> dict[int, Deal]:
+    """Deals on these cars that the viewer may see, keyed by listing id (for the card pill)."""
+    from app.teams import visible_user_ids
+
+    if not listing_ids:
+        return {}
+    rows = db.scalars(
+        select(Deal)
+        .where(Deal.listing_id.in_(listing_ids), Deal.owner_id.in_(visible_user_ids(db, user)))  # type: ignore[arg-type]
+        .options(selectinload(Deal.owner))
+    )
+    return {d.listing_id: d for d in rows}
 
 
 def _visible_deal(db: DB, listing_id: int, user: object) -> object | None:
@@ -424,48 +438,3 @@ def _trip(db: DB, listing: Listing, user: object = None) -> dict | None:  # type
         get_cost_config().travel,
         user,
     )
-
-
-@router.post("/listings/{listing_id}/status", response_class=HTMLResponse)
-def listing_set_status(
-    request: Request,
-    db: DB,
-    user: CurrentUser,
-    listing_id: int,
-    status_value: str = Form(..., alias="status"),
-) -> HTMLResponse:
-    listing = _load(db, listing_id)
-    try:
-        new_status = AlertStatus(status_value)
-    except ValueError:
-        raise HTTPException(400, "unknown status") from None
-    now = datetime.now(UTC)
-    if not listing.alerts:
-        if not listing.saved_searches:
-            raise HTTPException(409, "listing belongs to no saved search")
-        listing.alerts.append(
-            Alert(saved_search=listing.saved_searches[0], kind="new", sent_at=now, created_at=now)
-        )
-    for alert in listing.alerts:
-        alert.status = new_status
-        alert.claimed_by = user if new_status is not AlertStatus.new else None
-        alert.status_changed_at = now
-        if alert.telegram_message_id:
-            alert.message_synced = False  # the worker edits the Telegram message
-    sync_from_alert_status(db, listing.id, new_status.value, user, now)
-    if new_status in (AlertStatus.claimed, AlertStatus.contacted):
-        for w in listing.watches:
-            if w.user_id != user.id:
-                push(
-                    db,
-                    w.user_id,
-                    "claimed",
-                    f"{user.username} marked {listing.make} {listing.model} as {new_status.value}",
-                    "a car you starred",
-                    now,
-                    listing,
-                )
-    db.flush()
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(request, "listings/_status.html", {"listing": listing})
-    return RedirectResponse(f"/listings/{listing_id}", status_code=status.HTTP_303_SEE_OTHER)

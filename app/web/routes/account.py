@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
+from app.config import get_settings
 from app.db import Team, TeamPlan, User
 from app.geo import geocode_address
 from app.teams import plan_label, team_of, teammates
@@ -34,6 +35,7 @@ def account_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
             "msg": request.query_params.get("msg"),
             "err": None,
             "plan": plan_label(db, user),
+            "telegram_on": get_settings().telegram_enabled,
             "team": team_of(db, user),
             "teammates": [u for u in teammates(db, user) if u.id != user.id],
         },

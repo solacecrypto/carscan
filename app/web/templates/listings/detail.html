@@ -50,7 +50,6 @@
       {% if last_note %}<p class="mt-2 max-w-md truncate text-xs text-ink-500 sm:ml-auto" title="{{ last_note.text }}">💬 <b>{{ last_note.user.username }}</b>: {{ last_note.text }} <span class="text-ink-400">· {{ last_note.created_at|timeago }}</span></p>{% endif %}
     </div>
   </div>
-  <div class="mt-3 border-t border-ink-100 pt-3">{% include "listings/_status.html" %}</div>
 </div>
 
 {# ---------- verdict strip: the four numbers that decide, plus the market grade ---------- #}

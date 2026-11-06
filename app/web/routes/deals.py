@@ -8,15 +8,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.alerts import notify_group
-from app.db import Deal, DealEvent, DealStage, Listing, User
+from app.db import Alert, AlertStatus, Deal, DealEvent, DealStage, Listing, User
 from app.deals import (
     ACTUAL_FIELDS,
     DATE_FIELDS,
     STAGE_ORDER,
-    calibrate,
     checklist_for,
     create_deal,
     days_in_stage,
+    get_deal_for_listing,
     is_stale,
     next_action,
     next_stage,
@@ -24,7 +24,7 @@ from app.deals import (
     summary,
     update_actuals,
 )
-from app.deals.calibration import model_accuracy
+from app.notify import push
 from app.teams import teammates, visible_user_ids
 from app.web.deps import DB, CurrentUser, csrf_protect
 from app.web.templating import templates
@@ -179,10 +179,41 @@ def deals_create(
     listing = db.get(Listing, int(m.group(1))) if m else None
     if listing is None:
         raise HTTPException(404, "no such car on this site")
-    deal = create_deal(db, listing, user, datetime.now(UTC))
+    now = datetime.now(UTC)
+    fresh = get_deal_for_listing(db, listing.id) is None
+    deal = create_deal(db, listing, user, now)
     if deal.owner_id not in visible_user_ids(db, user):
         raise HTTPException(409, "this car is already tracked by an account outside your team")
+    if fresh:
+        _claim(db, listing, user, now)
     return RedirectResponse(f"/deals/{deal.id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _claim(db: DB, listing: Listing, user: User, now: datetime) -> None:
+    """Side effects of tracking a car: the group alert (if any) shows who claimed it, and
+    everyone else who favorited the car hears about it."""
+    if not listing.alerts and listing.saved_searches:  # never alerted: record the claim anyway
+        listing.alerts.append(
+            Alert(saved_search=listing.saved_searches[0], kind="new", sent_at=now, created_at=now)
+        )
+    for alert in listing.alerts:
+        if alert.status in (None, AlertStatus.new):  # None: created just above
+            alert.status = AlertStatus.claimed
+            alert.claimed_by = user
+            alert.status_changed_at = now
+            if alert.telegram_message_id:
+                alert.message_synced = False  # the worker edits the Telegram message
+    for w in listing.watches:
+        if w.user_id != user.id:
+            push(
+                db,
+                w.user_id,
+                "claimed",
+                f"{user.username} is working on {listing.make} {listing.model}",
+                "a car you favorited is now a deal",
+                now,
+                listing,
+            )
 
 
 def _load(db: DB, deal_id: int, user: User | None = None) -> Deal:
@@ -338,11 +369,6 @@ async def deal_update_actuals(
     return RedirectResponse(f"/deals/{deal_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.get("/calibration", response_class=HTMLResponse)
-def calibration_page(request: Request, db: DB, user: CurrentUser) -> HTMLResponse:
-    report = calibrate(db)
-    return templates.TemplateResponse(
-        request,
-        "calibration.html",
-        {"title": "Calibration", "report": report, "accuracy": model_accuracy(db)},
-    )
+@router.get("/calibration")
+def calibration_redirect() -> RedirectResponse:
+    return RedirectResponse("/models#calibration", status_code=status.HTTP_301_MOVED_PERMANENTLY)

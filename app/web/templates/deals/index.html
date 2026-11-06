@@ -4,7 +4,6 @@
 <div class="flex flex-wrap items-end justify-between gap-3">
   <div><h1>Deals</h1><p class="text-sm text-ink-400">Every car someone is working on, from first contact to sold. Each card says what to do next.</p></div>
   <div class="flex flex-wrap items-center gap-2 text-sm">
-    <a href="/calibration" class="btn-outline !py-1.5">Calibration</a>
     <form method="post" action="/deals" class="flex items-center gap-1">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input name="listing_id" required placeholder="car id or link on this site" class="input !mt-0 !w-48 !py-1.5">

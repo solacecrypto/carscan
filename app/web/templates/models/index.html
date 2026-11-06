@@ -109,4 +109,38 @@
   <span class="block text-xs text-ink-400">Their searches run on the normal schedule; cars show up here as soon as one is found.</span>
 </div>
 {% endif %}
+
+<details id="calibration" class="card fold mt-8 p-4">
+  <summary><h2>Estimate accuracy <span class="text-xs font-normal text-ink-300">· calibration from logged deals</span></h2><span class="fold-value">{{ report.deals_bought }} bought · {{ report.deals_sold }} sold</span></summary>
+  <p class="mt-2 text-sm text-ink-600">Estimates frozen when a deal was tracked, compared with what was logged on the deal. Suggestions are for <code>costs.yaml</code>; nothing is applied automatically.</p>
+  {% if report.metrics %}
+  <div class="mt-3 overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="text-left"><tr><th class="p-2">Metric</th><th class="p-2">n</th><th class="p-2 text-right">estimated</th><th class="p-2 text-right">actual</th><th class="p-2">current</th><th class="p-2">suggestion</th></tr></thead>
+    <tbody>
+    {% for m in report.metrics %}
+    <tr class="border-t border-ink-100 {{ 'opacity-60' if m.n < 3 }}">
+      <td class="p-2">{{ m.name }}</td><td class="p-2">{{ m.n }}{% if m.n < 3 %} <span class="text-xs text-brand-700">(few)</span>{% endif %}</td>
+      <td class="p-2 text-right">{{ m.estimated if m.estimated is not none else '–' }}</td><td class="p-2 text-right font-medium">{{ m.actual if m.actual is not none else '–' }}</td>
+      <td class="p-2 font-mono text-xs">{{ m.current }}</td><td class="p-2 font-mono text-xs">{{ m.suggestion }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="mt-3 text-sm text-ink-400">No bought or sold deals with actuals yet. Log purchase, transport and sale figures on a deal and the comparison appears here.</p>
+  {% endif %}
+  {% if accuracy %}
+  <h3 class="mt-4 text-xs font-semibold uppercase tracking-wider text-ink-500">Per model</h3>
+  <table class="mt-1 w-full text-sm">
+    <thead><tr class="text-left"><th class="p-2">model</th><th class="p-2">deals</th><th class="p-2">landed cost off by</th><th class="p-2">NL value off by</th></tr></thead>
+    <tbody>
+    {% for key, a in accuracy.items() %}
+    <tr class="border-t border-ink-100"><td class="p-2 font-medium">{{ key }}</td><td class="p-2">{{ a.n }}</td><td class="p-2">{{ a.landed_err_pct }}%</td><td class="p-2">{{ a.value_err_pct ~ '% (' ~ a.n_sold ~ ' sold)' if a.value_err_pct is not none else '–' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</details>
 {% endblock %}

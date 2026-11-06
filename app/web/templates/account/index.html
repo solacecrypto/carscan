@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="mb-4"><h1>Account</h1><p class="text-sm text-ink-400">Signed in as <b>{{ user.username }}</b>{% if user.is_admin %} · admin{% endif %} · plan <b>{{ plan }}</b>{% if teammates %} · deals shared with {{ teammates|map(attribute='username')|join(', ') }}{% elif team %} · you see only your own deals{% else %} · you see only your own deals; an admin can put you on a team{% endif %}.</p></div>
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3"><div><h1>Account</h1><p class="text-sm text-ink-400">Signed in as <b>{{ user.username }}</b>{% if user.is_admin %} · admin{% endif %} · plan <b>{{ plan }}</b>{% if teammates %} · deals shared with {{ teammates|map(attribute='username')|join(', ') }}{% elif team %} · you see only your own deals{% else %} · you see only your own deals; an admin can put you on a team{% endif %}.</p></div>{% if user.is_admin %}<a href="/users" class="btn-ghost">Users &amp; teams</a>{% endif %}</div>
 {% if msg %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">{{ msg }}</div>{% endif %}
 {% set loc = request.query_params.get('loc') %}
 {% if loc == 'saved' %}<div class="mb-4 rounded-xl bg-good-100 px-4 py-3 text-sm text-good-700">Location saved: {{ user.home_label }}.</div>
@@ -32,10 +32,11 @@
     <p id="push-status" class="text-xs text-ink-400">…</p>
     <script src="/static/push.js" defer></script>
   </div>
+  {% if telegram_on %}
   <div class="card space-y-3 p-4">
     <h2>Telegram</h2>
-    <p class="text-sm text-ink-600">Handle on file: <b>{{ '@' ~ user.telegram_username if user.telegram_username else 'none' }}</b>. It links your Claim / Pass presses in the group to your account.</p>
-    {% if user.is_admin %}<p class="text-sm"><a href="/users" class="underline">Manage users →</a></p>{% endif %}
+    <p class="text-sm text-ink-600">Handle on file: <b>{{ '@' ~ user.telegram_username if user.telegram_username else 'none' }}</b>. It links your button presses in the group to your account.</p>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

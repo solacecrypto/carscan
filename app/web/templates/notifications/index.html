@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-  <div><h1>Notifications</h1><p class="text-sm text-ink-400">Price moves, disappearances and notes on your favorite cars, and the cars your spotters are waiting for.</p></div>
+  <div><h1>Notifications</h1><p class="text-sm text-ink-400">Price moves, disappearances and notes on your <a href="/favorites" class="underline">favorites</a>, the cars your <a href="/spotter" class="underline">spotters</a> are waiting for, and your deals.</p></div>
   {% if unread %}
   <form method="post" action="/notifications/read"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn-ghost">Mark all {{ unread }} read</button></form>
   {% endif %}
 </div>
-<div class="grid gap-4 lg:grid-cols-5">
-  <div class="min-w-0 lg:col-span-3">
+<div class="mx-auto max-w-3xl">
+  <div class="min-w-0">
     {% set icons = {'price_down': '🔻', 'price_up': '🔺', 'target': '🎯', 'gone': '🚫', 'back': '↩️', 'spread_up': '📈', 'spread_down': '📉', 'wanted': '🆕', 'note': '📝', 'claimed': '🙋', 'deal': '🤝'} %}
-    {% if not rows %}<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">Nothing yet. Star cars with ☆ on their cards, and add the models you want on the right.</p>{% endif %}
+    {% if not rows %}<p class="rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-400">Nothing yet. Favorite cars with ☆ on their cards, or set up a spotter for the car you are after.</p>{% endif %}
     <ul class="space-y-2">
       {% for n in rows %}
       <li class="card flex items-start gap-3 p-3 {{ 'ring-2 ring-brand-300' if not n.read_at }}">
@@ -24,16 +24,6 @@
       </li>
       {% endfor %}
     </ul>
-  </div>
-  <div id="wanted" class="min-w-0 space-y-4 lg:col-span-2">
-    <div class="card p-4">
-      <h2 class="flex items-baseline justify-between gap-2">Spotters <span class="text-xs font-normal text-ink-400">you are told the moment a car matches</span><a href="/spotter" class="ml-auto text-xs font-normal normal-case tracking-normal underline">manage</a></h2>
-      <ul class="mt-2 space-y-1 text-sm">
-        {% for sub in subscriptions %}
-        <li class="flex items-center justify-between gap-2 {{ 'opacity-60' if not sub.active }}"><a href="/spotter" class="min-w-0 truncate font-medium hover:underline">{{ sub.name }}</a><span class="shrink-0 text-xs text-ink-400">{{ sub.hits }} spotted{% if not sub.active %} · paused{% endif %}</span></li>
-        {% else %}<li class="text-xs text-ink-300">None yet. <a href="/spotter" class="underline">Describe the car you are after</a> and we watch for it.</li>{% endfor %}
-      </ul>
-    </div>
   </div>
 </div>
 {% endblock %}

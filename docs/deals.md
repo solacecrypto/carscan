@@ -80,3 +80,13 @@ variant, city, country and the deal notes, and sort by last activity, expected p
 price, longest in stage or country. The summary tiles follow the filter; "n of m deals" says
 how much is hidden; show/hide closed keeps the filters. Drag and drop needs two adjacent
 columns, so it does nothing while a single stage is selected.
+
+## Cleanup (2026-11-06)
+
+- The Claim / Contacted / Pass strip on cards and car pages is gone: **Track as deal** is the
+  one "I'm on it" action. Tracking a car marks its group alert claimed by you (creating the
+  alert row when the car was never alerted) and notifies teammates who favorited it; cards
+  show a `deal · stage · owner` pill instead. Telegram button presses still sync through
+  `sync_from_alert_status`.
+- `/calibration` moved into a fold at the bottom of `/models` (`#calibration`); the old URL
+  redirects.

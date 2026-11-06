@@ -3,6 +3,8 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
+from app.deals import calibrate
+from app.deals.calibration import model_accuracy
 from app.market.overview import model_detail, model_overview, overview_totals
 from app.web.deps import DB, CurrentUser
 from app.web.templating import templates
@@ -34,6 +36,8 @@ def models_page(request: Request, db: DB, user: CurrentUser, sort: str = "spread
             "totals": overview_totals(models),
             "sort": sort,
             "now": now,
+            "report": calibrate(db),
+            "accuracy": model_accuracy(db),
         },
     )
 

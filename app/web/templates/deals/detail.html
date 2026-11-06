@@ -126,7 +126,7 @@
       {% if d.days_to_sell is not none %}<p class="mt-2 text-xs text-ink-500">Sold after <b>{{ d.days_to_sell }} days</b> on the market.</p>{% endif %}
       <label class="mt-3 block text-sm"><span class="label">Deal notes</span><textarea name="notes" rows="3" placeholder="seller's name is not stored here — phone outcome, agreed price, pickup date…" class="input">{{ d.notes or '' }}</textarea></label>
       <div class="mt-3 flex items-center justify-between">
-        <span class="text-[11px] text-ink-400">Actuals feed <a href="/calibration" class="underline">calibration</a>.</span>
+        <span class="text-[11px] text-ink-400">Actuals feed <a href="/models#calibration" class="underline">calibration</a>.</span>
         <button class="btn-primary">Save</button>
       </div>
     </form>

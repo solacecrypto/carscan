@@ -227,7 +227,7 @@ def test_listings_filters_and_sort(client: TestClient, seeded: dict, db: Session
     )
 
 
-def test_detail_and_status_buttons(client: TestClient, seeded: dict, db: Session) -> None:
+def test_detail_page(client: TestClient, seeded: dict, db: Session) -> None:
     lid = seeded["a"].id
     r = client.get(f"/listings/{lid}")
     assert r.status_code == 200
@@ -239,48 +239,24 @@ def test_detail_and_status_buttons(client: TestClient, seeded: dict, db: Session
         "Price history",
         "Dealer GmbH",
         "Berlin",
+        "Track as deal",
     ):
         assert needle in r.text
+    assert "Claim" not in r.text  # triage lives in deals now
     assert client.get("/listings/999").status_code == 404
-
-    # HTMX call carries the token in a header
+    # tracking the car makes it a deal, claims the group alert and shows on the card
     token = _csrf(r.text)
     r = client.post(
-        f"/listings/{lid}/status",
-        data={"status": "claimed"},
-        headers={"HX-Request": "true", "X-CSRF-Token": token},
-    )
-    assert (
-        r.status_code == 200
-        and "claimed · q" in r.text
-        and "Contacted" in r.text
-        and "Claim" not in r.text.replace("claimed", "")
-    )
-    db.expire_all()
-    alert = db.scalar(select(Alert).where(Alert.listing_id == lid))
-    assert (
-        alert is not None
-        and alert.status is AlertStatus.claimed
-        and alert.claimed_by.username == "q"
-    )
-    assert alert.sent_at is not None  # created from the website, so nothing to send
-
-    r = client.post(
-        f"/listings/{lid}/status",
-        data={"status": "passed", "csrf_token": token},
-        follow_redirects=False,
+        "/deals", data={"csrf_token": token, "listing_id": str(lid)}, follow_redirects=False
     )
     assert r.status_code == 303
     db.expire_all()
-    db.refresh(alert)
-    assert alert.status is AlertStatus.passed
-    assert (
-        client.post(
-            f"/listings/{lid}/status", data={"status": "bogus", "csrf_token": token}
-        ).status_code
-        == 400
-    )
-    assert client.post(f"/listings/{lid}/status", data={"status": "claimed"}).status_code == 403
+    alert = db.query(Alert).filter_by(listing_id=lid).first()
+    assert alert is not None and alert.status is AlertStatus.claimed
+    assert alert.claimed_by.username == "q"
+    cards = client.get("/listings?profitable=false").text.split('id="results"')[1]
+    assert "deal · spotted</span>q" in cards
+    assert "Deal: spotted · q" in client.get(f"/listings/{lid}").text
 
 
 def test_saved_searches_crud(client: TestClient, seeded: dict, db: Session) -> None:
@@ -533,7 +509,7 @@ def test_watch_notes_seller_and_digest_pages(client: TestClient, seeded: dict, d
         data={"target_price_eur": "5.500", "action": "watch", "csrf_token": token},
         headers={"HX-Request": "true"},
     )
-    assert r.status_code == 200 and "Update target" in r.text and "€ 5.500 or below" in r.text
+    assert r.status_code == 200 and "Save target" in r.text and "€ 5.500 or below" in r.text
     assert db.query(Watch).filter_by(listing_id=row.id).one().target_price_eur == 5500
     r = client.post(
         f"/listings/{row.id}/watch",
@@ -662,7 +638,7 @@ def test_star_notifications_and_wanted(client: TestClient, seeded: dict, db: Ses
     assert sub.criteria == {
         "filters": {"model_key": ["bmw-3er-e90"], "price_max": 8000, "profitable": True}
     }
-    assert "cheap E90" in client.get("/notifications").text
+    assert "cheap E90" in client.get("/spotter").text
     client.post(f"/spotter/{sub.id}/toggle", data={"csrf_token": token})
     db.expire_all()
     assert db.get(Subscription, sub.id).active is False

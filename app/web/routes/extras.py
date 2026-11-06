@@ -225,13 +225,6 @@ def notifications_page(request: Request, db: DB, user: CurrentUser) -> HTMLRespo
             .limit(100)
         )
     )
-    subs = list(
-        db.scalars(
-            select(Subscription)
-            .where(Subscription.user_id == user.id)
-            .order_by(Subscription.created_at)
-        )
-    )
     return templates.TemplateResponse(
         request,
         "notifications/index.html",
@@ -239,9 +232,7 @@ def notifications_page(request: Request, db: DB, user: CurrentUser) -> HTMLRespo
             "title": "Notifications",
             "rows": rows,
             "unread": unread_count(db, user.id),
-            "subscriptions": subs,
             "kinds": KINDS,
-            "models": _models(),
         },
     )
 
