@@ -444,23 +444,32 @@ def models_sync(
 @models.command("sweeps")
 def models_sweeps(
     owner: str = typer.Option(..., help="username that owns created searches"),
+    every: int = typer.Option(15, help="minutes between sweeps"),
+    pages: int = typer.Option(5, help="max result pages per sweep (AutoScout24 serves 20)"),
+    band_years: int | None = typer.Option(
+        None, help="split each brand into year bands this wide (needed for long intervals)"
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help="only print the sweeps"),
 ) -> None:
-    """Create the recency sweeps: one newest-first query per brand on AutoScout24.de and
-    Kleinanzeigen, every 15 minutes, stopping at the first page of known ads."""
+    """Create or reshape the recency sweeps: newest-first queries per brand (and year band)
+    on AutoScout24.de and Kleinanzeigen, stopping at the first page of known ads."""
     from app.db import User, db_session
     from app.watchlist import build_sweep_specs, sync_sweeps
 
+    kw = {"interval": every, "max_pages": pages, "band_years": band_years}
     if dry_run:
-        for sp in build_sweep_specs():
-            typer.echo(f"{sp.source:16} every {sp.interval_minutes:>3} min  {sp.name}  {sp.params}")
+        for sp in build_sweep_specs(**kw):
+            typer.echo(f"{sp.source:16} every {sp.interval_minutes:>4} min  {sp.name}  {sp.params}")
         return
     with db_session() as s:
         user = s.scalar(select(User).where(User.username == owner))
         if not user:
             raise typer.BadParameter(f"no such user {owner!r}")
-        r = sync_sweeps(s, user)
-    typer.echo(f"sweeps: {r['sweeps']}  created {r['created']}  updated {r['updated']}")
+        r = sync_sweeps(s, user, **kw)
+    typer.echo(
+        f"sweeps: {r['sweeps']}  created {r['created']}  updated {r['updated']}  "
+        f"paused {r['paused']}"
+    )
 
 
 @scrape.command("traffic")

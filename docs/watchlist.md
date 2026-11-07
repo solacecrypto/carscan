@@ -55,6 +55,13 @@ per-model searches keep doing deactivation; untracked cars are valued by model n
 show up for spotters and the free-text search. Sweeps never queue Telegram alerts
 (`alerts_enabled=False`); spotters and favorites decide what deserves attention.
 
+**Interval and bands.** `carscan models sweeps --every 720 --pages 20 --band-years 4` reshapes
+the sweeps for a 12-hour rhythm: each brand is split into 4-year registration bands so that
+no band yields more new ads than the site serves pages for (AutoScout24 stops at 20 pages of
+20). Sweeps the new layout no longer produces are paused. Sweep frequency barely changes the
+number of search pages per day (that is set by the inflow of new ads); it changes how fresh
+the site is and how many requests hit a site per hour.
+
 **Bytes.** `PoliteClient.bytes_received` counts what came over the wire (compressed), stored
 per run in `scrape_runs.bytes_fetched`. `carscan scrape traffic [--days N]` prints bytes per
 source and role with a monthly projection; the Status page shows the last 24 h per source and

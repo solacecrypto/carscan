@@ -129,6 +129,17 @@ def test_sweep_specs_one_per_brand_per_site() -> None:
     assert ka.params["make"] == "bmw" and ka.params["ez_from"] == 2007
     makes = {m["make"] for m in MODELS}
     assert len([sp for sp in specs if sp.source == "autoscout24_de"]) == len(makes)
+    # long intervals: split into year bands under the site's page cap
+    banded = build_sweep_specs(MODELS, interval=720, max_pages=20, band_years=4)
+    bmw = [
+        sp for sp in banded if sp.source == "autoscout24_de" and sp.name.startswith("Sweep · BMW")
+    ]
+    assert len(bmw) >= 5 and all(sp.interval_minutes == 720 for sp in bmw)
+    assert bmw[0].params["fregfrom"] == 2007 and bmw[0].params["fregto"] == 2010
+    assert "fregto" not in bmw[-1].params and bmw[-1].params["max_pages"] == 20
+    assert "2007–2010" in bmw[0].name and bmw[-1].name.endswith("+ · autoscout24_de")
+    ka = [sp for sp in banded if sp.source == "kleinanzeigen" and "BMW" in sp.name]
+    assert ka[0].params["ez_to"] == 2010 and ka[-1].params["ez_to"] == ""
 
 
 def test_sweep_run_stores_everything_and_never_deactivates(db: Session) -> None:
@@ -161,8 +172,10 @@ def test_sweep_run_stores_everything_and_never_deactivates(db: Session) -> None:
         == 0
     )
     # idempotent sync
-    assert sync_sweeps(db, u, MODELS) == {
-        "created": 0,
-        "updated": 0,
-        "sweeps": len(build_sweep_specs(MODELS)),
-    }
+    n = len(build_sweep_specs(MODELS))
+    assert sync_sweeps(db, u, MODELS) == {"created": 0, "updated": 0, "paused": 0, "sweeps": n}
+    # reshaping to 12-hour banded sweeps pauses the old layout and creates the new one
+    r = sync_sweeps(db, u, MODELS, interval=720, max_pages=20, band_years=4)
+    assert r["paused"] == n and r["created"] == r["sweeps"] > n
+    db.expire_all()
+    assert db.get(SavedSearch, sweep.id).active is False

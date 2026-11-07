@@ -396,64 +396,112 @@ def classify(
     return best[1] if best else None
 
 
-def build_sweep_specs(models: list[dict[str, Any]] | None = None) -> list[SearchSpec]:
-    """One newest-first sweep per brand for each sweep source: years from the oldest model
-    we track, a price cap only when every model of the brand has one, fuel only when the
-    brand's models agree. Pages stop early at the first page of already-known ads."""
+def _bands(y0: int, y1: int, width: int | None) -> list[tuple[int | None, int | None]]:
+    """Year bands for one brand: whole range, or slices of `width` years. A 12-hour sweep of
+    a big brand yields more new ads than the site serves pages for (AutoScout24 stops at 20
+    pages of 20), so the query is split by registration year to stay under the cap."""
+    if not width:
+        return [(y0, None)]
+    out: list[tuple[int | None, int | None]] = []
+    lo = y0
+    while lo <= y1:
+        hi = min(lo + width - 1, y1)
+        out.append((lo, None if hi >= y1 else hi))
+        lo = hi + 1
+    return out
+
+
+def build_sweep_specs(
+    models: list[dict[str, Any]] | None = None,
+    *,
+    interval: int = SWEEP_INTERVAL_MINUTES,
+    max_pages: int = SWEEP_MAX_PAGES,
+    band_years: int | None = None,
+) -> list[SearchSpec]:
+    """Newest-first sweeps per brand for each sweep source: years from the oldest model we
+    track (split into bands of `band_years` when given), a price cap only when every model
+    of the brand has one, fuel only when the brand's models agree. Pages stop early at the
+    first page of already-known ads."""
+    from datetime import UTC, datetime
+
     entries = models if models is not None else load_models()
     by_make: dict[str, list[dict[str, Any]]] = {}
     for m in entries:
         by_make.setdefault(m["make"], []).append(m)
+    this_year = datetime.now(UTC).year
     specs: list[SearchSpec] = []
     for make, group in sorted(by_make.items()):
         y0 = min(m["years"][0] for m in group)
         fuels = {m.get("fuel", "petrol") for m in group}
         caps = [m.get("price_max") for m in group]
-        common: dict[str, Any] = {"max_pages": SWEEP_MAX_PAGES}
-        if all(caps):
-            common["priceto"] = max(caps)
         as24_paths = [(m.get("autoscout24") or {}).get("path") for m in group]
         slugs = {p.split("/")[2] for p in as24_paths if p and p.count("/") >= 2}
-        if slugs and "autoscout24_de" in SWEEP_SOURCES:
-            params = {"path": f"/lst/{sorted(slugs)[0]}", "cy": "D", "fregfrom": y0, **common}
-            if len(fuels) == 1:
-                params["fuel"] = AS24_FUEL.get(next(iter(fuels)), "B")
-            specs.append(
-                SearchSpec(
-                    f"Sweep · {make} · autoscout24_de",
-                    "autoscout24_de",
-                    "sweep",
-                    params,
-                    SWEEP_INTERVAL_MINUTES,
+        ka_makes = {(m.get("kleinanzeigen") or {}).get("make") for m in group} - {None}
+        for lo, hi in _bands(y0, this_year, band_years):
+            label = f"{make} · {lo}–{hi}" if hi else (f"{make} · {lo}+" if band_years else make)
+            if slugs and "autoscout24_de" in SWEEP_SOURCES:
+                params: dict[str, Any] = {
+                    "path": f"/lst/{sorted(slugs)[0]}",
+                    "cy": "D",
+                    "fregfrom": lo,
+                    "max_pages": max_pages,
+                }
+                if hi:
+                    params["fregto"] = hi
+                if len(fuels) == 1:
+                    params["fuel"] = AS24_FUEL.get(next(iter(fuels)), "B")
+                if all(caps):
+                    params["priceto"] = max(caps)
+                specs.append(
+                    SearchSpec(
+                        f"Sweep · {label} · autoscout24_de",
+                        "autoscout24_de",
+                        "sweep",
+                        params,
+                        interval,
+                    )
                 )
-            )
-        ka_makes = {(m.get("kleinanzeigen") or {}).get("make") for m in group}
-        ka_makes.discard(None)
-        if ka_makes and "kleinanzeigen" in SWEEP_SOURCES:
-            params = {"make": sorted(ka_makes)[0], "ez_from": y0, "ez_to": "", **common}
-            params.pop("priceto", None)
-            specs.append(
-                SearchSpec(
-                    f"Sweep · {make} · kleinanzeigen",
-                    "kleinanzeigen",
-                    "sweep",
-                    params,
-                    SWEEP_INTERVAL_MINUTES,
+            if ka_makes and "kleinanzeigen" in SWEEP_SOURCES:
+                params = {
+                    "make": sorted(ka_makes)[0],
+                    "ez_from": lo,
+                    "ez_to": hi or "",
+                    "max_pages": max_pages,
+                }
+                specs.append(
+                    SearchSpec(
+                        f"Sweep · {label} · kleinanzeigen",
+                        "kleinanzeigen",
+                        "sweep",
+                        params,
+                        interval,
+                    )
                 )
-            )
     return specs
 
 
 def sync_sweeps(
-    session: Session, owner: User, models: list[dict[str, Any]] | None = None
+    session: Session,
+    owner: User,
+    models: list[dict[str, Any]] | None = None,
+    *,
+    interval: int = SWEEP_INTERVAL_MINUTES,
+    max_pages: int = SWEEP_MAX_PAGES,
+    band_years: int | None = None,
 ) -> dict[str, int]:
-    """Create or update the sweep searches (matched by name). Sweeps never alert on their
-    own: spotters and favorites decide what deserves attention."""
-    specs = build_sweep_specs(models)
+    """Create or update the sweep searches (matched by name) and pause sweeps that the
+    current layout no longer produces. Sweeps never alert on their own: spotters and
+    favorites decide what deserves attention."""
+    specs = build_sweep_specs(models, interval=interval, max_pages=max_pages, band_years=band_years)
     existing = {
         s.name: s for s in session.scalars(select(SavedSearch).where(SavedSearch.role == "sweep"))
     }
-    created = updated = 0
+    created = updated = paused = 0
+    wanted = {spec.name for spec in specs}
+    for row in existing.values():
+        if row.name not in wanted and row.active:
+            row.active = False
+            paused += 1
     for spec in specs:
         row = existing.get(spec.name)
         if row is None:
@@ -471,8 +519,13 @@ def sync_sweeps(
                 )
             )
             created += 1
-        elif row.source_params != spec.params or row.interval_minutes != spec.interval_minutes:
+        elif (
+            row.source_params != spec.params
+            or row.interval_minutes != spec.interval_minutes
+            or not row.active
+        ):
             row.source_params, row.interval_minutes = spec.params, spec.interval_minutes
+            row.active = True
             updated += 1
     session.flush()
-    return {"created": created, "updated": updated, "sweeps": len(specs)}
+    return {"created": created, "updated": updated, "paused": paused, "sweeps": len(specs)}
